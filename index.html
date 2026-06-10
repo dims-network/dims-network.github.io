@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DIMS-network</title>
+<meta name="description" content="The DIMS-network — open tools for visualizing dynamic interaction and multimodal signals in social-interaction research." />
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#121826; --panel2:#0f1422; --line:#1e2740;
+    --text:#e6edf3; --muted:#9aa7bd; --dim:#6b7894;
+    --web:#3ad0c0; --web2:#1b8f86;     /* static JS family */
+    --py:#a78bfa;  --py2:#6d5bd0;       /* python family */
+    --accent:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 70% -10%, #14203a 0%, var(--bg) 55%) no-repeat, var(--bg);
+    color:var(--text);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  header{padding:64px 0 28px}
+  .eyebrow{letter-spacing:.22em;text-transform:uppercase;color:var(--web);font-weight:700;font-size:.72rem;margin-bottom:14px}
+  h1{font-size:2.7rem;line-height:1.1;margin:0 0 14px;
+     background:linear-gradient(92deg,#fff 10%,var(--web) 55%,var(--py) 100%);
+     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .lede{color:var(--muted);font-size:1.12rem;max-width:760px;margin:0}
+  .lede b{color:var(--text)}
+
+  section{padding:30px 0}
+  h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);margin:0 0 18px;font-weight:700}
+
+  /* diagram */
+  .diagram{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
+    border:1px solid var(--line);border-radius:16px;padding:14px 14px 6px}
+  canvas{width:100%;height:auto;display:block;border-radius:10px}
+  .legend{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;color:var(--muted);
+    font-size:.82rem;padding:10px 6px 12px}
+  .legend span{display:inline-flex;align-items:center;gap:8px}
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .ln{width:24px;height:0;border-top:2px solid var(--dim)}
+  .ln.dash{border-top:2px dashed var(--dim)}
+  .hint{text-align:center;color:var(--dim);font-size:.78rem;margin:2px 0 0}
+
+  /* cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;
+    display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
+  .card:hover{border-color:#33425f;transform:translateY(-2px)}
+  .card.web{border-top:3px solid var(--web)}
+  .card.py{border-top:3px solid var(--py)}
+  .card h3{margin:0 0 4px;font-size:1.06rem}
+  .card h3 a{color:var(--text)}
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+  .badge{font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;font-weight:700;
+    padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .badge.root{color:#0b0e14;background:var(--web);border-color:transparent}
+  .badge.base{color:#0b0e14;background:var(--py);border-color:transparent}
+  .badge.fork{color:var(--accent);border-color:#27406b}
+  .badge.tmpl{color:#ffd479;border-color:#5a4a1e}
+  .card p{margin:0 0 14px;color:var(--muted);font-size:.92rem;flex:1}
+  .links{display:flex;gap:14px;flex-wrap:wrap;font-size:.86rem;font-weight:600}
+  .links .live::before{content:"▶ ";color:var(--web)}
+
+  .cite{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--py);
+    border-radius:10px;padding:16px 18px;color:var(--muted);font-size:.92rem}
+  .cite b{color:var(--text)}
+  footer{padding:30px 0 60px;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);margin-top:20px}
+  @media(max-width:560px){h1{font-size:2rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Dynamic Interaction &amp; Multimodal Signals</div>
+    <h1>The DIMS-network</h1>
+    <p class="lede">An open family of tools for visualizing <b>multimodal social-interaction data</b> — time series, video, transcripts, and analyses like RQA, cross-wavelet, and ELAN annotations — to bridge qualitative and quantitative research. One canonical dashboard, its forks for specific studies, and companion Python viewers.</p>
+  </header>
+
+  <section>
+    <h2>Repository network</h2>
+    <div class="diagram">
+      <canvas id="net" width="960" height="430" role="img"
+        aria-label="Diagram of DIMS-network repositories and their fork and template relationships"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--web)"></i> Static dashboards (JS · GitHub Pages)</span>
+        <span><i class="dot" style="background:var(--py)"></i> Python / Dash viewers</span>
+        <span><i class="ln"></i> fork</span>
+        <span><i class="ln dash"></i> template</span>
+      </div>
+      <p class="hint">click any node to open its repository</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Repositories</h2>
+    <div class="grid" id="cards"></div>
+  </section>
+
+  <section>
+    <h2>About</h2>
+    <div class="cite">
+      The DIMS Dashboard is introduced in:
+      <b>Miao, G. Q., Trujillo, J., Bulls, L. S., Thornton, M. A., Dale, R., &amp; Pouw, W. (2025).</b>
+      <i>DIMS Dashboard for Exploring Dynamic Interactions and Multimodal Signals.</i>
+      Proceedings of the 47th Annual Meeting of the Cognitive Science Society (CogSci 2025).
+      It integrates audiovisual, kinematic, neural, and transcript data in one space so qualitative
+      and quantitative analyses of social interaction can sit side by side.
+    </div>
+  </section>
+
+  <footer>
+    DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+  </footer>
+</div>
+
+<script>
+const repos = [
+  {id:"root", name:"DIMS_Dashboard", short:"DIMS Dashboard", fam:"web", kind:"root",
+   desc:"Canonical base — static dashboard for multimodal interaction data: time series, video, transcript, RQA, cross-wavelet, and ELAN annotations.",
+   url:"https://github.com/dims-network/DIMS_Dashboard", live:"https://dims-network.github.io/DIMS_Dashboard/"},
+  {id:"template", name:"DIMS_dashboard_template", short:"Dashboard template", fam:"web", kind:"tmpl",
+   desc:"Empty “Use this template” starter — full dashboard code plus an assets/ skeleton, no data. Spin up a new dataset dashboard in minutes.",
+   url:"https://github.com/dims-network/DIMS_dashboard_template"},
+  {id:"ortho", name:"DIMS_Dashboard_Ortho", short:"DIMS · ORTHO", fam:"web", kind:"fork",
+   desc:"ORTHO (CUF) use case — adds multi-perspective video, a trajectory tab, and a DTW tab on top of the base dashboard.",
+   url:"https://github.com/dims-network/DIMS_Dashboard_Ortho", live:"https://dims-network.github.io/DIMS_Dashboard_Ortho/"},
+  {id:"bots", name:"bots-viewer", short:"bots-viewer", fam:"py", kind:"base",
+   desc:"Dash app — trajectory playback plus RQA / cRQA for a two-player 2D-grid human-vs-bot game.",
+   url:"https://github.com/dims-network/bots-viewer", live:"https://huggingface.co/spaces/mikub97/bots-viewer"},
+  {id:"orthoview", name:"Ortho-viewer", short:"Ortho-viewer", fam:"py", kind:"fork",
+   desc:"ORTHO Game Browser — a code-only Dash viewer with an embedded DIMS sub-dashboard for ORTHO game sessions.",
+   url:"https://github.com/dims-network/Ortho-viewer"},
+];
+const edges = [
+  {from:"root", to:"ortho", label:"fork", style:"solid"},
+  {from:"root", to:"template", label:"template", style:"dash"},
+  {from:"bots", to:"orthoview", label:"fork", style:"solid"},
+];
+// logical layout (matches canvas width/height attributes)
+const pos = {
+  root:{x:210,y:96}, template:{x:96,y:300}, ortho:{x:340,y:300},
+  bots:{x:760,y:96}, orthoview:{x:760,y:300},
+};
+const NW=196, NH=66;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const COL = {web:css("--web"), web2:css("--web2"), py:css("--py"), py2:css("--py2"),
+            line:css("--line"), text:css("--text"), muted:css("--muted"), panel:css("--panel")};
+
+const canvas = document.getElementById("net");
+const ctx = canvas.getContext("2d");
+const W = canvas.width, H = canvas.height;
+const dpr = Math.max(1, window.devicePixelRatio || 1);
+canvas.width = W*dpr; canvas.height = H*dpr; ctx.scale(dpr,dpr);
+
+let hover = null;
+
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+function nodeRect(id){const p=pos[id];return {x:p.x-NW/2,y:p.y-NH/2,w:NW,h:NH};}
+
+function drawEdge(e){
+  const a=pos[e.from], b=pos[e.to];
+  const x1=a.x, y1=a.y+NH/2, x2=b.x, y2=b.y-NH/2;
+  const lit = hover && (hover===e.from || hover===e.to);
+  ctx.save();
+  ctx.strokeStyle = lit ? COL.text : "#34507e";
+  ctx.lineWidth = lit ? 2.4 : 1.8;
+  ctx.setLineDash(e.style==="dash" ? [6,5] : []);
+  // gentle vertical S-curve
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  const my=(y1+y2)/2;
+  ctx.bezierCurveTo(x1,my, x2,my, x2,y2);
+  ctx.stroke();
+  // arrowhead (edges always run parent→child, top→bottom)
+  ctx.setLineDash([]);
+  ctx.fillStyle = lit ? COL.text : "#34507e";
+  ctx.beginPath();
+  ctx.moveTo(x2,y2+1);
+  ctx.lineTo(x2-5,y2-8);
+  ctx.lineTo(x2+5,y2-8);
+  ctx.closePath();ctx.fill();
+  // label
+  const lx=(x1+x2)/2, ly=my;
+  ctx.font="600 11px ui-monospace,Menlo,monospace";
+  const tw=ctx.measureText(e.label).width;
+  ctx.fillStyle=COL.panel;
+  rr(lx-tw/2-7, ly-9, tw+14, 18, 9); ctx.fill();
+  ctx.strokeStyle="#2b3a5c"; ctx.lineWidth=1; rr(lx-tw/2-7, ly-9, tw+14, 18, 9); ctx.stroke();
+  ctx.fillStyle = e.style==="dash" ? "#ffd479" : COL.muted;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(e.label, lx, ly);
+  ctx.restore();
+}
+
+function drawNode(r){
+  const {x,y,w,h}=nodeRect(r.id);
+  const base = r.fam==="web"?COL.web:COL.py;
+  const base2= r.fam==="web"?COL.web2:COL.py2;
+  const strong = (r.kind==="root"||r.kind==="base");
+  const lit = hover===r.id;
+  ctx.save();
+  if(lit){ctx.shadowColor=base;ctx.shadowBlur=18;}
+  const g=ctx.createLinearGradient(x,y,x,y+h);
+  g.addColorStop(0, strong? base2 : "#162038");
+  g.addColorStop(1, "#0f1626");
+  rr(x,y,w,h,12); ctx.fillStyle=g; ctx.fill();
+  ctx.shadowBlur=0;
+  rr(x,y,w,h,12); ctx.lineWidth= lit?2.4:1.6; ctx.strokeStyle= lit?base:(strong?base:"#2a3756"); ctx.stroke();
+  // accent bar
+  ctx.fillStyle=base; rr(x,y,6,h,12); ctx.save(); ctx.clip(); ctx.fillRect(x,y,6,h); ctx.restore();
+  // text
+  ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+  ctx.fillStyle=COL.text; ctx.font="700 14px -apple-system,Segoe UI,Roboto,sans-serif";
+  ctx.fillText(r.short, x+18, y+27);
+  ctx.fillStyle=COL.muted; ctx.font="11px ui-monospace,Menlo,monospace";
+  ctx.fillText(r.name, x+18, y+45);
+  const tag = {root:"root",base:"base",fork:"fork",tmpl:"template"}[r.kind];
+  ctx.font="700 9px -apple-system,Segoe UI,sans-serif"; ctx.textAlign="right";
+  ctx.fillStyle = strong? base : (r.kind==="tmpl"?"#ffd479":COL.muted);
+  ctx.fillText(tag.toUpperCase(), x+w-12, y+19);
+  ctx.restore();
+}
+
+function clusterLabel(text,x){
+  ctx.save();ctx.fillStyle=COL.muted;ctx.font="700 11px -apple-system,Segoe UI,sans-serif";
+  ctx.textAlign="center";ctx.globalAlpha=.8;ctx.fillText(text,x,32);ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clusterLabel("STATIC DASHBOARDS · GITHUB PAGES", 218);
+  clusterLabel("PYTHON / DASH VIEWERS", 760);
+  edges.forEach(drawEdge);
+  repos.forEach(drawNode);
+}
+draw();
+
+function hit(e){
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(W/rect.width);
+  const my=(e.clientY-rect.top)*(H/rect.height);
+  for(const r of repos){const n=nodeRect(r.id);
+    if(mx>=n.x&&mx<=n.x+n.w&&my>=n.y&&my<=n.y+n.h) return r;}
+  return null;
+}
+canvas.addEventListener("mousemove",e=>{const r=hit(e);const id=r?r.id:null;
+  if(id!==hover){hover=id;canvas.style.cursor=id?"pointer":"default";draw();}});
+canvas.addEventListener("mouseleave",()=>{if(hover){hover=null;draw();}});
+canvas.addEventListener("click",e=>{const r=hit(e);if(r)window.open(r.url,"_blank","noopener");});
+
+// repo cards
+const kindBadge={root:["root","root"],base:["base","base"],fork:["fork","fork"],tmpl:["template","tmpl"]};
+document.getElementById("cards").innerHTML = repos.map(r=>{
+  const [label,cls]=kindBadge[r.kind];
+  const famBadge = r.fam==="web" ? "static · js" : "python · dash";
+  return `<div class="card ${r.fam}">
+    <h3><a href="${r.url}">${r.name}</a></h3>
+    <div class="badges"><span class="badge ${cls}">${label}</span><span class="badge">${famBadge}</span></div>
+    <p>${r.desc}</p>
+    <div class="links">
+      <a href="${r.url}">Repository →</a>
+      ${r.live?`<a class="live" href="${r.live}">Live demo</a>`:""}
+    </div>
+  </div>`;
+}).join("");
+</script>
+</body>
+</html>
