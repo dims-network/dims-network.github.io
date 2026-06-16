@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tutorial · DIMS-network</title>
+<meta name="description" content="Two ways to build your own DIMS dashboard for your data: the no-code Dashboard Builder, or cloning the template and editing it by hand." />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="tutorial.html" class="active">Tutorial</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Tutorial</div>
+    <h1>Build your own DIMS dashboard</h1>
+    <p class="lede">A DIMS dashboard is a <b>static website</b> driven by a single
+      <code>config.json</code> plus a folder of <code>assets/</code> (your video, time series,
+      transcript, and optional analyses). There are two ways to make one for your own data —
+      pick the path that fits you.</p>
+    <div class="toggle-group" role="tablist" aria-label="Choose your path">
+      <button class="toggle-btn active" data-panel="builder" role="tab" aria-selected="true">
+        🧩 No-code <span class="tag">Dashboard Builder</span></button>
+      <button class="toggle-btn" data-panel="manual" role="tab" aria-selected="false">
+        ⌨️ Hands-on <span class="tag">edit the template</span></button>
+    </div>
+  </header>
+
+  <!-- PATH 1 — non-technical -->
+  <section id="builder" class="tabpanel">
+    <div class="path builder">
+      <h3>For non-coders — the Dashboard Builder</h3>
+      <p class="sub">A point-and-click app: drop your files in, click through a wizard, get a
+        ready-to-deploy dashboard. No JSON editing, no file renaming, no terminal scripts.</p>
+
+      <div class="callout"><b>One prerequisite:</b> you need <b>Python 3.9+</b> installed (a free,
+        one-time install from <a href="https://www.python.org/downloads/">python.org/downloads</a>).
+        That's the only thing — <b>no git, no internet</b> required once you have the builder.</div>
+
+      <ol class="steps">
+        <li>
+          <h4>Download the builder</h4>
+          <p><a class="dl" href="https://github.com/dims-network/DIMS_dashboard_builder/archive/refs/heads/main.zip">⬇&nbsp;Download the builder (ZIP)</a></p>
+          <p>Unzip it — <b>no git needed</b>. The DIMS dashboard code is bundled inside, so
+            there's nothing else to download.</p>
+        </li>
+        <li>
+          <h4>Start it — one click</h4>
+          <p>Double-click the launcher in the unzipped folder. It installs everything the first
+            time and then opens the wizard in your browser:</p>
+          <ul>
+            <li><b>macOS:</b> <code>run.command</code></li>
+            <li><b>Windows:</b> <code>run.bat</code></li>
+            <li><b>Linux:</b> <code>run.sh</code></li>
+          </ul>
+          <div class="callout warn"><b>macOS — first time only:</b> you may see
+            <i>“Apple could not verify ‘run.command’ is free of malware.”</i> Click <b>Done</b>
+            (not <i>Move to Trash</i>), then open <b>System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security</b>,
+            scroll to <b>Security</b>, and click <b>Open Anyway</b> next to <code>run.command</code>.
+            This only happens once. (It's macOS flagging any downloaded, unsigned script — not a
+            problem with the builder.)</div>
+          <p>Prefer the terminal? That also avoids the macOS prompt above — open a terminal in the
+            unzipped folder and run:</p>
+          <pre class="code">pip install -r requirements.txt
+python builder.py</pre>
+        </li>
+        <li>
+          <h4>Create a project</h4>
+          <p>Choose an empty output folder and a title/authors. The builder uses its
+            <b>built-in</b> copy of the template — no internet or git required. (Advanced users
+            can opt to clone the latest from GitHub instead.)</p>
+        </li>
+        <li>
+          <h4>Add your files</h4>
+          <p>Drag in your <code>.mp4</code> video, your time-series <code>.csv</code> files, your
+            <code>_transcript.json</code>, and optionally an ELAN <code>.eaf</code>. The builder
+            recognises each file, groups them under a <b>session</b>, and checks them as you go —
+            so problems surface before you build.</p>
+        </li>
+        <li>
+          <h4>Choose optional analyses</h4>
+          <p>Toggle <b>RQA</b>, <b>cross-wavelet</b> (needs at least two data types), and
+            <b>ELAN</b> annotations. The wizard explains what each tab shows.</p>
+        </li>
+        <li>
+          <h4>Build &amp; precompute</h4>
+          <p>Build writes <code>config.json</code> and copies your files into the exact
+            <code>assets/</code> layout. Precompute then runs the RQA / cross-wavelet scripts for
+            you in a project-local Python environment — progress streams live.</p>
+        </li>
+        <li>
+          <h4>Preview &amp; deploy</h4>
+          <p>Preview opens the finished dashboard locally. The output folder is self-contained and
+            ready to host — the builder shows copy-paste commands for GitHub Pages, Netlify, or Vercel.</p>
+        </li>
+      </ol>
+
+      <div class="callout tip"><b>Tip:</b> the builder simply automates everything in the
+        hands-on path below — same files, same <code>config.json</code>, same analysis scripts.</div>
+
+      <a class="cta" href="https://github.com/dims-network/DIMS_dashboard_builder">Open the Dashboard Builder →</a>
+    </div>
+  </section>
+
+  <!-- PATH 2 — technical -->
+  <section id="manual" class="tabpanel" hidden>
+    <div class="path manual">
+      <h3>For coders — clone the template &amp; edit by hand</h3>
+      <p class="sub">Full control: start from the template, drop files into <code>assets/</code>
+        with the right names, edit <code>config.json</code>, and (optionally) run the analysis scripts.</p>
+
+      <div class="callout"><b>You'll need:</b> <b>git</b> and <b>Python 3.9+</b>
+        (<a href="https://www.python.org/downloads/">python.org/downloads</a>) — the latter for the
+        optional precompute and the local preview server.</div>
+
+      <ol class="steps">
+        <li>
+          <h4>Create your repo from the template</h4>
+          <p>On <b>DIMS_dashboard_template</b>, click <b>“Use this template”</b> → create a new repo —
+            or just clone it.</p>
+          <pre class="code">git clone https://github.com/dims-network/DIMS_dashboard_template my-dashboard
+cd my-dashboard</pre>
+        </li>
+        <li>
+          <h4>Add your assets with the exact names</h4>
+          <p>File names are a strict convention — the dashboard finds your data by name. For a
+            session id (e.g. <code>session1</code>) and a data type (e.g. <code>bodysync</code>):</p>
+          <div class="tree"><span class="p">assets/videos/</span>session1.mp4
+<span class="p">assets/timeseries/</span>session1_bodysync.csv      <span class="v"># Time + one measurement column</span>
+<span class="p">assets/timeseries/</span>session1_neuralsync.csv
+<span class="p">assets/transcripts/</span>session1_transcript.json  <span class="v"># { "segments": [ {start,end,speaker,text} ] }</span>
+<span class="p">assets/elan/</span>session1.eaf                  <span class="v"># optional (ELAN)</span></div>
+          <div class="callout warn"><b>Heads up:</b> the names must match exactly —
+            <code>{videoID}_{dataType}.csv</code>, <code>{videoID}.mp4</code>,
+            <code>{videoID}_transcript.json</code>. A missing <code>Time</code> column or a
+            mismatched name is the most common reason a tab stays blank.</div>
+        </li>
+        <li>
+          <h4>Edit <code>config.json</code></h4>
+          <p>Declare your sessions, their data types, which analyses to enable, and the page text:</p>
+          <pre class="code">{
+  <span class="k">"videoIDs"</span>: ["session1"],
+  <span class="k">"dataTypes"</span>: { "session1": ["bodysync", "neuralsync"] },
+  <span class="k">"include_RQA"</span>: ["bodysync", "neuralsync"],
+  <span class="k">"include_crosswavelet"</span>: ["bodysync", "neuralsync"],
+  <span class="k">"include_elan"</span>: false,
+  <span class="k">"defaultWindowSize"</span>: 5,
+  <span class="k">"title"</span>: "My DIMS Dashboard",
+  <span class="k">"subtitle"</span>: "Dynamic Interaction and Multimodal Signals",
+  <span class="k">"authors"</span>: "Your name(s)",
+  <span class="k">"contacts"</span>: "you@example.org"
+}</pre>
+          <p>Cross-wavelet compares <b>pairs</b>, so it needs at least two data types. Every name in
+            <code>include_RQA</code> / <code>include_crosswavelet</code> must have a matching CSV.</p>
+        </li>
+        <li>
+          <h4>(Optional) Precompute the analyses</h4>
+          <p>RQA and cross-wavelet read your CSVs and write JSON the dashboard loads. Run them once
+            whenever those toggles are on:</p>
+          <pre class="code">pip install -r opt/requirements.txt
+python opt/step_RQA.py          --config config.json --output-dir assets/rqa
+python opt/step_crosswavelet.py --config config.json --output-dir assets/crosswavelet</pre>
+          <p>This produces <code>assets/rqa/{videoID}_rqa_data.json</code> and
+            <code>assets/crosswavelet/{videoID}_crosswavelet_data.json</code>.</p>
+        </li>
+        <li>
+          <h4>Preview locally</h4>
+          <p>Use the bundled server (it supports HTTP Range requests, which the video needs for seeking):</p>
+          <pre class="code">python serve.py 8000   <span class="c"># then open http://localhost:8000</span></pre>
+        </li>
+        <li>
+          <h4>Deploy</h4>
+          <p>Push to GitHub and enable <b>Pages</b> (branch <code>main</code>, folder <code>/root</code>),
+            or host on any static host. Just make sure it serves <b>Range requests</b> so video seeking works.</p>
+        </li>
+      </ol>
+
+      <a class="cta" href="https://github.com/dims-network/DIMS_dashboard_template">Open the template →</a>
+    </div>
+  </section>
+
+  <footer>
+    DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+  </footer>
+</div>
+
+<script>
+  const btns = document.querySelectorAll(".toggle-btn");
+  const panels = document.querySelectorAll(".tabpanel");
+  function show(name){
+    panels.forEach(p => p.hidden = (p.id !== name));
+    btns.forEach(b => {
+      const on = b.dataset.panel === name;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    if (history.replaceState) history.replaceState(null, "", "#" + name);
+  }
+  btns.forEach(b => b.addEventListener("click", () => show(b.dataset.panel)));
+  // honor a deep link like tutorial.html#manual
+  if (location.hash === "#manual") show("manual");
+</script>
+
+</body>
+</html>
