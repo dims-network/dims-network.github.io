@@ -5,77 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>DIMS-network</title>
 <meta name="description" content="The DIMS-network — open tools for visualizing dynamic interaction and multimodal signals in social-interaction research." />
-<style>
-  :root{
-    --bg:#0b0e14; --panel:#121826; --panel2:#0f1422; --line:#1e2740;
-    --text:#e6edf3; --muted:#9aa7bd; --dim:#6b7894;
-    --web:#3ad0c0; --web2:#1b8f86;     /* static JS family */
-    --py:#a78bfa;  --py2:#6d5bd0;       /* python family */
-    --accent:#58a6ff;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    background:radial-gradient(1200px 600px at 70% -10%, #14203a 0%, var(--bg) 55%) no-repeat, var(--bg);
-    color:var(--text);
-    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
-  a{color:var(--accent);text-decoration:none}
-  a:hover{text-decoration:underline}
-
-  header{padding:64px 0 28px}
-  .eyebrow{letter-spacing:.22em;text-transform:uppercase;color:var(--web);font-weight:700;font-size:.72rem;margin-bottom:14px}
-  h1{font-size:2.7rem;line-height:1.1;margin:0 0 14px;
-     background:linear-gradient(92deg,#fff 10%,var(--web) 55%,var(--py) 100%);
-     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .lede{color:var(--muted);font-size:1.12rem;max-width:760px;margin:0}
-  .lede b{color:var(--text)}
-
-  section{padding:30px 0}
-  h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);margin:0 0 18px;font-weight:700}
-
-  /* diagram */
-  .diagram{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
-    border:1px solid var(--line);border-radius:16px;padding:14px 14px 6px}
-  canvas{width:100%;height:auto;display:block;border-radius:10px}
-  .legend{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;color:var(--muted);
-    font-size:.82rem;padding:10px 6px 12px}
-  .legend span{display:inline-flex;align-items:center;gap:8px}
-  .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
-  .ln{width:24px;height:0;border-top:2px solid var(--dim)}
-  .ln.dash{border-top:2px dashed var(--dim)}
-  .hint{text-align:center;color:var(--dim);font-size:.78rem;margin:2px 0 0}
-
-  /* cards */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;
-    display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
-  .card:hover{border-color:#33425f;transform:translateY(-2px)}
-  .card.web{border-top:3px solid var(--web)}
-  .card.py{border-top:3px solid var(--py)}
-  .card h3{margin:0 0 4px;font-size:1.06rem}
-  .card h3 a{color:var(--text)}
-  .badges{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
-  .badge{font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;font-weight:700;
-    padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-  .badge.root{color:#0b0e14;background:var(--web);border-color:transparent}
-  .badge.base{color:#0b0e14;background:var(--py);border-color:transparent}
-  .badge.fork{color:var(--accent);border-color:#27406b}
-  .badge.tmpl{color:#ffd479;border-color:#5a4a1e}
-  .card p{margin:0 0 14px;color:var(--muted);font-size:.92rem;flex:1}
-  .links{display:flex;gap:14px;flex-wrap:wrap;font-size:.86rem;font-weight:600}
-  .links .live::before{content:"▶ ";color:var(--web)}
-
-  .cite{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--py);
-    border-radius:10px;padding:16px 18px;color:var(--muted);font-size:.92rem}
-  .cite b{color:var(--text)}
-  footer{padding:30px 0 60px;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);margin-top:20px}
-  @media(max-width:560px){h1{font-size:2rem}}
-</style>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
 <div class="wrap">
 
   <header>
@@ -172,7 +116,7 @@ function drawEdge(e){
   const x1=a.x, y1=a.y+NH/2, x2=b.x, y2=b.y-NH/2;
   const lit = hover && (hover===e.from || hover===e.to);
   ctx.save();
-  ctx.strokeStyle = lit ? COL.text : "#34507e";
+  ctx.strokeStyle = lit ? COL.text : "#aab2bb";
   ctx.lineWidth = lit ? 2.4 : 1.8;
   ctx.setLineDash(e.style==="dash" ? [6,5] : []);
   // gentle vertical S-curve
@@ -183,7 +127,7 @@ function drawEdge(e){
   ctx.stroke();
   // arrowhead (edges always run parent→child, top→bottom)
   ctx.setLineDash([]);
-  ctx.fillStyle = lit ? COL.text : "#34507e";
+  ctx.fillStyle = lit ? COL.text : "#aab2bb";
   ctx.beginPath();
   ctx.moveTo(x2,y2+1);
   ctx.lineTo(x2-5,y2-8);
@@ -195,8 +139,8 @@ function drawEdge(e){
   const tw=ctx.measureText(e.label).width;
   ctx.fillStyle=COL.panel;
   rr(lx-tw/2-7, ly-9, tw+14, 18, 9); ctx.fill();
-  ctx.strokeStyle="#2b3a5c"; ctx.lineWidth=1; rr(lx-tw/2-7, ly-9, tw+14, 18, 9); ctx.stroke();
-  ctx.fillStyle = e.style==="dash" ? "#ffd479" : COL.muted;
+  ctx.strokeStyle=COL.line; ctx.lineWidth=1; rr(lx-tw/2-7, ly-9, tw+14, 18, 9); ctx.stroke();
+  ctx.fillStyle = e.style==="dash" ? "#9a6700" : COL.muted;
   ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.fillText(e.label, lx, ly);
   ctx.restore();
@@ -211,11 +155,11 @@ function drawNode(r){
   ctx.save();
   if(lit){ctx.shadowColor=base;ctx.shadowBlur=18;}
   const g=ctx.createLinearGradient(x,y,x,y+h);
-  g.addColorStop(0, strong? base2 : "#162038");
-  g.addColorStop(1, "#0f1626");
+  g.addColorStop(0, "#ffffff");
+  g.addColorStop(1, "#f6f8fa");
   rr(x,y,w,h,12); ctx.fillStyle=g; ctx.fill();
   ctx.shadowBlur=0;
-  rr(x,y,w,h,12); ctx.lineWidth= lit?2.4:1.6; ctx.strokeStyle= lit?base:(strong?base:"#2a3756"); ctx.stroke();
+  rr(x,y,w,h,12); ctx.lineWidth= lit?2.4:1.6; ctx.strokeStyle= lit?base:(strong?base:COL.line); ctx.stroke();
   // accent bar
   ctx.fillStyle=base; rr(x,y,6,h,12); ctx.save(); ctx.clip(); ctx.fillRect(x,y,6,h); ctx.restore();
   // text
@@ -226,7 +170,7 @@ function drawNode(r){
   ctx.fillText(r.name, x+18, y+45);
   const tag = {root:"root",base:"base",fork:"fork",tmpl:"template"}[r.kind];
   ctx.font="700 9px -apple-system,Segoe UI,sans-serif"; ctx.textAlign="right";
-  ctx.fillStyle = strong? base : (r.kind==="tmpl"?"#ffd479":COL.muted);
+  ctx.fillStyle = strong? base : (r.kind==="tmpl"?"#9a6700":COL.muted);
   ctx.fillText(tag.toUpperCase(), x+w-12, y+19);
   ctx.restore();
 }
