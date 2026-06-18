@@ -25,10 +25,21 @@
   <header>
     <div class="eyebrow">Tutorial</div>
     <h1>Build your own DIMS dashboard</h1>
-    <p class="lede">A DIMS dashboard is a <b>static website</b> driven by a single
-      <code>config.json</code> plus a folder of <code>assets/</code> (your video, time series,
-      transcript, and optional analyses). There are two ways to make one for your own data —
-      pick the path that fits you.</p>
+    <div class="callout"><b>What your data needs to look like</b> :
+      <ul>
+        <li><b>Group files by session.</b> Everything from one recording shares a single
+          <b>session&nbsp;ID</b> — the video, its time series, and its transcript.</li>
+        <li><b>Video</b> — an <code>.mp4</code>.</li>
+        <li><b>Time series</b> — a <code>.csv</code> with a <code>Time</code> column (in <b>seconds</b>,
+          case-sensitive) plus <b>at least one</b> measurement column. One CSV per data type.</li>
+        <li><b>Transcript</b> (optional) — JSON shaped as
+          <code>{ "segments": [ {start, end, speaker, text} ] }</code>.</li>
+        <li><b>ELAN</b> (optional) — an <code>.eaf</code> file.</li>
+      </ul>
+      <b>Most important:</b> the <code>Time</code> axis is mapped directly onto the video clock, so a
+      session's <b>video length and time-series length should match</b>. If they differ, the video and
+      signals won't line up (dead space, or the signal cut off).</div>
+
     <div class="toggle-group" role="tablist" aria-label="Choose your path">
       <button class="toggle-btn active" data-panel="builder" role="tab" aria-selected="true">
         🧩 No-code <span class="tag">Dashboard Builder</span></button>
