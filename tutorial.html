@@ -31,7 +31,9 @@
           <b>session&nbsp;ID</b> — the video, its time series, and its transcript.</li>
         <li><b>Video</b> — an <code>.mp4</code>.</li>
         <li><b>Time series</b> — a <code>.csv</code> with a <code>Time</code> column (in <b>seconds</b>,
-          case-sensitive) plus <b>at least one</b> measurement column. One CSV per data type.</li>
+          case-sensitive) plus one or more measurement columns. The <b>builder auto-splits</b> a
+          multi-column CSV into one data type per column; if you hand-edit the template, use
+          <b>one</b> measurement column per file.</li>
         <li><b>Transcript</b> (optional) — JSON shaped as
           <code>{ "segments": [ {start, end, speaker, text} ] }</code>.</li>
         <li><b>ELAN</b> (optional) — an <code>.eaf</code> file.</li>
@@ -98,17 +100,28 @@ python builder.py</pre>
             <code>_transcript.json</code>, and optionally an ELAN <code>.eaf</code>. The builder
             recognises each file, groups them under a <b>session</b>, and checks them as you go —
             so problems surface before you build.</p>
+          <p><b>Got one CSV with several signals?</b> Drop it in as-is — a CSV with a
+            <code>Time</code> column plus several measurement columns is <b>split automatically</b>
+            into one data type per column, so you don't have to prepare separate files by hand.</p>
         </li>
         <li>
           <h4>Choose optional analyses</h4>
-          <p>Toggle <b>RQA</b>, <b>cross-wavelet</b> (needs at least two data types), and
-            <b>ELAN</b> annotations. The wizard explains what each tab shows.</p>
+          <p>Toggle <b>RQA</b>, <b>cross-wavelet</b>, <b>cross-RQA</b>, and <b>ELAN</b> annotations —
+            the wizard explains what each tab shows.</p>
+          <ul>
+            <li><b>RQA</b> — recurrence within a single signal; pick which data types to compute.</li>
+            <li><b>Cross-wavelet</b> &amp; <b>cross-RQA</b> — coupling between <b>two</b> signals.
+              Pick the exact <b>pairs</b> to compute: chips show every possible pair (all selected by
+              default), and you click to toggle — so you can run, say,
+              <code>bodysync&nbsp;×&nbsp;neuralsync</code> and <code>neuralsync&nbsp;×&nbsp;gaze</code>
+              but skip <code>bodysync&nbsp;×&nbsp;gaze</code>. A signal can appear in several pairs.</li>
+          </ul>
         </li>
         <li>
           <h4>Build &amp; precompute</h4>
           <p>Build writes <code>config.json</code> and copies your files into the exact
-            <code>assets/</code> layout. Precompute then runs the RQA / cross-wavelet scripts for
-            you in a project-local Python environment — progress streams live.</p>
+            <code>assets/</code> layout. Precompute then runs the RQA / cross-wavelet / cross-RQA
+            scripts for you in a project-local Python environment — progress streams live.</p>
         </li>
         <li>
           <h4>Preview &amp; deploy</h4>
@@ -162,7 +175,8 @@ cd my-dashboard</pre>
   <span class="k">"videoIDs"</span>: ["session1"],
   <span class="k">"dataTypes"</span>: { "session1": ["bodysync", "neuralsync"] },
   <span class="k">"include_RQA"</span>: ["bodysync", "neuralsync"],
-  <span class="k">"include_crosswavelet"</span>: ["bodysync", "neuralsync"],
+  <span class="k">"include_crosswavelet"</span>: [["bodysync", "neuralsync"]],
+  <span class="k">"include_cRQA"</span>: [["bodysync", "neuralsync"]],
   <span class="k">"include_elan"</span>: false,
   <span class="k">"defaultWindowSize"</span>: 5,
   <span class="k">"title"</span>: "My DIMS Dashboard",
@@ -170,18 +184,23 @@ cd my-dashboard</pre>
   <span class="k">"authors"</span>: "Your name(s)",
   <span class="k">"contacts"</span>: "you@example.org"
 }</pre>
-          <p>Cross-wavelet compares <b>pairs</b>, so it needs at least two data types. Every name in
-            <code>include_RQA</code> / <code>include_crosswavelet</code> must have a matching CSV.</p>
+          <p><code>include_RQA</code> is a list of data types. <b>Cross-wavelet</b> and
+            <b>cross-RQA</b> compare <b>pairs</b>: list each pair as <code>["typeA", "typeB"]</code>,
+            so you control exactly which pairs run. Every name you reference must have a matching CSV.
+            (<code>include_crosswavelet</code> also still accepts a flat list of data types, expanded
+            to all pairs, for backward compatibility.)</p>
         </li>
         <li>
           <h4>(Optional) Precompute the analyses</h4>
-          <p>RQA and cross-wavelet read your CSVs and write JSON the dashboard loads. Run them once
-            whenever those toggles are on:</p>
+          <p>RQA, cross-wavelet, and cross-RQA read your CSVs and write JSON the dashboard loads. Run
+            them once whenever those toggles are on:</p>
           <pre class="code">pip install -r opt/requirements.txt
 python opt/step_RQA.py          --config config.json --output-dir assets/rqa
-python opt/step_crosswavelet.py --config config.json --output-dir assets/crosswavelet</pre>
-          <p>This produces <code>assets/rqa/{videoID}_rqa_data.json</code> and
-            <code>assets/crosswavelet/{videoID}_crosswavelet_data.json</code>.</p>
+python opt/step_crosswavelet.py --config config.json --output-dir assets/crosswavelet
+python opt/step_cRQA.py         --config config.json --output-dir assets/crqa</pre>
+          <p>This produces <code>assets/rqa/{videoID}_rqa_data.json</code>,
+            <code>assets/crosswavelet/{videoID}_crosswavelet_data.json</code>, and
+            <code>assets/crqa/{videoID}_crqa_data.json</code>.</p>
         </li>
         <li>
           <h4>Preview locally</h4>
