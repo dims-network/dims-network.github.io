@@ -127,7 +127,8 @@ pre.code .k{color:#79c0ff}     /* keyword/path */
 .callout.warn{border-left-color:var(--amber)}
 
 .tree{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
-  font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);overflow:auto;margin:10px 0}
+  font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text);
+  white-space:pre;overflow:auto;margin:10px 0}
 .tree .p{color:var(--web2)}    /* path segment */
 .tree .v{color:var(--muted)}   /* annotation */
 

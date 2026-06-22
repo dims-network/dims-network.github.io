@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Integration workflow · DIMS docs</title>
+<meta name="description" content="The DIMS development and integration workflow: develop on the template, test on real data, bless once, propagate downstream." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Development</div>
+      <h1>Integration workflow</h1>
+      <p class="lede">There is <b>one source of truth for dashboard code</b> — the
+        template. Features are developed there, validated on real data, blessed
+        once, and then pulled into the downstreams.</p>
+
+      <table>
+        <thead><tr><th>Repo</th><th>Role</th><th>Gets template code via</th></tr></thead>
+        <tbody>
+          <tr><td><b>DIMS_dashboard_template</b></td><td>canonical code (frontend + <code>opt/</code> scripts)</td><td>— (the source)</td></tr>
+          <tr><td><b>DIMS_Dashboard</b></td><td>canonical data + deployed site + integration test bed</td><td><code>git merge template/main</code></td></tr>
+          <tr><td><b>DIMS_dashboard_builder</b></td><td>the no-code wizard</td><td><code>git subtree pull</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn"><b>Golden rule:</b> never edit dashboard <i>code</i>
+        directly in <code>DIMS_Dashboard</code> or the builder. All code changes
+        originate in the template; the downstreams only <i>receive</i>. That keeps
+        merges conflict-free — a downstream's <code>assets/</code> never exist
+        upstream, and <code>config.json</code> is auto-kept via
+        <code>.gitattributes merge=ours</code>.</div>
+
+      <h2>Lifecycle of a feature</h2>
+      <ol class="steps">
+        <li>
+          <h4>Develop on the template</h4>
+          <p>Branch <b>DIMS_dashboard_template</b> and open a PR there (frontend or
+            <code>opt/</code> scripts).</p>
+        </li>
+        <li>
+          <h4>Integration-test on real data</h4>
+          <p>In <b>DIMS_Dashboard</b>, try the feature branch against the canonical
+            data and preview locally:</p>
+          <pre class="code">git fetch template &lt;feature-branch&gt;
+git checkout -b test/&lt;feature&gt; &amp;&amp; git merge template/&lt;feature-branch&gt;
+python serve.py 8000        <span class="c"># open http://localhost:8000 and check it</span></pre>
+          <p>Throw the test branch away afterwards
+            (<code>git checkout main &amp;&amp; git branch -D test/&lt;feature&gt;</code>).</p>
+        </li>
+        <li>
+          <h4>Bless it</h4>
+          <p>Merge the PR into <b><code>template/main</code></b> — the single
+            approval point.</p>
+        </li>
+        <li>
+          <h4>Propagate downstream (mechanical, no re-review)</h4>
+          <p><b>DIMS_Dashboard:</b></p>
+          <pre class="code">scripts/update-from-template.sh   <span class="c"># git fetch + merge template/main</span>
+python serve.py 8000              <span class="c"># verify with real data</span>
+git push                          <span class="c"># Pages redeploys</span></pre>
+          <p><b>Builder:</b></p>
+          <pre class="code">scripts/update-template.sh        <span class="c"># git subtree pull --prefix=template ... --squash</span>
+git push</pre>
+        </li>
+      </ol>
+
+      <h2>One-time setup (per clone)</h2>
+      <p><b>DIMS_Dashboard</b> uses an <code>ours</code> merge driver so
+        <code>config.json</code> auto-resolves to its own version on every template
+        merge:</p>
+      <pre class="code">git config merge.ours.driver true</pre>
+      <p>The <code>template</code> remote is added automatically by
+        <code>scripts/update-from-template.sh</code> if missing.</p>
+
+      <div class="callout tip"><b>Why bless before propagating?</b> Merging the
+        feature independently into three repos invites drift. Bless once at
+        <code>template/main</code>; the downstreams only ever pull.</div>
+
+      <p>See also <a href="contributing.html">Contributing</a> for the subtree
+        mechanics, and <a href="architecture.html">Architecture</a> for the model.</p>
+
+      <div class="docs-nextprev">
+        <a href="analyses.html">← Analyses</a>
+        <a class="nxt" href="contributing.html">Contributing →</a>
+      </div>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

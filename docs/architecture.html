@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Architecture · DIMS docs</title>
+<meta name="description" content="The DIMS source-of-truth model: how dashboard code flows from the template to the builder and the canonical dashboard." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Getting started</div>
+      <h1>Architecture</h1>
+      <p class="lede">The DIMS system is several repositories with <b>one source of
+        truth for dashboard code</b>. Everything else either contributes code back
+        to that source or consumes it.</p>
+
+      <h2>The source-of-truth model</h2>
+      <p><b>DIMS_dashboard_template</b> holds the canonical dashboard code — the
+        frontend (<code>js/</code>, <code>css/</code>, <code>index.html</code>) and
+        the analysis scripts (<code>opt/step_*.py</code>). Two downstreams consume
+        it; each adds something different.</p>
+
+      <pre class="code">          DIMS_dashboard_template          <span class="c"># single source of truth — code only</span>
+            (frontend + opt/ scripts)
+                     │
+          ┌──────────┴───────────┐
+      <span class="k">git merge</span>               <span class="k">git subtree</span>
+          │                      │
+    DIMS_Dashboard         DIMS_dashboard_builder
+    code + real data,      template/ vendored inside;
+    deployed to Pages      no-code wizard wraps it</pre>
+
+      <table>
+        <thead><tr><th>Repo</th><th>What it adds</th><th>Pulls template code via</th></tr></thead>
+        <tbody>
+          <tr><td><b>DIMS_dashboard_template</b></td><td>— (it <i>is</i> the source)</td><td>—</td></tr>
+          <tr><td><b>DIMS_Dashboard</b></td><td>canonical data + the deployed GitHub Pages site</td><td><code>git merge template/main</code></td></tr>
+          <tr><td><b>DIMS_dashboard_builder</b></td><td>the no-code wizard</td><td><code>git subtree pull</code> (its <code>template/</code> subdir)</td></tr>
+        </tbody>
+      </table>
+
+      <p>Why two different mechanisms? In the builder the template lives in a
+        <code>template/</code> subdirectory, which is exactly what a git
+        <b>subtree</b> tracks. In <code>DIMS_Dashboard</code> the dashboard code
+        sits at the repo root, intermixed with data — there is no subdirectory to
+        target — so it consumes the template as a plain upstream <b>remote</b> it
+        merges from.</p>
+
+      <h2>The golden rule</h2>
+      <div class="callout warn"><b>Never edit dashboard <i>code</i> directly in
+        <code>DIMS_Dashboard</code> or the builder.</b> All code changes originate
+        in the template; the downstreams only ever <i>receive</i>. That is what
+        keeps merges conflict-free — a downstream's data files never exist
+        upstream, so they never collide.</div>
+
+      <h2>Code vs. data</h2>
+      <p>Each consumer cleanly separates <b>code</b> (received from the template)
+        from its own <b>data/configuration</b> (kept locally):</p>
+      <ul>
+        <li><b>DIMS_Dashboard</b> — keeps <code>assets/</code> and
+          <code>config.json</code>; a <code>.gitattributes</code> rule
+          (<code>config.json merge=ours</code>) auto-keeps its config on every
+          template merge.</li>
+        <li><b>builder</b> — its <code>acquire_template()</code> refreshes a
+          generated project's template <i>code</i> (<code>opt/</code>, frontend,
+          deploy workflow) on each build while preserving the user's
+          <code>config.json</code> and <code>assets/</code>.</li>
+      </ul>
+
+      <h2>Related repositories</h2>
+      <p>Beyond the dashboard family, the network includes Python/Dash viewers
+        (<code>bots-viewer</code>, <code>Ortho-viewer</code>) and study-specific
+        forks (e.g. <code>DIMS_Dashboard_Ortho</code>). See the
+        <a href="../index.html">repository overview</a> on the home page, and the
+        <a href="repositories.html">Repositories</a> reference.</p>
+
+      <div class="docs-nextprev">
+        <a href="index.html">← Overview</a>
+        <a class="nxt" href="repositories.html">Repositories →</a>
+      </div>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

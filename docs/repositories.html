@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Repositories · DIMS docs</title>
+<meta name="description" content="Reference for each DIMS repository: purpose, layout, and how it consumes the template." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1>Repositories</h1>
+      <p class="lede">What each repository is, how it is laid out, and how it
+        relates to the canonical template. See <a href="architecture.html">Architecture</a>
+        for the overall model.</p>
+
+      <h2>DIMS_dashboard_template</h2>
+      <p><b>The canonical dashboard code</b> — the single source of truth. All code
+        changes happen here.</p>
+      <div class="tree"><span class="p">js/</span>            <span class="v"># dashboard frontend (app.js, video-component.js)</span>
+<span class="p">css/</span>           <span class="v"># styles</span>
+<span class="p">opt/</span>           <span class="v"># analysis scripts: step_RQA.py, step_cRQA.py, step_crosswavelet.py</span>
+index.html     <span class="v"># dashboard entry point</span>
+serve.py       <span class="v"># local preview server (HTTP Range support for video seeking)</span>
+config.json    <span class="v"># empty/default config (no data)</span>
+<span class="p">assets/</span>        <span class="v"># empty skeleton: videos/ timeseries/ transcripts/ elan/</span>
+<span class="p">.github/</span>       <span class="v"># Pages deploy workflow (static.yml)</span></div>
+      <p>Repo: <a href="https://github.com/dims-network/DIMS_dashboard_template">github.com/dims-network/DIMS_dashboard_template</a></p>
+
+      <h2>DIMS_Dashboard</h2>
+      <p><b>The canonical, deployed dashboard</b> — the template code plus real
+        research data, published to GitHub Pages. It doubles as the
+        <b>integration test bed</b>: new template features are tried here against
+        real data before being blessed.</p>
+      <ul>
+        <li>Dashboard code lives at the repo <b>root</b> (mixed with data), so it
+          consumes the template as an upstream remote:
+          <code>git merge template/main</code>.</li>
+        <li>Its own data is <code>config.json</code> + <code>assets/</code>; a
+          <code>.gitattributes</code> rule keeps <code>config.json</code> on merge.</li>
+        <li>Update it with <code>scripts/update-from-template.sh</code>.</li>
+      </ul>
+      <p>Repo: <a href="https://github.com/dims-network/DIMS_Dashboard">github.com/dims-network/DIMS_Dashboard</a>
+        · Live: <a href="https://dims-network.github.io/DIMS_Dashboard/">dims-network.github.io/DIMS_Dashboard</a></p>
+
+      <h2>DIMS_dashboard_builder</h2>
+      <p><b>The no-code wizard.</b> A small Flask app that scaffolds a dashboard
+        project, places assets under the strict layout, writes
+        <code>config.json</code>, and runs the template's analysis scripts — so a
+        non-technical user needs neither git nor a network connection.</p>
+      <div class="tree"><span class="p">app/</span>           <span class="v"># Flask app: server.py, project.py, media.py, precompute.py, validate.py</span>
+<span class="p">app/static/</span>    <span class="v"># wizard UI (index.html, builder.js)</span>
+<span class="p">template/</span>      <span class="v"># vendored copy of DIMS_dashboard_template (a git subtree)</span>
+<span class="p">scripts/</span>       <span class="v"># update-template.sh (subtree pull)</span>
+builder.py     <span class="v"># launcher</span></div>
+      <ul>
+        <li>The <code>template/</code> directory is a <b>git subtree</b> of the
+          template repo — the files are committed (offline-safe) but their history
+          tracks upstream. Update with <code>scripts/update-template.sh</code>.</li>
+        <li><code>app/project.py</code> <code>acquire_template()</code> copies the
+          template into each generated project and <b>refreshes its code</b> on
+          rebuild while preserving the user's data.</li>
+      </ul>
+      <p>Repo: <a href="https://github.com/dims-network/DIMS_dashboard_builder">github.com/dims-network/DIMS_dashboard_builder</a></p>
+
+      <h2>Python / Dash viewers &amp; forks</h2>
+      <p>Outside the static-dashboard family:</p>
+      <ul>
+        <li><b>DIMS_Dashboard_Ortho</b> — a study-specific fork of the dashboard
+          (multi-perspective video + trajectory tab).</li>
+        <li><b>bots-viewer</b> — a Dash app for a two-player grid game (trajectory
+          playback + RQA/cRQA).</li>
+        <li><b>Ortho-viewer</b> — a Dash viewer embedding a DIMS sub-dashboard for
+          ORTHO game sessions.</li>
+      </ul>
+
+      <div class="docs-nextprev">
+        <a href="architecture.html">← Architecture</a>
+        <a class="nxt" href="data-model.html">Data &amp; config model →</a>
+      </div>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

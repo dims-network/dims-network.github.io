@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Documentation · DIMS-network</title>
+<meta name="description" content="Technical documentation for the DIMS system: architecture, repositories, data model, analyses, and the development workflow." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="eyebrow">Documentation</div>
+      <h1>DIMS documentation</h1>
+      <p class="lede">Technical reference for how the DIMS dashboard, its template,
+        the no-code builder, and the canonical data site fit together — and the
+        workflow for developing and integrating changes across them.</p>
+
+      <div class="callout tip">New here? The <a href="../tutorial.html">Tutorial</a>
+        shows how to build your own dashboard (no-code builder or hand-edited
+        template). These pages are the <b>technical / maintainer</b> reference.</div>
+
+      <h2>Sections</h2>
+      <div class="grid">
+        <div class="card web">
+          <h3><a href="architecture.html">Architecture</a></h3>
+          <p>The repositories and how code flows from a single source of truth to
+            the builder and the canonical dashboard.</p>
+          <div class="links"><a href="architecture.html">Read →</a></div>
+        </div>
+        <div class="card web">
+          <h3><a href="repositories.html">Repositories</a></h3>
+          <p>What each repo is, its layout, and how it consumes the template.</p>
+          <div class="links"><a href="repositories.html">Read →</a></div>
+        </div>
+        <div class="card web">
+          <h3><a href="data-model.html">Data &amp; config model</a></h3>
+          <p>The <code>config.json</code> schema and the strict <code>assets/</code>
+            naming convention the dashboard reads.</p>
+          <div class="links"><a href="data-model.html">Read →</a></div>
+        </div>
+        <div class="card web">
+          <h3><a href="analyses.html">Analyses</a></h3>
+          <p>RQA, cross-RQA, and cross-wavelet: inputs, the scripts that produce
+            them, and the JSON the dashboard renders.</p>
+          <div class="links"><a href="analyses.html">Read →</a></div>
+        </div>
+        <div class="card py">
+          <h3><a href="workflow.html">Integration workflow</a></h3>
+          <p>The feature lifecycle: develop on the template, test on real data,
+            bless once, propagate downstream.</p>
+          <div class="links"><a href="workflow.html">Read →</a></div>
+        </div>
+        <div class="card py">
+          <h3><a href="contributing.html">Contributing</a></h3>
+          <p>How the template is vendored into the builder via git subtree, and how
+            to add features.</p>
+          <div class="links"><a href="contributing.html">Read →</a></div>
+        </div>
+      </div>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>
