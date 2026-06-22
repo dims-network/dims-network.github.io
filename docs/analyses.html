@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Analyses · DIMS docs</title>
+<meta name="description" content="RQA, cross-RQA, and cross-wavelet in the DIMS dashboard: inputs, the scripts that produce them, and the JSON the dashboard renders." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1>Analyses</h1>
+      <p class="lede">Three optional analyses are precomputed from your time series
+        into JSON that the dashboard loads. Each is a standalone script under
+        <code>opt/</code>, reads <code>config.json</code>, and writes one file per
+        video (see <a href="data-model.html">Data &amp; config model</a>).</p>
+
+      <h2>Running them</h2>
+      <p>The builder runs these for you. By hand (from a project root):</p>
+      <pre class="code">pip install -r opt/requirements.txt
+python opt/step_RQA.py          --config config.json --output-dir assets/rqa
+python opt/step_crosswavelet.py --config config.json --output-dir assets/crosswavelet
+python opt/step_cRQA.py         --config config.json --output-dir assets/crqa</pre>
+      <table>
+        <thead><tr><th>Analysis</th><th>Script</th><th>Config key</th><th>Input</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td>RQA</td><td><code>step_RQA.py</code></td><td><code>include_RQA</code></td><td>data types (flat list)</td><td><code>assets/rqa/{id}_rqa_data.json</code></td></tr>
+          <tr><td>Cross-RQA</td><td><code>step_cRQA.py</code></td><td><code>include_cRQA</code></td><td>pairs <code>[a,b]</code></td><td><code>assets/crqa/{id}_crqa_data.json</code></td></tr>
+          <tr><td>Cross-wavelet</td><td><code>step_crosswavelet.py</code></td><td><code>include_crosswavelet</code></td><td>pairs <code>[a,b]</code></td><td><code>assets/crosswavelet/{id}_crosswavelet_data.json</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2>RQA — Recurrence Quantification Analysis</h2>
+      <p>Recurrence <b>within a single signal</b>: how often the signal revisits
+        similar states over time. Each series is z-normalized; a distance matrix is
+        thresholded to a target recurrence rate (~7%) to produce a recurrence plot,
+        downsampled to ≤500×500 for the browser. The dashboard renders the
+        recurrence plot with the signal as marginal traces, plus windowed metrics.</p>
+      <p><b>Windowed metrics</b> (a sliding window along the diagonal): recurrence
+        rate (RR), determinism (DET), laminarity (LAM), and longest diagonal line
+        (L_MAX).</p>
+
+      <h2>Cross-RQA</h2>
+      <p>Recurrence <b>between two signals</b> — when states of signal A recur in
+        signal B. The two series are interpolated onto a common time grid and
+        z-normalized; the cross-recurrence matrix is thresholded the same way. The
+        dashboard renders the cross-recurrence plot with <b>signal&nbsp;1 as the top
+        marginal and signal&nbsp;2 as the left marginal</b> (matching the RQA
+        layout), plus the same windowed RR/DET/LAM/L_MAX metrics.</p>
+      <div class="callout"><b>Output shape:</b> <code>crqa_data[pair].visualization</code>
+        carries <code>time</code>, <code>data_x</code>, <code>data_y</code>,
+        <code>matrix_size</code> and a sparse <code>sparse_matrix</code>;
+        <code>windowed_metrics</code> carries the RR/DET/LAM/L_MAX series.</div>
+
+      <h2>Cross-wavelet</h2>
+      <p>Time–frequency <b>coupling between two signals</b>, via the continuous
+        wavelet transform (Morlet) using <code>pycwt</code>. Produces cross-wavelet
+        <b>power</b>, <b>coherence</b>, and <b>phase</b> over time and period, with
+        AR1-based significance and a cone of influence (COI). Results are
+        downsampled for the browser.</p>
+      <div class="callout"><b>Output shape:</b>
+        <code>crosswavelet_pairs[pair].visualization</code> carries
+        <code>time</code>, <code>period</code>/<code>freqs</code>,
+        <code>power</code>, <code>coherence</code>, <code>phase</code>,
+        <code>coi</code>, and significance fields.</div>
+
+      <div class="callout tip"><b>Pairs vs. flat list:</b> RQA takes a flat list of
+        data types; cross-wavelet and cross-RQA take <b>pairs</b>. In the builder
+        you pick exactly which pairs to compute; by hand, list them as
+        <code>[["a","b"], ...]</code> in <code>config.json</code>.</div>
+
+      <div class="docs-nextprev">
+        <a href="data-model.html">← Data &amp; config model</a>
+        <a class="nxt" href="workflow.html">Integration workflow →</a>
+      </div>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

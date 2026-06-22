@@ -1,0 +1,67 @@
+/* DIMS docs — sidebar layout on top of the shared style.css */
+
+.docs-layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:36px;
+  align-items:start;
+  padding:26px 0 0;
+}
+
+/* left sidebar (rendered by docs.js) */
+.docs-side{
+  position:sticky;
+  top:72px;
+  align-self:start;
+  font-size:.92rem;
+  border-right:1px solid var(--line);
+  padding-right:10px;
+}
+.docs-side-title{
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--dim);font-weight:700;margin:0 0 14px;
+}
+.docs-group{margin:0 0 16px}
+.docs-group-h{
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--web2);font-weight:700;margin:0 0 6px;
+}
+.docs-side a{
+  display:block;color:var(--muted);padding:4px 10px;border-radius:6px;
+  font-weight:500;border-left:2px solid transparent;
+}
+.docs-side a:hover{color:var(--text);text-decoration:none;background:var(--panel2)}
+.docs-side a.active{
+  color:var(--web2);font-weight:700;border-left-color:var(--web);background:var(--panel2);
+}
+
+/* content column */
+.docs-main{min-width:0;max-width:46rem;padding-bottom:24px}
+.crumbs{font-size:.8rem;color:var(--dim);margin:6px 0 0}
+.docs-main h1{font-size:2rem;line-height:1.15;margin:6px 0 12px}
+.docs-main .lede{font-size:1.02rem;margin:0 0 8px}
+.docs-main h2{
+  font-size:1.15rem;text-transform:none;letter-spacing:0;color:var(--text);
+  font-weight:700;margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);
+}
+.docs-main h3{font-size:1rem;margin:22px 0 6px}
+.docs-main p,.docs-main li{color:var(--text)}
+.docs-main ul,.docs-main ol{padding-left:22px}
+.docs-main li{margin:4px 0}
+
+/* tables (numpy-ish reference look) */
+.docs-main table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem}
+.docs-main th,.docs-main td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+.docs-main th{background:var(--panel2);font-weight:700}
+.docs-main td code{white-space:nowrap}
+
+/* next/prev footer links */
+.docs-nextprev{display:flex;justify-content:space-between;gap:16px;margin:34px 0 0;
+  padding-top:16px;border-top:1px solid var(--line);font-weight:600;font-size:.9rem}
+.docs-nextprev .nxt{margin-left:auto;text-align:right}
+
+@media(max-width:820px){
+  .docs-layout{grid-template-columns:1fr;gap:0}
+  .docs-side{position:static;border-right:0;border-bottom:1px solid var(--line);
+    padding:0 0 14px;margin-bottom:18px}
+}

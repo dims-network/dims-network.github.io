@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Data &amp; config model · DIMS docs</title>
+<meta name="description" content="The DIMS config.json schema and the strict assets/ naming convention the dashboard reads." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1>Data &amp; config model</h1>
+      <p class="lede">A dashboard is driven by one <code>config.json</code> plus a
+        strict <code>assets/</code> file-naming convention. The builder writes both
+        for you; this page is the underlying contract.</p>
+
+      <h2>Asset layout</h2>
+      <p>Files are found <b>by name</b>. Everything from one recording shares a
+        single <b>session ID</b> (<code>{videoID}</code>); a time series also has a
+        <b>data type</b> (<code>{dataType}</code>).</p>
+      <div class="tree"><span class="p">assets/videos/</span>{videoID}.mp4
+<span class="p">assets/timeseries/</span>{videoID}_{dataType}.csv      <span class="v"># Time column (seconds) + one measurement column</span>
+<span class="p">assets/transcripts/</span>{videoID}_transcript.json   <span class="v"># { "segments": [ {start,end,speaker,text} ] }</span>
+<span class="p">assets/elan/</span>{videoID}.eaf                     <span class="v"># optional (ELAN)</span></div>
+      <p>Analysis outputs are written alongside, one file per video:</p>
+      <div class="tree"><span class="p">assets/rqa/</span>{videoID}_rqa_data.json
+<span class="p">assets/crqa/</span>{videoID}_crqa_data.json
+<span class="p">assets/crosswavelet/</span>{videoID}_crosswavelet_data.json</div>
+      <div class="callout warn"><b>Most common cause of a blank tab:</b> a
+        mismatched file name or a missing time column. The time column is matched
+        <b>case-insensitively</b> (<code>time</code>, <code>Time</code>,
+        <code>TIME</code> all work) and is in <b>seconds</b>; it is mapped onto the
+        video clock, so a session's video length and time-series length should
+        match.</div>
+
+      <h2>config.json schema</h2>
+      <p>The dashboard reads exactly these keys:</p>
+      <pre class="code">{
+  <span class="k">"videoIDs"</span>: ["session1"],                                <span class="c"># sessions in the dashboard</span>
+  <span class="k">"dataTypes"</span>: { "session1": ["bodysync", "neuralsync"] }, <span class="c"># data types per session</span>
+  <span class="k">"include_RQA"</span>: ["bodysync", "neuralsync"],              <span class="c"># flat list of data types</span>
+  <span class="k">"include_crosswavelet"</span>: [["bodysync", "neuralsync"]],   <span class="c"># list of PAIRS</span>
+  <span class="k">"include_cRQA"</span>: [["bodysync", "neuralsync"]],           <span class="c"># list of PAIRS</span>
+  <span class="k">"include_elan"</span>: false,
+  <span class="k">"defaultWindowSize"</span>: 5,                                 <span class="c"># seconds, time-window slider default</span>
+  <span class="k">"title"</span>: "My DIMS Dashboard",
+  <span class="k">"subtitle"</span>: "Dynamic Interaction and Multimodal Signals",
+  <span class="k">"authors"</span>: "Your name(s)",
+  <span class="k">"contacts"</span>: "you@example.org"
+}</pre>
+
+      <table>
+        <thead><tr><th>Key</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>videoIDs</code></td><td>string[]</td><td>session IDs; each needs assets named after it.</td></tr>
+          <tr><td><code>dataTypes</code></td><td>object</td><td>videoID → list of its data types.</td></tr>
+          <tr><td><code>include_RQA</code></td><td>string[]</td><td>data types to run recurrence analysis on.</td></tr>
+          <tr><td><code>include_crosswavelet</code></td><td>pair[]</td><td>each pair <code>["a","b"]</code>; a flat list is also accepted and expanded to all pairs.</td></tr>
+          <tr><td><code>include_cRQA</code></td><td>pair[]</td><td>each pair <code>["a","b"]</code>.</td></tr>
+          <tr><td><code>include_elan</code></td><td>bool</td><td>show the ELAN annotation tab.</td></tr>
+          <tr><td><code>defaultWindowSize</code></td><td>number</td><td>default analysis window, in seconds.</td></tr>
+          <tr><td><code>title</code> / <code>subtitle</code></td><td>string</td><td>page heading.</td></tr>
+          <tr><td><code>authors</code> / <code>contacts</code></td><td>string</td><td>credit / contact line.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><b>Source of truth:</b> the contract is defined by the
+        <b>dashboard</b> (the template) — <code>config.json</code> is read by the
+        frontend (<code>js/app.js</code>), and the template ships a
+        <code>config.json</code> listing every key. The builder's
+        <code>app/project.py</code> (<code>CONFIG_KEYS</code> / <code>ASSET_LAYOUT</code>)
+        only mirrors it.</div>
+
+      <p>For what each analysis computes from these inputs, see
+        <a href="analyses.html">Analyses</a>.</p>
+
+      <div class="docs-nextprev">
+        <a href="repositories.html">← Repositories</a>
+        <a class="nxt" href="analyses.html">Analyses →</a>
+      </div>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

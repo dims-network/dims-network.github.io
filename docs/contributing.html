@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contributing · DIMS docs</title>
+<meta name="description" content="How the DIMS template is vendored into the builder via git subtree, and how to add features." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Development</div>
+      <h1>Contributing</h1>
+      <p class="lede">All dashboard code changes start in the template; the builder
+        and the canonical dashboard receive them. This page covers the mechanics —
+        see <a href="workflow.html">Integration workflow</a> for the full lifecycle.</p>
+
+      <h2>Where code lives</h2>
+      <ul>
+        <li><b>DIMS_dashboard_template</b> — the dashboard itself: frontend
+          (<code>js/</code>, <code>css/</code>, <code>index.html</code>), analysis
+          scripts (<code>opt/step_*.py</code>), and <code>serve.py</code>. <b>Make
+          code changes here.</b></li>
+        <li><b>DIMS_dashboard_builder</b> — the no-code wizard. Changes to the
+          wizard itself (the Flask app in <code>app/</code>, the UI in
+          <code>app/static/</code>) are made directly in that repo.</li>
+        <li><b>DIMS_Dashboard</b> — canonical data + the deployed site; receives
+          template code, never authors it.</li>
+      </ul>
+
+      <h2>How the template lives inside the builder</h2>
+      <p>The builder ships a complete copy of the template under
+        <code>template/</code> so a non-technical user needs <b>neither git nor a
+        network connection</b> (<code>acquire_template()</code> in
+        <code>app/project.py</code> copies it into each generated project, and the
+        builder runs the project's own <code>opt/</code> scripts).</p>
+      <p>That directory is a <b>git subtree</b> of the upstream template repo — the
+        files are committed in the builder (offline-safe), but their history is
+        linked upstream so updates pull in with one command.</p>
+
+      <h2>Adding a feature to the dashboard</h2>
+      <ol class="steps">
+        <li>
+          <h4>Open a PR against the template</h4>
+          <p>Branch <b>DIMS_dashboard_template</b> (frontend or <code>opt/</code>
+            scripts) and open a pull request.</p>
+        </li>
+        <li>
+          <h4>Test it on real data</h4>
+          <p>Try the branch on <b>DIMS_Dashboard</b> and preview with
+            <code>serve.py</code> — see <a href="workflow.html">Integration
+            workflow</a>.</p>
+        </li>
+        <li>
+          <h4>Merge to <code>template/main</code></h4>
+          <p>This is the single bless point.</p>
+        </li>
+        <li>
+          <h4>Integrate into the builder</h4>
+          <pre class="code">cd DIMS_dashboard_builder
+scripts/update-template.sh
+<span class="c"># equivalently:</span>
+<span class="c"># git subtree pull --prefix=template \</span>
+<span class="c">#     https://github.com/dims-network/DIMS_dashboard_template.git main --squash</span></pre>
+          <p>Review the squashed merge, do a quick build to sanity-check, then
+            <code>git push</code> the builder.</p>
+        </li>
+      </ol>
+
+      <div class="callout tip">Existing generated projects pick up new scripts
+        automatically: on the next build, <code>acquire_template()</code> refreshes
+        a project's template <i>code</i> (<code>opt/</code>, frontend, deploy
+        workflow) from the bundled copy while preserving the user's
+        <code>config.json</code> and <code>assets/</code>.</div>
+
+      <div class="docs-nextprev">
+        <a href="workflow.html">← Integration workflow</a>
+        <a class="nxt" href="index.html">Overview →</a>
+      </div>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

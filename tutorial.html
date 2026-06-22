@@ -15,6 +15,7 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="tutorial.html" class="active">Tutorial</a>
+      <a href="docs/index.html">Docs</a>
       <a href="https://github.com/dims-network">GitHub ↗</a>
     </div>
   </div>
@@ -30,8 +31,9 @@
         <li><b>Group files by session.</b> Everything from one recording shares a single
           <b>session&nbsp;ID</b> — the video, its time series, and its transcript.</li>
         <li><b>Video</b> — an <code>.mp4</code>.</li>
-        <li><b>Time series</b> — a <code>.csv</code> with a <code>Time</code> column (in <b>seconds</b>,
-          case-sensitive) plus one or more measurement columns. The <b>builder auto-splits</b> a
+        <li><b>Time series</b> — a <code>.csv</code> with a time column (named
+          <code>Time</code>, <code>time</code>, any casing) in <b>seconds</b>, plus one or more
+          measurement columns. The <b>builder auto-splits</b> a
           multi-column CSV into one data type per column; if you hand-edit the template, use
           <b>one</b> measurement column per file.</li>
         <li><b>Transcript</b> (optional) — JSON shaped as
