@@ -6,7 +6,6 @@ const DOCS_NAV = [
     { title: "Architecture",        href: "architecture.html" },
   ]},
   { group: "Reference", items: [
-    { title: "Repositories",        href: "repositories.html" },
     { title: "Data & config model", href: "data-model.html" },
     { title: "Analyses",            href: "analyses.html" },
   ]},
