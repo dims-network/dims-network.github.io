@@ -150,19 +150,25 @@ python builder.py</pre>
       <p class="sub">Full control: copy the empty dashboard scaffold, drop files into <code>assets/</code>
         with the right names, edit <code>config.json</code>, and (optionally) run the analyses.</p>
 
-      <div class="callout"><b>You'll need:</b> <b>git</b> and <b>Python 3.9+</b>
-        (<a href="https://www.python.org/downloads/">python.org/downloads</a>) — the latter for the
-        optional precompute and the local preview server.</div>
+      <div class="callout"><b>You'll need:</b> <b>git</b> and <b>Python 3.10–3.12</b>
+        (<a href="https://www.python.org/downloads/">python.org/downloads</a>). 3.13 works for
+        everything except motion capture, for which <code>mediapipe</code> ships no wheel yet.</div>
 
       <ol class="steps">
         <li>
           <h4>Start from the scaffold</h4>
-          <p>All DIMS code lives in one repository. The empty dashboard — the page, the
-            styles, the tab modules, an <code>assets/</code> skeleton — is the
-            <b>case scaffold</b> inside it. Copy it and you have a study of your own.</p>
+          <p>All DIMS code lives in one repository. Install it, then let it write
+            you a study: <code>dims-case new</code> copies the scaffold <b>and</b> the
+            pinned dashboard code into <code>vendor/</code>, which is what makes the
+            page load at all.</p>
           <pre class="code">git clone https://github.com/dims-network/dims
-cp -r dims/packages/dims-case-scaffold my-dashboard
-cd my-dashboard</pre>
+pip install -e ./dims
+dims-case new my-dashboard --visibility public   <span class="c"># -> ./case-my-dashboard</span>
+cd case-my-dashboard</pre>
+          <div class="callout warn"><b>Do not copy the scaffold directory by hand.</b>
+            It contains no <code>vendor/</code>, so eight script tags 404 and you get a
+            blank page with no error worth reading. <code>dims-case new</code> is the
+            command that produces something that runs.</div>
           <div class="callout"><b>Working with recordings of people?</b> Decide up
             front whether the data can be published, and keep private data out of
             git from the very first commit — removing it afterwards means rewriting
@@ -210,8 +216,12 @@ cd my-dashboard</pre>
           <h4>(Optional) Precompute the analyses</h4>
           <p>RQA, cross-wavelet, and cross-RQA read your CSVs and write JSON the dashboard loads. Run
             them once whenever those toggles are on:</p>
-          <pre class="code">pip install -e ../dims/packages/dims-analysis   <span class="c"># not yet on PyPI</span>
-dims-analysis run --config config.json</pre>
+          <pre class="code"><span class="c"># already installed above; the analyses come with it</span>
+python build_assets.py --check   <span class="c"># what would run, and what is missing</span>
+python build_assets.py</pre>
+          <p><code>--check</code> computes nothing. It reports which recordings it can
+            see, which analyses are switched on, and which time series it could not
+            find — the quickest way to discover that a file is misnamed.</p>
           <p>This produces <code>assets/rqa/{videoID}_rqa_data.json</code>,
             <code>assets/crosswavelet/{videoID}_crosswavelet_data.json</code>, and
             <code>assets/crqa/{videoID}_crqa_data.json</code>. Each analysis runs

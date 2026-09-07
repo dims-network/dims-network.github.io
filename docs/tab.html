@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Writing a tab · DIMS docs</title>
+<meta name="description" content="The contract a tab implements, and the acceptance checks for it." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Extending DIMS</div>
+      <h1>Contract: a dashboard tab</h1>
+      <p>A tab is one JavaScript file. It registers itself. The host never lists tabs,
+      and adding one must not require editing any other file.</p>
+      <p>Tabs live in one of two places:</p>
+      <ul>
+      <li><strong><code>packages/dims-tabs/</code></strong> — tabs that make sense for more than one study, and
+      ship with the core.</li>
+      <li><strong><code>tabs/</code> inside a case repo</strong> — tabs that belong to <em>that study</em>. ORTHO's
+      trajectory view is the example: it draws a background image of the physical
+      play space and this study's own path geometry, which mean nothing anywhere
+      else. <code>dims-case</code> lists them in <code>index.html</code> and preserves that list when the
+      core is refreshed.</li>
+      </ul>
+      <p>The contract is identical either way, which is the point: a study can add a
+      view without touching, or waiting for, the core.</p>
+      <p>Built-in tabs use this same API — timeseries, RQA, cross-RQA, cross-wavelet and
+      ELAN are not special. That is deliberate: if this contract breaks, ELAN breaks
+      in the same commit, so it cannot rot unnoticed.</p>
+      <h2>The shape</h2>
+      <pre><code class="language-js">(function () {
+        'use strict';
+
+        window.DIMS.registerTab({
+          id:    'network',                  // also names the pane: #networkContainer
+          label: 'Cross-Effector Network',   // the button text
+          order: 50,                         // sort order; built-ins use 10..50
+
+          // Shown only when this returns true. Read config, nothing else.
+          gate(config) {
+            return Array.isArray(config.include_crosswavelet)
+                &amp;&amp; config.include_crosswavelet.length &gt;= 1;
+          },
+
+          // First time the tab is shown. May be async. `container` is your pane;
+          // you own everything inside it and nothing outside it.
+          async onActivate(app, container) { … },
+
+          // Shown again, already activated. Cheap redraw.
+          onUpdate(app) { … },
+
+          // The playhead moved. Called for whichever tab is visible.
+          onTimeUpdate(app, time, windowSize) { … },
+
+          // A different video was selected. Drop cached data here.
+          onVideoChange(app, videoID) { … },
+
+          // Another tab was selected. Release anything expensive.
+          onDeactivate(app) { … }
+        });
+      })();
+      </code></pre>
+      <p>Only <code>id</code>, <code>label</code> and <code>onActivate</code> are required.</p>
+      <h2>What you may use from <code>app</code></h2>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>app.config</code></td>
+        <td>the parsed <code>config.json</code></td>
+      </tr>
+      <tr>
+        <td><code>app.currentVideoID</code></td>
+        <td>selected video</td>
+      </tr>
+      <tr>
+        <td><code>app.lastClickedPoint</code></td>
+        <td>current playhead time, seconds</td>
+      </tr>
+      <tr>
+        <td><code>app.loadJSON(url)</code> / <code>app.loadCSV(url)</code></td>
+        <td>fetch helpers; use these, not <code>fetch</code></td>
+      </tr>
+      <tr>
+        <td><code>app.onTimeChange(fn)</code></td>
+        <td>follow the playhead even when your tab is not visible; returns an unsubscribe function</td>
+      </tr>
+      <tr>
+        <td><code>window.DIMS.extendHost({...})</code></td>
+        <td>attach rendering methods to the host, as the built-in tabs do</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>Treat anything else on <code>app</code> as private. If you need something that is not here,
+      that is a request to extend this contract — say so in an issue rather than
+      reaching into internals.</p>
+      <h2>Rules</h2>
+      <ol>
+      <li><strong>Load after <code>dims-core.js</code>, before <code>DOMContentLoaded</code>.</strong> The host defines
+      the registry; your file registers into it. Registering after the app has
+      been constructed is too late and is ignored.</li>
+      <li><strong>A duplicate <code>id</code> is refused</strong>, so you cannot shadow a built-in tab by
+      registering over it. Pick a distinct one.</li>
+      <li><strong>Style only with CSS custom properties</strong> — <code>var(--text)</code>, <code>var(--muted)</code>,
+      <code>var(--panel)</code>, <code>var(--accent)</code>. Never read the host's JS theme object: it is
+      a module-level variable initialised after your file runs, so it is not there
+      when you need it. Tabs that follow this rule survive theme switches with no
+      host support at all.</li>
+      <li><strong>Stay inside your container.</strong> Do not touch other panes, and do not add
+      controls to the header directly — declare them and let the host place them.</li>
+      <li><strong>Load data lazily,</strong> in <code>onActivate</code>, not at registration.</li>
+      <li><strong>Fail visibly, not fatally.</strong> A gate that throws hides only your tab;
+      the others carry on. If your data is missing, render a short
+      explanation into your container. Never throw out of a hook.</li>
+      </ol>
+      <h2>Acceptance</h2>
+      <ul>
+      <li>Your tab appears when <code>gate()</code> passes and is absent when it does not.</li>
+      <li>Deleting your file removes the tab and breaks nothing else.</li>
+      <li>Switching theme leaves it readable, with no code of yours running.</li>
+      <li>Moving the playhead updates it while it is the visible tab.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

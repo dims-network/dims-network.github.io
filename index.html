@@ -32,13 +32,12 @@
   <section id="repo-network">
     <h2>Repository network</h2>
     <div class="diagram">
-      <canvas id="net" width="960" height="430" role="img"
-        aria-label="Diagram of DIMS-network repositories and their fork and template relationships"></canvas>
+      <canvas id="net" width="1100" height="330" role="img"
+        aria-label="Diagram of the DIMS repositories: the core, and the studies and tools that pin a released version of it"></canvas>
       <div class="legend">
         <span><i class="dot" style="background:var(--web)"></i> Static dashboards (JS · GitHub Pages)</span>
         <span><i class="dot" style="background:var(--py)"></i> Python / Dash viewers</span>
-        <span><i class="ln"></i> fork</span>
-        <span><i class="ln dash"></i> template</span>
+        <span><i class="ln"></i> pins a released core version</span>
       </div>
       <p class="hint">click any node to open its repository</p>
     </div>
@@ -87,16 +86,35 @@ const repos = [
    url:"https://github.com/mikub97/DIMS_ORTHO_VIEWER"},
 ];
 const edges = [
-  {from:"dims", to:"builder", kind:"pin"},
-  {from:"dims", to:"root",    kind:"pin"},
-  {from:"dims", to:"ortho",   kind:"pin"},
-  {from:"dims", to:"karnatak",kind:"pin"},
+  {from:"dims", to:"builder",  label:"pins"},
+  {from:"dims", to:"root",     label:"pins"},
+  {from:"dims", to:"ortho",    label:"pins"},
+  {from:"dims", to:"karnatak", label:"pins"},
 ];
-// logical layout (matches canvas width/height attributes)
+// Logical layout, in the canvas's own coordinates (see its width/height).
+//
+// Every id in `repos` needs an entry. It did not have one for three of them --
+// the keys here were still `template` and `bots`, from the fork era -- so
+// `pos["dims"]` was undefined, `nodeRect` threw on the first node drawn, and
+// the exception took down the rest of this script. The repository cards below
+// are rendered by the same script, so the front page showed neither the
+// diagram nor the cards. `assertLayout` is why that cannot happen quietly
+// again.
 const pos = {
-  root:{x:210,y:96}, template:{x:96,y:300}, ortho:{x:340,y:300},
-  bots:{x:760,y:96}, orthoview:{x:760,y:300},
+  dims:{x:330,y:76},
+  builder:{x:110,y:236}, root:{x:330,y:236},
+  ortho:{x:550,y:236},   karnatak:{x:770,y:236},
+  orthoview:{x:990,y:236},
 };
+
+function assertLayout(){
+  const missing = repos.filter(r => !pos[r.id]).map(r => r.id);
+  if(missing.length){
+    console.error("no diagram position for: " + missing.join(", "));
+    return false;
+  }
+  return true;
+}
 const NW=196, NH=66;
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const COL = {web:css("--web"), web2:css("--web2"), py:css("--py"), py2:css("--py2"),
@@ -186,12 +204,17 @@ function clusterLabel(text,x){
 
 function draw(){
   ctx.clearRect(0,0,W,H);
-  clusterLabel("STATIC DASHBOARDS · GITHUB PAGES", 218);
-  clusterLabel("PYTHON / DASH VIEWERS", 760);
+  clusterLabel("ONE CORE, PINNED BY EVERY STUDY", 440);
+  clusterLabel("ELSEWHERE", 990);
   edges.forEach(drawEdge);
   repos.forEach(drawNode);
 }
-draw();
+
+const layoutOK = assertLayout();
+if(layoutOK) draw();
+else canvas.replaceWith(Object.assign(document.createElement("p"),
+  {className:"diagram-error",
+   textContent:"The repository diagram could not be drawn. The cards below list the same repositories."}));
 
 function hit(e){
   const rect=canvas.getBoundingClientRect();
@@ -201,13 +224,16 @@ function hit(e){
     if(mx>=n.x&&mx<=n.x+n.w&&my>=n.y&&my<=n.y+n.h) return r;}
   return null;
 }
+if(layoutOK){
 canvas.addEventListener("mousemove",e=>{const r=hit(e);const id=r?r.id:null;
   if(id!==hover){hover=id;canvas.style.cursor=id?"pointer":"default";draw();}});
 canvas.addEventListener("mouseleave",()=>{if(hover){hover=null;draw();}});
 canvas.addEventListener("click",e=>{const r=hit(e);if(r)window.open(r.url,"_blank","noopener");});
+}
 
 // repo cards
 const kindBadge={core:["core","root"],tool:["tool","tmpl"],case:["case study","base"],app:["app","fork"]};
+// Rendered whatever the diagram did: these cards are the page, the picture is a picture.
 document.getElementById("cards").innerHTML = repos.map(r=>{
   const [label,cls]=kindBadge[r.kind] || [r.kind,"base"];
   const famBadge = r.fam==="web" ? "static · js" : "python · dash";

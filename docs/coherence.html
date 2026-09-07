@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wavelet coherence · DIMS docs</title>
+<meta name="description" content="What the chance level is, what it assumes, and how to read a coherence value." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1>Wavelet coherence, and reading it honestly</h1>
+      <p>Coherence asks whether two signals <em>keep a consistent timing relationship</em>,
+      timescale by timescale, moment by moment. It is not correlation and it is not
+      shared energy: two signals can both be large and score nothing, and two quiet
+      signals can score highly.</p>
+      <p>This page is the method and its traps. What each stored field means is in
+      <a href="assets.html">asset layout</a>; what the tab draws is in the study that
+      uses it.</p>
+      <h2>The one thing to know first</h2>
+      <p><strong>Coherence does not sit at zero when there is no relationship.</strong> Two unrelated
+      red-noise signals typically score around 0.25–0.6 depending on the timescale.
+      So a value of 0.5 means nothing on its own, and a picture of raw coherence with
+      no baseline drawn on it is unreadable — it will look like coupling everywhere,
+      because it is coherent everywhere.</p>
+      <p>Every value has to be read against a null. That is what <code>sig95_wtc</code> is for.</p>
+      <h2>The null, and how it is obtained</h2>
+      <p>For wavelet <strong>power</strong> there is an analytic significance level (Torrence &amp; Compo
+      1998), stored as <code>sig95_xwt</code>. For <strong>coherence</strong> no closed form is available, so
+      the level is estimated by simulation, following Grinsted, Moore &amp; Jevrejeva
+      (2004):</p>
+      <ol>
+      <li>Estimate the lag-1 autocorrelation of each prepared signal. Human movement
+      is very red — values around 0.96–0.98, close to a random walk, are normal.</li>
+      <li>Generate many pairs of <strong>independent</strong> red-noise series with those
+      autocorrelations.</li>
+      <li>Compute the coherence of each pair, and take the 95th percentile at each
+      timescale.</li>
+      </ol>
+      <p>That percentile is <code>sig95_wtc</code>. It answers one question: <em>how coherent would
+      two unrelated signals with this much redness look, here?</em> The generator is
+      seeded and the result is cached, so a rerun reproduces the same level.</p>
+      <p>The level is not flat. It sits around 0.58–0.60 through the middle of a band
+      and rises at both ends — above 0.7 at the extremes — where fewer independent
+      cycles fit inside the record.</p>
+      <h3><code>sig95_wtc</code> and <code>sig95_xwt</code> are not interchangeable</h3>
+      <p>This is the trap that has caught this project once already, and it does not
+      announce itself: both are arrays of the right shape, so using the wrong one
+      produces a plausible picture rather than an error.</p>
+      <table>
+      <thead>
+      <tr>
+        <th>field</th>
+        <th>tests</th>
+        <th>answers</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>sig95_xwt</code></td>
+        <td>cross-wavelet <strong>power</strong> against red noise</td>
+        <td>&quot;is there unusually much joint energy here?&quot;</td>
+      </tr>
+      <tr>
+        <td><code>sig95_wtc</code></td>
+        <td><strong>coherence</strong> against unrelated red noise</td>
+        <td>&quot;is the timing relationship stronger than chance?&quot;</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>sig95_xwt</code> is not a test of coupling. Two people moving vigorously at the same
+      time have joint energy whether or not their movements are related.</p>
+      <h3>What the method assumes</h3>
+      <p>Five assumptions, each of which is a judgement rather than a measurement:</p>
+      <ol>
+      <li><strong>The surrogate count.</strong> 300 pairs is the default and the number to publish
+      with. Estimating a 95th percentile from 100 samples is noisy: with an
+      unseeded generator, repeated runs on identical data disagreed by up to 0.04
+      on the level. Seeding makes it reproducible, which is not the same as
+      accurate.</li>
+      <li><strong>AR(1) is a model.</strong> Whether a first-order autoregressive process describes
+      the signal at hand is a choice, not a fact about the data.</li>
+      <li><strong>The null is stationary; a recording is not.</strong> One level per timescale is
+      applied across a record that may contain both rest and vigorous movement.</li>
+      <li><strong>Every cell is tested at 95%, so 5% exceed by construction.</strong> Treat a
+      single bright cell as noise. What means something is the <em>fraction</em> of
+      usable cells above the level, read against a 0.05 baseline.</li>
+      <li><strong>The surrogates are independent; two measurements of the same scene may not
+      be.</strong> When both signals come from one video, their jitter has shared
+      sources — camera motion, lighting, the tracker's own instability. Shared
+      measurement noise produces genuine coherence, and AR(1) surrogates cannot
+      tell that the correlation came from the camera rather than from the people.
+      If that is a live concern, the answer is a stronger null: surrogates that
+      preserve each signal's amplitude envelope and randomise only the timing.
+      That has not been built.</li>
+      </ol>
+      <h2>The cone of influence is a different thing</h2>
+      <p>The cone of influence marks where a wavelet coefficient is contaminated by the
+      edges of the record — the transform has run off the end of the data. It is
+      about <strong>which cells exist</strong>, and applies to power and coherence alike.</p>
+      <p>Significance is about <strong>which existing cells mean something</strong>. Cells inside the
+      cone are excluded from statistics entirely; they are not &quot;insignificant&quot;, they
+      are unavailable. Conflating the two is easy because both end up drawn as
+      hatching or transparency.</p>
+      <h2>Three defects worth checking older output for</h2>
+      <p>All three were found in this project's own analyses, all are fixed, and any of
+      them can be present in output produced elsewhere by similar code.</p>
+      <p><strong>Discarding phase before it can cancel.</strong> Coherence works by letting
+      mismatched timing cancel out during smoothing. Smoothing the <em>magnitude</em> of the
+      cross-spectrum instead of the complex value removes the timing before it can
+      cancel, so nothing ever cancels. The symptom is unmistakable once looked for:
+      a large share of cells sitting at exactly 1.0 — in the case that prompted this,
+      56.7% of them — and coherence correlating with signal power at +0.87. Corrected,
+      the same recording had no cells at 1.0 and a power correlation of −0.02.</p>
+      <p><strong>Reporting silence as perfect coupling.</strong> Where neither signal moves, the
+      calculation divides almost-nothing by almost-nothing, and the result is
+      numerically capped at the maximum. Stillness is then drawn as perfect synchrony.
+      Cells with no meaningful energy in either signal must be left blank, not capped.</p>
+      <p><strong>No baseline at all.</strong> Without <code>sig95_wtc</code> there is nothing to read a value
+      against, and every edge looks strong — see the first section of this page.</p>
+      <p>A quick check on any existing output: the share of cells at exactly 1.0, and
+      the correlation between coherence and log power. Both should be near zero.</p>
+      <h2>Reading a result</h2>
+      <ul>
+      <li>Compare the fraction of above-chance cells with <strong>0.05</strong>, not with zero.</li>
+      <li><strong>&quot;Not detectable&quot; is not &quot;absent&quot;.</strong> A null result is a statement about one
+      recording, over one band of timescales, against one kind of null.</li>
+      <li>Analyse the <code>.npz</code>, not the JSON. The JSON is reduced in time and rounded to
+      six significant figures; it is a picture, not the analysis.</li>
+      <li>A within-person pair scoring far above chance while between-person pairs sit
+      at chance is the expected shape of a healthy analysis, not a disappointment.
+      One body is one motor system, and it is the strongest coupling most recordings
+      contain.</li>
+      </ul>
+      <h2>References</h2>
+      <ul>
+      <li>Torrence, C., &amp; Compo, G. P. (1998). A practical guide to wavelet analysis.
+      <em>Bulletin of the American Meteorological Society</em>, 79(1), 61–78.</li>
+      <li>Torrence, C., &amp; Webster, P. J. (1999). Interdecadal changes in the ENSO
+      monsoon system. <em>Journal of Climate</em>, 12(8), 2679–2690.</li>
+      <li>Grinsted, A., Moore, J. C., &amp; Jevrejeva, S. (2004). Application of the cross
+      wavelet transform and wavelet coherence to geophysical time series.
+      <em>Nonlinear Processes in Geophysics</em>, 11, 561–566.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/coherence.md"><code>docs/coherence.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

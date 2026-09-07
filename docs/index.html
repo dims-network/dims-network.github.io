@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Documentation · DIMS-network</title>
-<meta name="description" content="Technical documentation for the DIMS system: architecture, data model, analyses, and the development workflow." />
+<title>Documentation · DIMS docs</title>
+<meta name="description" content="Technical reference for DIMS: architecture, asset layout, the analysis and tab contracts." />
 <link rel="stylesheet" href="../style.css" />
 <link rel="stylesheet" href="docs.css" />
 </head>
@@ -27,52 +27,66 @@
     <aside class="docs-side"></aside>
     <main class="docs-main">
 
+      <div class="crumbs">Documentation</div>
       <div class="eyebrow">Documentation</div>
       <h1>DIMS documentation</h1>
-      <p class="lede">Technical reference for the DIMS core, its self-registering
-        tabs, the Python analyses and the no-code builder — and the workflow for
-        changing any of them.</p>
+      <p class="lede">Technical reference for the DIMS core, its
+        self-registering tabs, the Python analyses and the study
+        repositories that pin them.</p>
 
-      <div class="callout tip">New here? The <a href="../tutorial.html">Tutorial</a>
-        shows how to build your own dashboard — with the no-code builder, or by
-        hand from the scaffold. These pages are the <b>technical</b> reference.
-        To work on DIMS itself, start from
-        <a href="https://github.com/dims-network/dims#working-on-dims">the README</a>
-        in the core repository.</div>
+      <div class="callout tip">Every page here is generated from the
+        markdown in <a href="https://github.com/dims-network/dims">dims-network/dims</a> at
+        <code>v1.4.1</code>, so it describes the code as
+        released rather than as remembered. New to DIMS? Start with
+        <a href="getting-started.html">Getting started</a>.</div>
 
       <h2>Sections</h2>
       <div class="grid">
         <div class="card web">
+          <h3><a href="getting-started.html">Getting started</a></h3>
+          <p>From raw data to a running dashboard, with the commands that work.</p>
+          <div class="links"><a href="getting-started.html">Read →</a></div>
+        </div>
+        <div class="card web">
           <h3><a href="architecture.html">Architecture</a></h3>
-          <p>One core repository, self-registering tabs, and one small repo per
-            study pinning a released version of the core.</p>
+          <p>One core repository, self-registering tabs, and one small repo per study pinning a released version.</p>
           <div class="links"><a href="architecture.html">Read →</a></div>
         </div>
         <div class="card web">
-          <h3><a href="data-model.html">Data &amp; config model</a></h3>
-          <p>The <code>config.json</code> schema and the strict <code>assets/</code>
-            naming convention the dashboard reads.</p>
-          <div class="links"><a href="data-model.html">Read →</a></div>
+          <h3><a href="assets.html">Asset layout</a></h3>
+          <p>Where every file goes, what an analysis writes, and how a payload is reduced.</p>
+          <div class="links"><a href="assets.html">Read →</a></div>
         </div>
         <div class="card web">
-          <h3><a href="analyses.html">Analyses</a></h3>
-          <p>RQA, cross-RQA and cross-wavelet: inputs, outputs, and how to read a
-            coherence value against its null.</p>
-          <div class="links"><a href="analyses.html">Read →</a></div>
+          <h3><a href="coherence.html">Wavelet coherence</a></h3>
+          <p>What the chance level is, what it assumes, and how to read a coherence value.</p>
+          <div class="links"><a href="coherence.html">Read →</a></div>
         </div>
-        <div class="card py">
-          <h3><a href="workflow.html">Integration workflow</a></h3>
-          <p>The feature lifecycle: develop on the template, test on real data,
-            bless once, propagate downstream.</p>
-          <div class="links"><a href="workflow.html">Read →</a></div>
+        <div class="card web">
+          <h3><a href="data-visibility.html">Public and private data</a></h3>
+          <p>How a study declares its visibility, and the guards that enforce it.</p>
+          <div class="links"><a href="data-visibility.html">Read →</a></div>
         </div>
-        <div class="card py">
-          <h3><a href="contributing.html">Contributing</a></h3>
-          <p>How the template is vendored into the builder via git subtree, and how
-            to add features.</p>
-          <div class="links"><a href="contributing.html">Read →</a></div>
+        <div class="card web">
+          <h3><a href="tab.html">Writing a tab</a></h3>
+          <p>The contract a tab implements, and the acceptance checks for it.</p>
+          <div class="links"><a href="tab.html">Read →</a></div>
+        </div>
+        <div class="card web">
+          <h3><a href="step.html">Writing an analysis</a></h3>
+          <p>A study-owned script or a registered step — which to write, and how.</p>
+          <div class="links"><a href="step.html">Read →</a></div>
+        </div>
+        <div class="card web">
+          <h3><a href="case.html">A study repository</a></h3>
+          <p>What a case repo holds, what a version bump regenerates, and what it never touches.</p>
+          <div class="links"><a href="case.html">Read →</a></div>
         </div>
       </div>
+
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims"><code>tools/SOURCE.json</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

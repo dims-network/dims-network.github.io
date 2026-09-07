@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Writing an analysis · DIMS docs</title>
+<meta name="description" content="A study-owned script or a registered step — which to write, and how." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Extending DIMS</div>
+      <h1>Contract: a Python analysis step</h1>
+      <p>An analysis turns time series into something a tab can draw. There are two
+      places to put one, and choosing correctly is most of this document.</p>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th>Put it in</th>
+        <th>Because</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>Every study could use it</td>
+        <td><code>packages/dims-analysis/dims_analysis/steps/</code></td>
+        <td>one copy, one fix, reaches every study by a version bump</td>
+      </tr>
+      <tr>
+        <td>Only this study needs it</td>
+        <td>the study's own <code>opt/step_&lt;id&gt;.py</code></td>
+        <td>its input is that study's own upstream pipeline</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><strong>Most analyses are the second kind</strong>, and both shipped examples are: ORTHO's
+      categorical gaze RQA reads a game database, and Karnatak's motion tracking
+      reads video. Neither belongs in a package every study installs.</p>
+      <hr />
+      <h2>A study-owned analysis</h2>
+      <p>A plain script in <code>opt/</code>, named <code>step_&lt;id&gt;.py</code>, run by <code>build_assets.py</code> and
+      gated by <code>&quot;include_&lt;id&gt;&quot;: true</code> in <code>config.json</code>. It is handed
+      <code>--config config.json</code> and nothing else; it decides where its own output goes.</p>
+      <pre><code class="language-python">#!/usr/bin/env python3
+      &quot;&quot;&quot;What this produces, and what it reads to produce it.&quot;&quot;&quot;
+      import argparse, json
+      from dims_analysis.common import assets, results, series
+
+      ap = argparse.ArgumentParser()
+      ap.add_argument('--config', default='config.json')
+      args = ap.parse_args()
+      config = json.load(open(args.config))
+
+      for video_id in config['videoIDs']:
+          path = assets.resolve(f'assets/timeseries/{video_id}_gaze.csv')
+          loaded = series.load_or_none(path, min_points=10)
+          if loaded is None:            # already explained why, on stdout
+              continue
+          time, values = loaded
+          ...
+          results.write_payload(assets.resolve(f'assets/rqa/{video_id}_rqa_data.json'),
+                                {'video_id': video_id, 'categorical_rqa': ...})
+      </code></pre>
+      <p>Three things this example is doing on purpose:</p>
+      <ul>
+      <li><strong><code>assets.resolve</code></strong> on every path. A private study keeps its data outside
+      the repository, at the path <code>data.local.json</code> names. A script that skips this
+      works for its author and for nobody else.</li>
+      <li><strong><code>results.write_payload</code></strong> rather than <code>json.dump</code>. It merges into whatever
+      is already in that file, so an analysis writing beside a shared one does not
+      erase it. ORTHO's categorical RQA writes into the same
+      <code>assets/rqa/&lt;id&gt;_rqa_data.json</code> the shared RQA step writes; before merging
+      existed, whichever ran second won.</li>
+      <li><strong>No <code>--output-dir</code>.</strong> <code>build_assets.py</code> deliberately does not pass one to a
+      study-owned step, because a step that writes into an existing directory on
+      purpose must not have that overridden.</li>
+      </ul>
+      <h2>A shared step</h2>
+      <p>A class in <code>packages/dims-analysis/dims_analysis/steps/</code>, found through an
+      entry point. The runner never lists steps, so adding one edits no existing
+      file.</p>
+      <pre><code class="language-python">from dims_analysis.base import Step
+
+      class RQAStep(Step):
+          id          = &quot;rqa&quot;                       # also the CLI selector
+          config_key  = &quot;include_RQA&quot;               # gate key in config.json
+          output_dir  = &quot;assets/rqa&quot;                # default; resolved through data.local.json
+          output_name = &quot;{video_id}_rqa_data.json&quot;
+          description = &quot;Recurrence quantification, per video&quot;
+
+          def run(self, config, ctx) -&gt; None:
+              for video_id in config[&quot;videoIDs&quot;]:
+                  ...
+                  ctx.write_result(self, video_id, {&quot;rqa_data&quot;: ...})
+      </code></pre>
+      <pre><code class="language-toml">[project.entry-points.&quot;dims.steps&quot;]
+      rqa = &quot;dims_analysis.steps.rqa:RQAStep&quot;
+      </code></pre>
+      <p>A step in a <em>separate</em> package registers the same way — that is how an outside
+      module joins the pipeline without a change here.</p>
+      <h3>What <code>ctx</code> is for</h3>
+      <p><code>ctx</code> is paths and results. It is <strong>not</strong> a data-access layer, and does not
+      wrap the analysis helpers; those are module functions you import directly.
+      Every method takes the step as its first argument, because one context serves
+      every step in a run.</p>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>ctx.project_dir</code></td>
+        <td>absolute path to the study</td>
+      </tr>
+      <tr>
+        <td><code>ctx.path(*parts)</code></td>
+        <td>a path inside the study</td>
+      </tr>
+      <tr>
+        <td><code>ctx.output_dir_for(step)</code></td>
+        <td>where this step's output belongs, resolved through <code>data.local.json</code>; no side effects</td>
+      </tr>
+      <tr>
+        <td><code>ctx.output_path(step, video_id)</code></td>
+        <td>the full output filename, creating the directory</td>
+      </tr>
+      <tr>
+        <td><code>ctx.write_result(step, video_id, payload)</code></td>
+        <td>writes it, <strong>merging</strong> with anything already in that file</td>
+      </tr>
+      <tr>
+        <td><code>ctx.params(step, defaults)</code></td>
+        <td>per-step tuning from <code>config.json</code>'s <code>analysis</code> block, over your defaults</td>
+      </tr>
+      <tr>
+        <td><code>ctx.output_snapshot(step)</code></td>
+        <td><code>{path: mtime}</code>, which the runner uses to detect a step that wrote nothing</td>
+      </tr>
+      </tbody>
+      </table>
+      <h3>The helpers, which are not on <code>ctx</code></h3>
+      <p>Import these from <code>dims_analysis.common</code>. They exist because each was
+      previously copied into ten or twelve places, in signatures that disagreed.</p>
+      <table>
+      <thead>
+      <tr>
+        <th>module</th>
+        <th>what it settles</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>assets</code></td>
+        <td>where the data actually is: <code>resolve(path)</code>, <code>assets_root()</code></td>
+      </tr>
+      <tr>
+        <td><code>series</code></td>
+        <td>one reader: canonical <code>Time</code> column, NaNs dropped, <strong>sorted by time</strong>, a caller-stated minimum length. <code>load_or_none</code> reports and returns <code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>recurrence</code></td>
+        <td>one recurrence rule for RQA and cross-RQA: <code>threshold_for_target</code>, <code>recurrence_rate</code>, <code>line_lengths</code>, <code>window_metrics</code></td>
+      </tr>
+      <tr>
+        <td><code>reduce</code></td>
+        <td>reducing for the browser without lying: <code>block_mean</code> for series, <code>block_binary</code> for a recurrence matrix</td>
+      </tr>
+      <tr>
+        <td><code>results</code></td>
+        <td><code>write_payload</code>, which merges; <code>compare_entries</code>, which says what a re-run replaced</td>
+      </tr>
+      <tr>
+        <td><code>npz</code></td>
+        <td><code>add_group</code>, appending a full-resolution array group without recompressing the file</td>
+      </tr>
+      <tr>
+        <td><code>payload</code></td>
+        <td><code>round_payload</code>: browser payloads carry significant figures, not decimal places</td>
+      </tr>
+      </tbody>
+      </table>
+      <h2>Rules</h2>
+      <ol>
+      <li><strong>Self-gate.</strong> If your key is absent, do nothing and exit cleanly. Do not
+      raise, and do not make the runner know about you.</li>
+      <li><strong>Never hardcode a path.</strong> Everything through <code>assets.resolve</code> or <code>ctx</code>.
+      Two absorbed scripts hardcoded <code>./config.json</code> and their own input
+      directory; they could only run from one working directory, and on a private
+      study they read a directory that did not exist while printing &quot;assets
+      resolved&quot; and reporting success.</li>
+      <li><strong>Tuning belongs in config</strong>, via <code>ctx.params</code> or a documented key. A
+      module-level constant cannot vary per study without editing the source,
+      which is exactly how a fork ends up maintaining its own copy of an analysis.</li>
+      <li><strong>Write both resolutions.</strong> The JSON is the browser payload and may be
+      reduced; the <code>.npz</code> beside it is the real result. Record the reduction
+      factor in the payload — a reader who cannot tell a 500-point plot from a
+      6000-point one does not know what the axis means. Never let a reduction be
+      the only surviving analysis.</li>
+      <li><strong>Reduce honestly.</strong> A recurrence matrix has two properties a reader takes
+      from the picture: where the structure is, and how much of the plot is
+      recurrent. Striding keeps the rate and deletes any line off the main
+      diagonal — which is what a lagged coupling looks like. Block-OR keeps the
+      structure and inflates the rate; measured on ORTHO at factor 9, 10.9% became
+      54.4% beside a caption saying 10.9%. Use <code>reduce.block_binary</code>, which keeps
+      both.</li>
+      <li><strong>Fail loudly.</strong> Raise on real errors. The runner checks that an enabled
+      step wrote something, because for a long time a crashed analysis scrolled
+      past in the log and the build reported success.</li>
+      <li><strong>Be deterministic.</strong> Seed anything stochastic and put the seed in the
+      output. An unseeded Monte Carlo made one significance threshold vary by 0.04
+      between runs on identical data.</li>
+      </ol>
+      <h2>Acceptance</h2>
+      <p>Run these. Do not reason about them.</p>
+      <ul>
+      <li>A shared step: <code>dims-analysis run --config config.json</code> finds it with no
+      other file edited. <code>dims-analysis list</code> shows it.</li>
+      <li>A study-owned step: <code>python build_assets.py --check</code> lists it under
+      <em>study-owned</em>, and lists it as <em>not enabled</em> when its config key is absent.</li>
+      <li>With the config key absent, the run succeeds and writes nothing.</li>
+      <li>Running twice over identical input produces byte-identical output.</li>
+      <li>A deliberate <code>raise</code> inside the step makes the command exit non-zero.</li>
+      <li>On a study with <code>data.local.json</code>, the step reads and writes under the
+      external root, and <code>git status</code> is clean afterwards.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/contracts/step.md"><code>docs/contracts/step.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

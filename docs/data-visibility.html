@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Public and private data · DIMS docs</title>
+<meta name="description" content="How a study declares its visibility, and the guards that enforce it." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1>Contract: public and private data</h1>
+      <p>Much DIMS data is video of identifiable people. Visibility is therefore
+      <strong>declared by the researcher, never inferred</strong>, and enforced by machinery rather
+      than by memory.</p>
+      <h2>Declare it</h2>
+      <p><code>dims-case.json</code>, at the root of every case repo:</p>
+      <pre><code class="language-json">{
+        &quot;case&quot;: &quot;karnatak&quot;,
+        &quot;visibility&quot;: &quot;private&quot;,
+        &quot;dimsCore&quot;: &quot;1.3.1&quot;,
+        &quot;publishable&quot;: [],
+        &quot;restricted&quot;: [
+          &quot;assets/videos&quot;,
+          &quot;assets/timeseries&quot;,
+          &quot;assets/transcripts&quot;,
+          &quot;assets/elan&quot;,
+          &quot;assets/motion_tracking&quot;
+        ]
+      }
+      </code></pre>
+      <p><code>visibility</code> is <code>&quot;public&quot;</code> or <code>&quot;private&quot;</code>, chosen once when the case is created.
+      <code>publishable</code> is a <strong>default-deny allowlist</strong>: for a private case, nothing under
+      <code>assets/</code> may be committed unless a path here says so. <code>restricted</code> is what the
+      allowlist opens exceptions to; <code>dims-case new</code> writes it, and every guard reads
+      it from here so the rule lives in one place. If it is absent the guards fall
+      back to the core's own list rather than passing everything — an earlier version
+      of this example omitted the key, and a study written by hand from it had guards
+      that declared themselves private and blocked nothing.</p>
+      <h2>What <code>private</code> turns on</h2>
+      <p>Four independent guards, ordered by how early they catch the mistake:</p>
+      <ol>
+      <li><strong>Pre-commit hook</strong> — refuses to stage restricted paths. This is the one that
+      matters: it stops data before it enters history, where removing it needs a
+      rewrite and the data has already been pushed.</li>
+      <li><strong>Pre-push hook</strong> — the same check across the push range.</li>
+      <li><strong>CI</strong> — fails if any <em>tracked</em> file matches a restricted path, and fails if
+      <code>&quot;visibility&quot;: &quot;private&quot;</code> while the GitHub repo is public. That last check
+      catches the case nobody plans for: someone flipping visibility months later.</li>
+      <li><strong><code>AGENTS.md</code></strong> in the core repository — states the rule where an automated
+      contributor reads it before touching anything.</li>
+      </ol>
+      <p>Enable the hooks once per clone:</p>
+      <pre><code class="language-sh">git config core.hooksPath .githooks
+      </code></pre>
+      <p>A <code>.gitignore</code> is not one of these guards. It is a convention, and <code>git add -f</code>
+      walks straight through it.</p>
+      <h2>Working with private data comfortably</h2>
+      <p>This half matters as much as the guards: a guard that makes the work painful
+      gets disabled.</p>
+      <ul>
+      <li>Data lives <strong>outside the repo</strong>, at a path named in <code>data.local.json</code>
+      (untracked). <code>serve.py</code> and <code>dims-analysis</code> both resolve assets through it, so
+      everything runs against real data with an empty tracked <code>assets/</code>.</li>
+      <li><code>assets/MANIFEST.json</code> is tracked and holds <strong>names, sizes and checksums —
+      never content</strong>, so a rebuild can be confirmed complete without anyone seeing
+      the data. Write it with <code>dims-analysis manifest</code> (or <code>build_assets.py --write-manifest</code>) once the assets are right; check it with <code>dims-analysis manifest --check</code>, which compares names and sizes, or <code>--check --deep</code>, which
+      verifies the checksums and on a study with video takes minutes. Both hooks
+      and the CI guard exempt this file by name, which is exactly why it may never
+      carry content.</li>
+      <li>Private cases are not wired to GitHub Pages. They are served locally.</li>
+      </ul>
+      <h2>Going public</h2>
+      <p>An explicit, gated transition. Never a default, never a side effect.</p>
+      <ol>
+      <li>Run the anonymisation step over every video.</li>
+      <li><strong>Verify frame by frame.</strong> Detection-based masking misses; the tooling's own
+      documentation says it is a starting point, not a solution.</li>
+      <li>Move the cleared directories onto <code>publishable</code>.</li>
+      <li>Flip <code>visibility</code> to <code>&quot;public&quot;</code>.</li>
+      <li>Only now does the Pages workflow become available.</li>
+      </ol>
+      <h2>For automated contributors</h2>
+      <p>In a private case: never push, and never move asset content into anything
+      external — an issue, a prompt, a hosted page, a paste. Describing the data is
+      fine. Reproducing it is not.</p>
+      <h2>Acceptance</h2>
+      <ul>
+      <li><code>git add -f assets/videos/x.mp4</code> in a private case is refused.</li>
+      <li>Bypassing with <code>--no-verify</code> produces a red CI run.</li>
+      <li>Making a <code>&quot;private&quot;</code> case's repo public produces a red CI run.</li>
+      <li>A private case runs locally, renders every tab, and leaves <code>git status</code> clean.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/contracts/data-visibility.md"><code>docs/contracts/data-visibility.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

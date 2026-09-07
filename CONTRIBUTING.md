@@ -1,31 +1,29 @@
 # Contributing
 
-> Canonical / web version: <https://dims-network.github.io/docs/contributing.html>
+All the code is in **[dims-network/dims](https://github.com/dims-network/dims)**,
+and so is everything about how to work on it. This repository is only the
+website.
 
-All code is in **[dims-network/dims](https://github.com/dims-network/dims)**.
-Start with its [its README](https://github.com/dims-network/dims#working-on-dims) —
-a map telling you which single document to read for the task you have, rather
-than asking you to read everything.
+- **The map** — which single document to read for the task you have:
+  [dims/README.md](https://github.com/dims-network/dims#working-on-dims)
+- **Automated contributors**:
+  [AGENTS.md](https://github.com/dims-network/dims/blob/main/AGENTS.md)
+- **Issues**: [dims-network/dims/issues](https://github.com/dims-network/dims/issues).
+  Those labelled `agent-ready` name the files, link the contract and state the
+  acceptance check.
 
-## Where to start
+## Changing the documentation on this site
 
-Issues labelled **`agent-ready`** are self-contained: they name the files, link
-the contract, and state the acceptance check. Both human and automated
-contributors are welcome to take them.
+Do not edit `docs/*.html`. They are generated from the markdown in the core, at
+the release named in [`tools/SOURCE.json`](tools/SOURCE.json):
 
-## The short version
+```sh
+pip install -r tools/requirements.txt
+python tools/render_docs.py --dims ../dims          # re-render
+python tools/render_docs.py --dims ../dims --check  # what CI runs
+```
 
-- **One copy of the code.** If you are fixing the same bug twice, you are in the
-  wrong repository.
-- **Everything self-registers.** Adding a tab or an analysis must not require
-  editing an existing file. If it does, the contract needs fixing — say so.
-- **Assume data is private** until `dims-case.json` says otherwise. Never commit
-  anything under `assets/`, and never move data content into an external
-  service.
-- **No build step, by design.** A dashboard must open from a plain file server
-  years from now.
-
-## Code of conduct
-
-Participation is covered by our
-[Code of Conduct](https://github.com/dims-network/dims/blob/main/CODE_OF_CONDUCT.md).
+Fix the text in `dims/docs/`, release it, bump `ref`, re-render, commit. CI
+fails if the committed HTML is not what the pinned release produces — which is
+the whole point: this site used to describe a workflow that had not existed for
+months, and nothing connected a page to the code it described.

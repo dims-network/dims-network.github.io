@@ -9,7 +9,48 @@ jobs:
   check:
     uses: dims-network/.github/.github/workflows/reusable-dashboard-ci.yml@main
     with:
-      python_paths: ""
+      python_paths: "tools"
       js_glob: "docs/*.js"
       config_path: ""
       check_assets: false
+
+  # The documentation pages are generated from the markdown in the core. This
+  # is what stops them drifting from it: for months this site described
+  # developing on a template and propagating downstream, a process that had
+  # stopped existing, because nothing connected a page to the code it
+  # described.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch the release these pages claim to document
+        run: |
+          ref=$(python -c "import json;print(json.load(open('tools/SOURCE.json'))['ref'])")
+          echo "documenting: $ref"
+          git clone -q --depth 1 --branch "$ref" \
+            https://github.com/dims-network/dims.git /tmp/dims \
+            || { echo "::error::dims has no tag $ref. tools/SOURCE.json must name a release."; exit 1; }
+
+      - name: The committed pages are what that release produces
+        run: |
+          pip install -q -r tools/requirements.txt
+          python tools/render_docs.py --dims /tmp/dims --check
+
+  # The front page renders its diagram and its repository cards from one
+  # script. A mismatch between the two lists in it used to throw before the
+  # cards were built, so the page showed neither -- silently, because a
+  # TypeError in a script tag is not visible on the page.
+  front-page:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-save jsdom@26
+      - name: The front page renders its repository cards
+        run: node tools/check_front_page.mjs index.html

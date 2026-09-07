@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Architecture · DIMS docs</title>
-<meta name="description" content="How DIMS fits together: one core repository, self-registering tabs, and one small repo per study pinning a released version." />
+<meta name="description" content="One core repository, self-registering tabs, and one small repo per study pinning a released version." />
 <link rel="stylesheet" href="../style.css" />
 <link rel="stylesheet" href="docs.css" />
 </head>
@@ -28,115 +28,81 @@
     <main class="docs-main">
 
       <div class="crumbs">Getting started</div>
-      <h1>Architecture</h1>
-      <p class="lede">All DIMS code lives in <b>one repository</b>. Each study —
-        each recording session, each experiment — lives in its own small repo
-        holding only its configuration, its data, and a pinned version of that
-        core.</p>
-
-      <h2>How a dashboard works</h2>
-      <p>A deployed dashboard is one small web page with no build step. It reads
-        a <code>config.json</code> (which videos and analyses to show) and the
-        matching data files, and draws everything you see. The one idea to
-        remember: <b>pick a moment in time, and every panel updates to that
-        moment together</b> — the charts, the videos, and the transcript all stay
-        in sync.</p>
-
-      <div class="mermaid">
-flowchart TD
-    cfg["config.json<br/>+ data files"] --> core
-    core["dims-core.js<br/><i>loads data, owns the timeline</i>"]
-    core --> tabs["Tab modules<br/>one file each"]
-    core --> txt["Transcript"]
-    core --> vid["video-component.js<br/>video players"]
-    tabs -. "pick a time" .-> core
-    core -. "everyone update" .-> tabs
-      </div>
-
-      <p><b><code>dims-core.js</code></b> is the conductor. It loads the data,
-        keeps the timeline, and tells everything else which moment to show. It
-        does not know what a recurrence plot is, or what ELAN is.</p>
-      <p><b>Tab modules</b> do the drawing — one file per tab, in
-        <code>packages/dims-tabs/</code>. Each announces itself to the core and
-        says under what conditions it applies (“show me only if this study has
-        cross-wavelet results”). Delete the file and the tab is gone; add one and
-        it appears. Nothing else changes.</p>
-      <p>That applies to the built-in tabs too, not just add-ons. It has to: if
-        the mechanism only carried third-party tabs, it could quietly break and
-        nobody would notice until an outside contributor tried to use it.</p>
-      <p><b><code>video-component.js</code></b> is the one small React piece. The
-        core hands it a video and a time window; it plays just that segment and
-        loops it. In short — <i>the core decides which moment to show, and the
-        tabs and video know how to show it.</i></p>
-
-      <h2>One core, many studies</h2>
-      <pre class="code">          dims-network/dims                <span class="c"># all the code, released as versions</span>
-       core · tabs · analyses · builder
-                     │
-        pinned and vendored into each study
-                     │
-      ┌──────────────┼──────────────┐
-  case-demo      case-ortho     case-karnatak
-  config + data  config + data  config + data <span class="c">(private)</span></pre>
-
-      <p>A study repo holds no code of its own. It names a core version in
-        <code>dims-case.json</code>, and a copy of that exact release sits in its
-        <code>vendor/</code> directory. Continuous integration checks that the
-        copy still matches the release, so hand-editing it is a build failure
-        rather than a silent fork.</p>
-      <p>Updating a study is therefore a <b>version bump</b>, not a merge: a bot
-        opens a pull request changing the pinned version and refreshing the
-        vendored copy.</p>
-
-      <div class="callout"><b>Why vendor a copy instead of loading from a CDN?</b>
-        Because these dashboards accompany published research and need to still
-        work in ten years, on a machine nobody maintains, possibly with no
-        network. A self-contained repository can be archived and given a DOI. A
-        link to someone else's server cannot.</div>
-
-      <h2>What replaced the old model</h2>
-      <p>Until September 2026 the code lived in five repositories kept in step by
-        hand, with one of them nominated as the source of truth. It did not hold,
-        and the failure was measurable: three unrelated git histories, four
-        different copies of the frontend ranging from 2,136 to 2,500 lines, and
-        <b>no single repository containing every feature</b>. One fork carried
-        the only correct wavelet-coherence calculation for months while four
-        others shipped a version that measured signal power instead — not because
-        anyone was careless, but because there was no mechanism for a fix to
-        travel.</p>
-      <p>The rule is now structural rather than remembered: there is only one
-        copy of the code, so there is nothing to keep in step.</p>
-
-      <h2>Code, data, and privacy</h2>
-      <p>Every study declares whether its data is public or private, in
-        <code>dims-case.json</code>. It is a decision the researcher makes and
-        records — never something inferred from repository settings, which anyone
-        can change later without knowing what is inside.</p>
-      <ul>
-        <li><b>Public</b> — data is committed alongside the config, and the
-          dashboard publishes to GitHub Pages.</li>
-        <li><b>Private</b> — the data lives outside the repository entirely.
-          Commit hooks refuse to stage it, CI fails if any of it is ever tracked,
-          and CI also fails if the repository is made public while the study
-          still says private. The dashboard runs locally against the real data;
-          only a manifest of filenames and checksums is committed.</li>
-      </ul>
-      <p>Going public is an explicit, checklisted transition — anonymise, verify
-        frame by frame, then flip the declaration — never a side effect of
-        something else.</p>
-
-      <h2>The Python side</h2>
-      <p>Analyses are a pip package, <code>dims-analysis</code>. Each analysis is
-        a small class that says which config key switches it on and where its
-        output goes; the runner discovers them rather than listing them. An
-        analysis published in a <i>separate</i> package joins the pipeline with no
-        change to DIMS at all, which is how work from other toolboxes is meant to
-        arrive.</p>
-
-      <div class="docs-nextprev">
-        <a href="index.html">← Overview</a>
-        <a class="nxt" href="data-model.html">Data &amp; config model →</a>
-      </div>
+      <h1>How DIMS fits together</h1>
+      <pre><code>                dims-network/dims          all the code, released as vX.Y.Z
+                             │
+              ┌──────────────┴──────────────┐
+        vendor/ , pinned            dims-analysis, installed
+        what the browser loads      what rebuilds the assets
+        (bot PR; CI rebuilds it     (pip install -e ./dims —
+         from the release tag)       not on PyPI yet)
+              │                              │
+         ┌────┴─────┬──────────────┐         └── used by every study, and by the builder
+      case-demo  case-ortho  case-karnatak
+       (public)   (public)     (PRIVATE — data lives outside the repository)
+      </code></pre>
+      <p>Both halves move together and carry the same version number. A study's
+      <code>dims-case.json</code> names it once: it is the tag CI fetches to verify <code>vendor/</code>,
+      and it is the version of <code>dims-analysis</code> that produced the study's assets.</p>
+      <h2>Why a monorepo</h2>
+      <p>Because the alternative was tried and failed measurably. The code lived in five
+      repositories that were supposed to stay in step by hand. They did not: three
+      disjoint git lineages, four different copies of the frontend ranging from 2136
+      to 2500 lines, and <strong>no repository containing every feature</strong>. One fork carried
+      the only correct wavelet coherence for months while the other four shipped a
+      version that tracked signal power instead — because there was no mechanism for a
+      fix to travel.</p>
+      <p>Propagation is now a version bump, not a merge.</p>
+      <h2>Why no build step</h2>
+      <p>A dashboard has to open from a plain file server, years later, on a machine
+      nobody has maintained. Plain <code>&lt;script&gt;</code> tags and CSS custom properties survive
+      that; a bundler and a <code>node_modules</code> tree do not. This constrains the design and
+      is worth the constraint.</p>
+      <p>The constraint is not fully honoured yet: five libraries — React, ReactDOM,
+      Plotly, PapaParse, lodash — are still loaded from a CDN rather than vendored,
+      so a dashboard opened without a network is a blank page. That is
+      <a href="https://github.com/dims-network/dims/issues/12">dims#12</a>, and until it is
+      closed, &quot;opens from a plain file server&quot; means one with a network behind it.</p>
+      <h2>Why everything self-registers</h2>
+      <p>Adding a tab or an analysis must not require editing a file that already works.
+      Before this, adding one analysis to the builder meant edits in four separate
+      files, and adding a tab meant editing three regions of a 2000-line class — which
+      is exactly how two forks came to have features that could never be shared.</p>
+      <p>Built-in tabs use the same registry as third-party ones, so the extension point
+      cannot quietly rot: break it, and ELAN breaks with it.</p>
+      <h2>The layers</h2>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><strong>Producers</strong></td>
+        <td>mocap, EnvisionBox modules, any tool that emits a time series</td>
+      </tr>
+      <tr>
+        <td><strong>Analyses</strong></td>
+        <td><code>dims-analysis</code> steps: RQA, cross-RQA, cross-wavelet, …</td>
+      </tr>
+      <tr>
+        <td><strong>Presentation</strong></td>
+        <td><code>dims-core</code> + <code>dims-tabs</code>, driven by <code>config.json</code></td>
+      </tr>
+      <tr>
+        <td><strong>Cases</strong></td>
+        <td>one study each: config, data, a pinned core</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>The seam between producers and DIMS is a <strong>data contract, not an API</strong>: a CSV
+      with a time column in seconds. That is why integrating an outside toolbox is a
+      unit conversion rather than a merge.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/architecture.md"><code>docs/architecture.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
@@ -146,22 +112,5 @@ flowchart TD
 </div>
 
 <script src="docs.js"></script>
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    themeVariables: {
-      fontFamily: 'inherit',
-      fontSize: '15px',
-      primaryColor: '#f6f8fa',
-      primaryBorderColor: '#d9dee3',
-      primaryTextColor: '#1f2328',
-      lineColor: '#8c959f',
-      tertiaryColor: '#ffffff'
-    },
-    flowchart: { curve: 'basis', htmlLabels: true, padding: 14, nodeSpacing: 55, rankSpacing: 55 }
-  });
-</script>
 </body>
 </html>

@@ -11,8 +11,23 @@ Published at <https://dims-network.github.io/> from `main`.
 |---|---|
 | `index.html` | landing page and repository overview |
 | `tutorial.html` | build your own dashboard — no-code builder, or by hand |
-| `docs/` | technical reference: architecture, data model, analyses, workflow |
-| `WORKFLOW.md`, `CONTRIBUTING.md` | the same material as `docs/`, in markdown |
+| `docs/` | **generated.** The technical reference, rendered from the markdown in the core |
+| `tools/` | the renderer, and the list of pages it builds |
+
+`docs/*.html` and `docs/docs.js` are **generated — do not edit them.** They come
+from `dims/docs/*.md` at the release named in
+[`tools/SOURCE.json`](tools/SOURCE.json), and CI fails if what is committed is
+not what that release produces. Before this, the site carried its own copy of
+the documentation and drifted: the "Integration workflow" page still described
+developing on a template and propagating changes downstream, months after the
+monorepo replaced the five forks that made that necessary.
+
+To change a page, change the markdown in the core, release it, then:
+
+```sh
+pip install -r tools/requirements.txt
+python tools/render_docs.py --dims ../dims        # after bumping "ref"
+```
 
 ## Where the code is
 
