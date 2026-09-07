@@ -29,7 +29,7 @@
     <p class="lede">An open family of tools for visualizing <b>multimodal social-interaction data</b> — time series, video, transcripts, and analyses like RQA, cross-wavelet, and ELAN annotations — to bridge qualitative and quantitative research. One canonical dashboard, its forks for specific studies, and companion Python viewers.</p>
   </header>
 
-  <section id="repo-network" hidden>
+  <section id="repo-network">
     <h2>Repository network</h2>
     <div class="diagram">
       <canvas id="net" width="960" height="430" role="img"
@@ -67,26 +67,30 @@
 
 <script>
 const repos = [
-  {id:"root", name:"DIMS_Dashboard", short:"DIMS Dashboard", fam:"web", kind:"root",
-   desc:"Canonical base — static dashboard for multimodal interaction data: time series, video, transcript, RQA, cross-wavelet, and ELAN annotations.",
+  {id:"dims", name:"dims", short:"DIMS core", fam:"web", kind:"core",
+   desc:"The monorepo — dashboard core, self-registering tabs, the Python analyses and the no-code builder. Everything else pins a released version of this.",
+   url:"https://github.com/dims-network/dims"},
+  {id:"builder", name:"DIMS_dashboard_builder", short:"Dashboard builder", fam:"web", kind:"tool",
+   desc:"No-code wizard — turns recordings, time series and annotations into a populated, deployable dashboard. No git or command line needed.",
+   url:"https://github.com/dims-network/DIMS_dashboard_builder"},
+  {id:"root", name:"DIMS_Dashboard", short:"DIMS Dashboard", fam:"web", kind:"case",
+   desc:"The reference dashboard with real data: time series, video, transcript, RQA, cross-RQA, cross-wavelet coherence and ELAN annotations.",
    url:"https://github.com/dims-network/DIMS_Dashboard", live:"https://dims-network.github.io/DIMS_Dashboard/"},
-  {id:"template", name:"DIMS_dashboard_template", short:"Dashboard template", fam:"web", kind:"tmpl",
-   desc:"Empty “Use this template” starter — full dashboard code plus an assets/ skeleton, no data. Spin up a new dataset dashboard in minutes.",
-   url:"https://github.com/dims-network/DIMS_dashboard_template"},
-  {id:"ortho", name:"DIMS_Dashboard_Ortho", short:"DIMS · ORTHO", fam:"web", kind:"fork",
-   desc:"ORTHO use case — adds multi-perspective video and a trajectory tab, on top of the base dashboard.",
+  {id:"ortho", name:"DIMS_Dashboard_Ortho", short:"DIMS · ORTHO", fam:"web", kind:"case",
+   desc:"ORTHO use case — multi-perspective video and a trajectory view over a two-person tabletop game.",
    url:"https://github.com/dims-network/DIMS_Dashboard_Ortho", live:"https://dims-network.github.io/DIMS_Dashboard_Ortho/"},
-  {id:"bots", name:"bots-viewer", short:"bots-viewer", fam:"py", kind:"base",
-   desc:"Dash app — trajectory playback plus RQA / cRQA for a two-player 2D-grid human-vs-bot game.",
-   url:"https://github.com/dims-network/bots-viewer", live:"https://huggingface.co/spaces/mikub97/bots-viewer"},
-  {id:"orthoview", name:"Ortho-viewer", short:"Ortho-viewer", fam:"py", kind:"fork",
-   desc:"ORTHO Game Browser — a code-only Dash viewer with an embedded DIMS sub-dashboard for ORTHO game sessions.",
-   url:"https://github.com/dims-network/Ortho-viewer"},
+  {id:"karnatak", name:"DIMS_Dashboard_Karnatak", short:"DIMS · Karnatak", fam:"web", kind:"case",
+   desc:"Karnatak music lessons — two-person motion tracking and a cross-effector coherence network. Private: the recordings are identifiable.",
+   url:"https://github.com/dims-network/DIMS_Dashboard_Karnatak"},
+  {id:"orthoview", name:"DIMS_ORTHO_VIEWER", short:"ORTHO Explorer", fam:"py", kind:"app",
+   desc:"Dash application over a database of ORTHO game sessions — trajectories, kinematics and recurrence analyses across many recordings.",
+   url:"https://github.com/mikub97/DIMS_ORTHO_VIEWER"},
 ];
 const edges = [
-  {from:"root", to:"ortho", label:"fork", style:"solid"},
-  {from:"root", to:"template", label:"template", style:"dash"},
-  {from:"bots", to:"orthoview", label:"fork", style:"solid"},
+  {from:"dims", to:"builder", kind:"pin"},
+  {from:"dims", to:"root",    kind:"pin"},
+  {from:"dims", to:"ortho",   kind:"pin"},
+  {from:"dims", to:"karnatak",kind:"pin"},
 ];
 // logical layout (matches canvas width/height attributes)
 const pos = {
@@ -150,7 +154,7 @@ function drawNode(r){
   const {x,y,w,h}=nodeRect(r.id);
   const base = r.fam==="web"?COL.web:COL.py;
   const base2= r.fam==="web"?COL.web2:COL.py2;
-  const strong = (r.kind==="root"||r.kind==="base");
+  const strong = (r.kind==="core"||r.kind==="tool");
   const lit = hover===r.id;
   ctx.save();
   if(lit){ctx.shadowColor=base;ctx.shadowBlur=18;}
@@ -168,9 +172,9 @@ function drawNode(r){
   ctx.fillText(r.short, x+18, y+27);
   ctx.fillStyle=COL.muted; ctx.font="11px ui-monospace,Menlo,monospace";
   ctx.fillText(r.name, x+18, y+45);
-  const tag = {root:"root",base:"base",fork:"fork",tmpl:"template"}[r.kind];
+  const tag = {core:"core",tool:"tool",case:"case study",app:"app"}[r.kind] || r.kind;
   ctx.font="700 9px -apple-system,Segoe UI,sans-serif"; ctx.textAlign="right";
-  ctx.fillStyle = strong? base : (r.kind==="tmpl"?"#9a6700":COL.muted);
+  ctx.fillStyle = strong? base : COL.muted;
   ctx.fillText(tag.toUpperCase(), x+w-12, y+19);
   ctx.restore();
 }
@@ -203,9 +207,9 @@ canvas.addEventListener("mouseleave",()=>{if(hover){hover=null;draw();}});
 canvas.addEventListener("click",e=>{const r=hit(e);if(r)window.open(r.url,"_blank","noopener");});
 
 // repo cards
-const kindBadge={root:["root","root"],base:["base","base"],fork:["fork","fork"],tmpl:["template","tmpl"]};
+const kindBadge={core:["core","root"],tool:["tool","tmpl"],case:["case study","base"],app:["app","fork"]};
 document.getElementById("cards").innerHTML = repos.map(r=>{
-  const [label,cls]=kindBadge[r.kind];
+  const [label,cls]=kindBadge[r.kind] || [r.kind,"base"];
   const famBadge = r.fam==="web" ? "static · js" : "python · dash";
   return `<div class="card ${r.fam}">
     <h3><a href="${r.url}">${r.name}</a></h3>

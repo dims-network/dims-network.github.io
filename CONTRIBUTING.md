@@ -1,45 +1,31 @@
 # Contributing
 
 > Canonical / web version: <https://dims-network.github.io/docs/contributing.html>
-> Keep this file and `docs/contributing.html` in sync.
 
-## Where code lives
+All code is in **[dims-network/dims](https://github.com/dims-network/dims)**.
+Start with its [`AGENTS.md`](https://github.com/dims-network/dims/blob/main/AGENTS.md) —
+a map telling you which single document to read for the task you have, rather
+than asking you to read everything.
 
-- **[DIMS_dashboard_template](https://github.com/dims-network/DIMS_dashboard_template)**
-  — the dashboard itself: the frontend (`js/`, `css/`, `index.html`), the analysis
-  scripts (`opt/step_*.py`), and `serve.py`. **Make code changes here.**
-- **DIMS_dashboard_builder** — the no-code wizard. Changes to the wizard itself
-  (the Flask app in `app/`, the UI in `app/static/`) are made directly in that repo.
-- **DIMS_Dashboard** — canonical data + the deployed site; receives template code,
-  never authors it.
+## Where to start
 
-## How the template lives inside the builder
+Issues labelled **`agent-ready`** are self-contained: they name the files, link
+the contract, and state the acceptance check. Both human and automated
+contributors are welcome to take them.
 
-The builder ships a complete copy of the template under `template/` so a
-non-technical user needs **neither git nor a network connection**
-(`acquire_template()` in `app/project.py` copies it into each generated project,
-and the builder runs the project's own `opt/` scripts).
+## The short version
 
-That `template/` directory is a **git subtree** of the upstream template repo —
-the files are committed (offline-safe), but their history is linked upstream so
-updates pull in with one command.
+- **One copy of the code.** If you are fixing the same bug twice, you are in the
+  wrong repository.
+- **Everything self-registers.** Adding a tab or an analysis must not require
+  editing an existing file. If it does, the contract needs fixing — say so.
+- **Assume data is private** until `dims-case.json` says otherwise. Never commit
+  anything under `assets/`, and never move data content into an external
+  service.
+- **No build step, by design.** A dashboard must open from a plain file server
+  years from now.
 
-## Adding a feature to the dashboard
+## Code of conduct
 
-1. Open a PR against **DIMS_dashboard_template** (frontend or `opt/` scripts).
-2. Test it on real data via **DIMS_Dashboard** + `serve.py` (see
-   [WORKFLOW.md](WORKFLOW.md)).
-3. Merge it into `template/main` (the single bless point).
-4. Integrate into the builder:
-   ```sh
-   cd DIMS_dashboard_builder
-   scripts/update-template.sh
-   # = git subtree pull --prefix=template \
-   #     https://github.com/dims-network/DIMS_dashboard_template.git main --squash
-   ```
-5. Review the squashed merge, sanity-check with a build, then `git push`.
-
-> Existing generated projects pick up new scripts automatically: on the next
-> build, `acquire_template()` refreshes a project's template *code* (`opt/`, the
-> frontend, the deploy workflow) while preserving the user's `config.json` and
-> `assets/`.
+Participation is covered by our
+[Code of Conduct](https://github.com/dims-network/dims/blob/main/CODE_OF_CONDUCT.md).
