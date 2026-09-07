@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Architecture · DIMS docs</title>
-<meta name="description" content="The DIMS source-of-truth model: how dashboard code flows from the template to the builder and the canonical dashboard." />
+<meta name="description" content="How DIMS fits together: one core repository, self-registering tabs, and one small repo per study pinning a released version." />
 <link rel="stylesheet" href="../style.css" />
 <link rel="stylesheet" href="docs.css" />
 </head>
@@ -29,68 +29,109 @@
 
       <div class="crumbs">Getting started</div>
       <h1>Architecture</h1>
-      <p class="lede">The DIMS system is several repositories with <b>one source of
-        truth for dashboard code</b>. Everything else either contributes code back
-        to that source or consumes it.</p>
+      <p class="lede">All DIMS code lives in <b>one repository</b>. Each study —
+        each recording session, each experiment — lives in its own small repo
+        holding only its configuration, its data, and a pinned version of that
+        core.</p>
 
-      <h2>The source-of-truth model</h2>
-      <p><b>DIMS_dashboard_template</b> holds the canonical dashboard code — the
-        frontend (<code>js/</code>, <code>css/</code>, <code>index.html</code>) and
-        the analysis scripts (<code>opt/step_*.py</code>). Two downstreams consume
-        it; each adds something different.</p>
+      <h2>How a dashboard works</h2>
+      <p>A deployed dashboard is one small web page with no build step. It reads
+        a <code>config.json</code> (which videos and analyses to show) and the
+        matching data files, and draws everything you see. The one idea to
+        remember: <b>pick a moment in time, and every panel updates to that
+        moment together</b> — the charts, the videos, and the transcript all stay
+        in sync.</p>
 
-      <pre class="code">          DIMS_dashboard_template          <span class="c"># single source of truth — code only</span>
-            (frontend + opt/ scripts)
+      <div class="mermaid">
+flowchart TD
+    cfg["config.json<br/>+ data files"] --> core
+    core["dims-core.js<br/><i>loads data, owns the timeline</i>"]
+    core --> tabs["Tab modules<br/>one file each"]
+    core --> txt["Transcript"]
+    core --> vid["video-component.js<br/>video players"]
+    tabs -. "pick a time" .-> core
+    core -. "everyone update" .-> tabs
+      </div>
+
+      <p><b><code>dims-core.js</code></b> is the conductor. It loads the data,
+        keeps the timeline, and tells everything else which moment to show. It
+        does not know what a recurrence plot is, or what ELAN is.</p>
+      <p><b>Tab modules</b> do the drawing — one file per tab, in
+        <code>packages/dims-tabs/</code>. Each announces itself to the core and
+        says under what conditions it applies (“show me only if this study has
+        cross-wavelet results”). Delete the file and the tab is gone; add one and
+        it appears. Nothing else changes.</p>
+      <p>That applies to the built-in tabs too, not just add-ons. It has to: if
+        the mechanism only carried third-party tabs, it could quietly break and
+        nobody would notice until an outside contributor tried to use it.</p>
+      <p><b><code>video-component.js</code></b> is the one small React piece. The
+        core hands it a video and a time window; it plays just that segment and
+        loops it. In short — <i>the core decides which moment to show, and the
+        tabs and video know how to show it.</i></p>
+
+      <h2>One core, many studies</h2>
+      <pre class="code">          dims-network/dims                <span class="c"># all the code, released as versions</span>
+       core · tabs · analyses · builder
                      │
-          ┌──────────┴───────────┐
-      <span class="k">git merge</span>               <span class="k">git subtree</span>
-          │                      │
-    DIMS_Dashboard         DIMS_dashboard_builder
-    code + real data,      template/ vendored inside;
-    deployed to Pages      no-code wizard wraps it</pre>
+        pinned and vendored into each study
+                     │
+      ┌──────────────┼──────────────┐
+  case-demo      case-ortho     case-karnatak
+  config + data  config + data  config + data <span class="c">(private)</span></pre>
 
-      <table>
-        <thead><tr><th>Repo</th><th>What it adds</th><th>Pulls template code via</th></tr></thead>
-        <tbody>
-          <tr><td><b>DIMS_dashboard_template</b></td><td>— (it <i>is</i> the source)</td><td>—</td></tr>
-          <tr><td><b>DIMS_Dashboard</b></td><td>canonical data + the deployed GitHub Pages site</td><td><code>git merge template/main</code></td></tr>
-          <tr><td><b>DIMS_dashboard_builder</b></td><td>the no-code wizard</td><td><code>git subtree pull</code> (its <code>template/</code> subdir)</td></tr>
-        </tbody>
-      </table>
+      <p>A study repo holds no code of its own. It names a core version in
+        <code>dims-case.json</code>, and a copy of that exact release sits in its
+        <code>vendor/</code> directory. Continuous integration checks that the
+        copy still matches the release, so hand-editing it is a build failure
+        rather than a silent fork.</p>
+      <p>Updating a study is therefore a <b>version bump</b>, not a merge: a bot
+        opens a pull request changing the pinned version and refreshing the
+        vendored copy.</p>
 
-      <p>Why two different mechanisms? In the builder the template lives in a
-        <code>template/</code> subdirectory, which is exactly what a git
-        <b>subtree</b> tracks. In <code>DIMS_Dashboard</code> the dashboard code
-        sits at the repo root, intermixed with data — there is no subdirectory to
-        target — so it consumes the template as a plain upstream <b>remote</b> it
-        merges from.</p>
+      <div class="callout"><b>Why vendor a copy instead of loading from a CDN?</b>
+        Because these dashboards accompany published research and need to still
+        work in ten years, on a machine nobody maintains, possibly with no
+        network. A self-contained repository can be archived and given a DOI. A
+        link to someone else's server cannot.</div>
 
-      <h2>The golden rule</h2>
-      <div class="callout warn"><b>Never edit dashboard <i>code</i> directly in
-        <code>DIMS_Dashboard</code> or the builder.</b> All code changes originate
-        in the template; the downstreams only ever <i>receive</i>. That is what
-        keeps merges conflict-free — a downstream's data files never exist
-        upstream, so they never collide.</div>
+      <h2>What replaced the old model</h2>
+      <p>Until September 2026 the code lived in five repositories kept in step by
+        hand, with one of them nominated as the source of truth. It did not hold,
+        and the failure was measurable: three unrelated git histories, four
+        different copies of the frontend ranging from 2,136 to 2,500 lines, and
+        <b>no single repository containing every feature</b>. One fork carried
+        the only correct wavelet-coherence calculation for months while four
+        others shipped a version that measured signal power instead — not because
+        anyone was careless, but because there was no mechanism for a fix to
+        travel.</p>
+      <p>The rule is now structural rather than remembered: there is only one
+        copy of the code, so there is nothing to keep in step.</p>
 
-      <h2>Code vs. data</h2>
-      <p>Each consumer cleanly separates <b>code</b> (received from the template)
-        from its own <b>data/configuration</b> (kept locally):</p>
+      <h2>Code, data, and privacy</h2>
+      <p>Every study declares whether its data is public or private, in
+        <code>dims-case.json</code>. It is a decision the researcher makes and
+        records — never something inferred from repository settings, which anyone
+        can change later without knowing what is inside.</p>
       <ul>
-        <li><b>DIMS_Dashboard</b> — keeps <code>assets/</code> and
-          <code>config.json</code>; a <code>.gitattributes</code> rule
-          (<code>config.json merge=ours</code>) auto-keeps its config on every
-          template merge.</li>
-        <li><b>builder</b> — its <code>acquire_template()</code> refreshes a
-          generated project's template <i>code</i> (<code>opt/</code>, frontend,
-          deploy workflow) on each build while preserving the user's
-          <code>config.json</code> and <code>assets/</code>.</li>
+        <li><b>Public</b> — data is committed alongside the config, and the
+          dashboard publishes to GitHub Pages.</li>
+        <li><b>Private</b> — the data lives outside the repository entirely.
+          Commit hooks refuse to stage it, CI fails if any of it is ever tracked,
+          and CI also fails if the repository is made public while the study
+          still says private. The dashboard runs locally against the real data;
+          only a manifest of filenames and checksums is committed.</li>
       </ul>
+      <p>Going public is an explicit, checklisted transition — anonymise, verify
+        frame by frame, then flip the declaration — never a side effect of
+        something else.</p>
 
-      <h2>Related repositories</h2>
-      <p>Beyond the dashboard family, the network includes Python/Dash viewers
-        (<code>bots-viewer</code>, <code>Ortho-viewer</code>) and study-specific
-        forks (e.g. <code>DIMS_Dashboard_Ortho</code>). See the
-        <a href="../index.html">repository overview</a> on the home page.</p>
+      <h2>The Python side</h2>
+      <p>Analyses are a pip package, <code>dims-analysis</code>. Each analysis is
+        a small class that says which config key switches it on and where its
+        output goes; the runner discovers them rather than listing them. An
+        analysis published in a <i>separate</i> package joins the pipeline with no
+        change to DIMS at all, which is how work from other toolboxes is meant to
+        arrive.</p>
 
       <div class="docs-nextprev">
         <a href="index.html">← Overview</a>
@@ -105,5 +146,22 @@
 </div>
 
 <script src="docs.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: 'inherit',
+      fontSize: '15px',
+      primaryColor: '#f6f8fa',
+      primaryBorderColor: '#d9dee3',
+      primaryTextColor: '#1f2328',
+      lineColor: '#8c959f',
+      tertiaryColor: '#ffffff'
+    },
+    flowchart: { curve: 'basis', htmlLabels: true, padding: 14, nodeSpacing: 55, rankSpacing: 55 }
+  });
+</script>
 </body>
 </html>

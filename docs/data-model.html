@@ -32,6 +32,10 @@
       <p class="lede">A dashboard is driven by one <code>config.json</code> plus a
         strict <code>assets/</code> file-naming convention. The builder writes both
         for you; this page is the underlying contract.</p>
+      <div class="callout tip">There is now a machine-readable version:
+        <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/config.schema.json"><code>config.schema.json</code></a>.
+        CI validates every study against it, so a malformed config is caught before
+        it produces a blank tab rather than after.</div>
 
       <h2>Asset layout</h2>
       <p>Files are found <b>by name</b>. Everything from one recording shares a

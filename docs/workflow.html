@@ -27,77 +27,54 @@
     <aside class="docs-side"></aside>
     <main class="docs-main">
 
-      <div class="crumbs">Development</div>
+      <div class="crumbs">Working on DIMS</div>
       <h1>Integration workflow</h1>
-<div class="note" style="border-left:3px solid #9a6700;padding:.6rem .9rem;margin:1rem 0;background:#fffbe6"><strong>Updated September 2026.</strong> All DIMS code now lives in one repository, <a href="https://github.com/dims-network/dims">dims-network/dims</a>. The template-and-downstreams model described below has been replaced; see <a href="https://github.com/dims-network/dims-network.github.io/blob/main/WORKFLOW.md">WORKFLOW.md</a> for the current workflow.</div>
-      <p class="lede">There is <b>one source of truth for dashboard code</b> — the
-        template. Features are developed there, validated on real data, blessed
-        once, and then pulled into the downstreams.</p>
+      <p class="lede">All code lives in one repository. Studies pin a released
+        version of it. Updating a study is a version bump, not a merge.</p>
 
       <table>
-        <thead><tr><th>Repo</th><th>Role</th><th>Gets template code via</th></tr></thead>
+        <thead><tr><th>Repo</th><th>Role</th></tr></thead>
         <tbody>
-          <tr><td><b>DIMS_dashboard_template</b></td><td>canonical code (frontend + <code>opt/</code> scripts)</td><td>— (the source)</td></tr>
-          <tr><td><b>DIMS_Dashboard</b></td><td>canonical data + deployed site + integration test bed</td><td><code>git merge template/main</code></td></tr>
-          <tr><td><b>DIMS_dashboard_builder</b></td><td>the no-code wizard</td><td><code>git subtree pull</code></td></tr>
+          <tr><td><b><a href="https://github.com/dims-network/dims">dims</a></b></td><td>all code — core, tabs, analyses, builder; released as tags</td></tr>
+          <tr><td><b>case repos</b></td><td>one study each: <code>config.json</code>, data, a pinned <code>vendor/dims-core</code></td></tr>
+          <tr><td><b><a href="https://github.com/dims-network/.github">.github</a></b></td><td>one copy of every CI job, called by the rest</td></tr>
         </tbody>
       </table>
 
-      <div class="callout warn"><b>Golden rule:</b> never edit dashboard <i>code</i>
-        directly in <code>DIMS_Dashboard</code> or the builder. All code changes
-        originate in the template; the downstreams only <i>receive</i>. That keeps
-        merges conflict-free — a downstream's <code>assets/</code> never exist
-        upstream, and <code>config.json</code> is auto-kept via
-        <code>.gitattributes merge=ours</code>.</div>
-
-      <h2>Lifecycle of a feature</h2>
+      <h2>Lifecycle of a change</h2>
       <ol class="steps">
-        <li>
-          <h4>Develop on the template</h4>
-          <p>Branch <b>DIMS_dashboard_template</b> and open a PR there (frontend or
-            <code>opt/</code> scripts).</p>
-        </li>
-        <li>
-          <h4>Integration-test on real data</h4>
-          <p>In <b>DIMS_Dashboard</b>, try the feature branch against the canonical
-            data and preview locally:</p>
-          <pre class="code">git fetch template &lt;feature-branch&gt;
-git checkout -b test/&lt;feature&gt; &amp;&amp; git merge template/&lt;feature-branch&gt;
-python serve.py 8000        <span class="c"># open http://localhost:8000 and check it</span></pre>
-          <p>Throw the test branch away afterwards
-            (<code>git checkout main &amp;&amp; git branch -D test/&lt;feature&gt;</code>).</p>
-        </li>
-        <li>
-          <h4>Bless it</h4>
-          <p>Merge the PR into <b><code>template/main</code></b> — the single
-            approval point.</p>
-        </li>
-        <li>
-          <h4>Propagate downstream (mechanical, no re-review)</h4>
-          <p><b>DIMS_Dashboard:</b></p>
-          <pre class="code">scripts/update-from-template.sh   <span class="c"># git fetch + merge template/main</span>
-python serve.py 8000              <span class="c"># verify with real data</span>
-git push                          <span class="c"># Pages redeploys</span></pre>
-          <p><b>Builder:</b></p>
-          <pre class="code">scripts/update-template.sh        <span class="c"># git subtree pull --prefix=template ... --squash</span>
-git push</pre>
-        </li>
+        <li><h4>Open a pull request against <code>dims</code></h4>
+          <p>CI checks Python and JavaScript syntax, validates <code>config.json</code>
+            against the shared schema, runs the analysis and dashboard test suites,
+            and guards file sizes.</p></li>
+        <li><h4>Merge</h4>
+          <p>The single approval point — and now there is only one copy of the code
+            to approve.</p></li>
+        <li><h4>Release a tag</h4>
+          <p>When the change should reach studies.</p></li>
+        <li><h4>Studies update themselves</h4>
+          <p>A bot opens a pull request in each case repo bumping the pinned version
+            and refreshing the vendored copy. CI there verifies the copy matches the
+            release exactly.</p></li>
       </ol>
 
-      <h2>One-time setup (per clone)</h2>
-      <p><b>DIMS_Dashboard</b> uses an <code>ours</code> merge driver so
-        <code>config.json</code> auto-resolves to its own version on every template
-        merge:</p>
-      <pre class="code">git config merge.ours.driver true</pre>
-      <p>The <code>template</code> remote is added automatically by
-        <code>scripts/update-from-template.sh</code> if missing.</p>
+      <p>There is no step in which anyone copies a file between repositories.</p>
 
-      <div class="callout tip"><b>Why bless before propagating?</b> Merging the
-        feature independently into three repos invites drift. Bless once at
-        <code>template/main</code>; the downstreams only ever pull.</div>
+      <h2>Adding something</h2>
+      <p>Adding a tab or an analysis must not require editing a file that already
+        works — they register themselves. Read the one relevant contract:</p>
+      <ul>
+        <li>a tab → <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a></li>
+        <li>an analysis → <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/step.md"><code>docs/contracts/step.md</code></a></li>
+        <li>a new study → <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/case.md"><code>docs/contracts/case.md</code></a></li>
+      </ul>
 
-      <p>See also <a href="contributing.html">Contributing</a> for the subtree
-        mechanics, and <a href="architecture.html">Architecture</a> for the model.</p>
+      <div class="callout"><b>Human-subject data.</b> Every study declares public or
+        private in <code>dims-case.json</code>, enforced by commit hooks and CI
+        rather than by memory. See
+        <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/data-visibility.md">the
+        data-visibility contract</a> before working on a study that holds
+        recordings of people.</div>
 
       <div class="docs-nextprev">
         <a href="analyses.html">← Analyses</a>

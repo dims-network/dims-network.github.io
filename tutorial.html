@@ -140,9 +140,9 @@ python builder.py</pre>
   <!-- PATH 2 — technical -->
   <section id="manual" class="tabpanel" hidden>
     <div class="path manual">
-      <h3>For coders — clone the template &amp; edit by hand</h3>
-      <p class="sub">Full control: start from the template, drop files into <code>assets/</code>
-        with the right names, edit <code>config.json</code>, and (optionally) run the analysis scripts.</p>
+      <h3>For coders — start from the scaffold &amp; edit by hand</h3>
+      <p class="sub">Full control: copy the empty dashboard scaffold, drop files into <code>assets/</code>
+        with the right names, edit <code>config.json</code>, and (optionally) run the analyses.</p>
 
       <div class="callout"><b>You'll need:</b> <b>git</b> and <b>Python 3.9+</b>
         (<a href="https://www.python.org/downloads/">python.org/downloads</a>) — the latter for the
@@ -150,11 +150,19 @@ python builder.py</pre>
 
       <ol class="steps">
         <li>
-          <h4>Create your repo from the template</h4>
-          <p>On <b>DIMS_dashboard_template</b>, click <b>“Use this template”</b> → create a new repo —
-            or just clone it.</p>
-          <pre class="code">git clone https://github.com/dims-network/DIMS_dashboard_template my-dashboard
+          <h4>Start from the scaffold</h4>
+          <p>All DIMS code lives in one repository. The empty dashboard — the page, the
+            styles, the tab modules, an <code>assets/</code> skeleton — is the
+            <b>case scaffold</b> inside it. Copy it and you have a study of your own.</p>
+          <pre class="code">git clone https://github.com/dims-network/dims
+cp -r dims/packages/dims-case-scaffold my-dashboard
 cd my-dashboard</pre>
+          <div class="callout"><b>Working with recordings of people?</b> Decide up
+            front whether the data can be published, and keep private data out of
+            git from the very first commit — removing it afterwards means rewriting
+            history, by which time it has usually been pushed. See
+            <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/data-visibility.md">the
+            data-visibility contract</a>.</div>
         </li>
         <li>
           <h4>Add your assets with the exact names</h4>
@@ -196,18 +204,20 @@ cd my-dashboard</pre>
           <h4>(Optional) Precompute the analyses</h4>
           <p>RQA, cross-wavelet, and cross-RQA read your CSVs and write JSON the dashboard loads. Run
             them once whenever those toggles are on:</p>
-          <pre class="code">pip install -r opt/requirements.txt
-python opt/step_RQA.py          --config config.json --output-dir assets/rqa
-python opt/step_crosswavelet.py --config config.json --output-dir assets/crosswavelet
-python opt/step_cRQA.py         --config config.json --output-dir assets/crqa</pre>
+          <pre class="code">pip install -e ../dims/packages/dims-analysis   <span class="c"># not yet on PyPI</span>
+dims-analysis run --config config.json</pre>
           <p>This produces <code>assets/rqa/{videoID}_rqa_data.json</code>,
             <code>assets/crosswavelet/{videoID}_crosswavelet_data.json</code>, and
-            <code>assets/crqa/{videoID}_crqa_data.json</code>.</p>
+            <code>assets/crqa/{videoID}_crqa_data.json</code>. Each analysis runs
+            only if its key is set in <code>config.json</code>, so the one command
+            does the right thing whatever you enabled.</p>
         </li>
         <li>
           <h4>Preview locally</h4>
           <p>Use the bundled server (it supports HTTP Range requests, which the video needs for seeking):</p>
           <pre class="code">python serve.py 8000   <span class="c"># then open http://localhost:8000</span></pre>
+          <p>It prints which study it is serving and from which directory — worth a
+            glance if you keep several dashboards side by side.</p>
         </li>
         <li>
           <h4>Deploy</h4>
@@ -216,7 +226,7 @@ python opt/step_cRQA.py         --config config.json --output-dir assets/crqa</p
         </li>
       </ol>
 
-      <a class="cta" href="https://github.com/dims-network/DIMS_dashboard_template">Open the template →</a>
+      <a class="cta" href="https://github.com/dims-network/dims">Open the DIMS core →</a>
     </div>
   </section>
 

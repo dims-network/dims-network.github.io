@@ -27,85 +27,45 @@
     <aside class="docs-side"></aside>
     <main class="docs-main">
 
-      <div class="crumbs">Development</div>
+      <div class="crumbs">Working on DIMS</div>
       <h1>Contributing</h1>
-<div class="note" style="border-left:3px solid #9a6700;padding:.6rem .9rem;margin:1rem 0;background:#fffbe6"><strong>Updated September 2026.</strong> All DIMS code now lives in one repository, <a href="https://github.com/dims-network/dims">dims-network/dims</a>. The template-and-downstreams model described below has been replaced; see <a href="https://github.com/dims-network/dims-network.github.io/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for the current workflow.</div>
-      <h2> Todos:</h2>
-      <p>
-        <ul>
+      <p class="lede">DIMS is meant to be extended by people who did not write it —
+        including from outside the project entirely.</p>
 
-          <li>      Make the opt scripts more customizable (also through builder)</li>
-        
-          <li>Implemented, but wrong: Short-series adaptation: cap the window to half the series and refine
-            # the step so we always get several windows (otherwise a single trivial
-            # window renders as a blank metric chart). Long series are unaffected.</li>
-          
-          <li>Dynamic Time Warping Tab</li>
-        </ul>
+      <h2>Start here</h2>
+      <p>All code is in <a href="https://github.com/dims-network/dims"><b>dims-network/dims</b></a>.
+        Its <a href="https://github.com/dims-network/dims/blob/main/AGENTS.md"><code>AGENTS.md</code></a>
+        is a map: it tells you which <i>single</i> document to read for the task you
+        have, rather than asking you to read everything.</p>
+      <p>Issues labelled <b><code>agent-ready</code></b> are self-contained — they
+        name the files, link the contract, and state the acceptance check. Human and
+        automated contributors alike are welcome to take them.</p>
 
-            
-      </p>
-      <p class="lede">All dashboard code changes start in the template; the builder
-        and the canonical dashboard receive them. This page covers the mechanics —
-        see <a href="workflow.html">Integration workflow</a> for the full lifecycle.</p>
-
-      <h2>Where code lives</h2>
+      <h2>The rules</h2>
       <ul>
-        <li><b>DIMS_dashboard_template</b> — the dashboard itself: frontend
-          (<code>js/</code>, <code>css/</code>, <code>index.html</code>), analysis
-          scripts (<code>opt/step_*.py</code>), and <code>serve.py</code>. <b>Make
-          code changes here.</b></li>
-        <li><b>DIMS_dashboard_builder</b> — the no-code wizard. Changes to the
-          wizard itself (the Flask app in <code>app/</code>, the UI in
-          <code>app/static/</code>) are made directly in that repo.</li>
-        <li><b>DIMS_Dashboard</b> — canonical data + the deployed site; receives
-          template code, never authors it.</li>
+        <li><b>One copy of the code.</b> If you are fixing the same bug twice, you
+          are in the wrong repository.</li>
+        <li><b>Everything self-registers.</b> Adding a tab or an analysis must not
+          require editing an existing file. If it does, the contract needs fixing —
+          say so rather than working around it.</li>
+        <li><b>Assume data is private</b> until <code>dims-case.json</code> says
+          otherwise. Never commit anything under <code>assets/</code>, and never
+          move data content into an external service.</li>
+        <li><b>No build step, by design.</b> A dashboard must still open from a
+          plain file server years from now, on a machine nobody maintains.</li>
+        <li><b>Comment the why.</b> The comments worth having in this codebase
+          explain a decision or a trap, and often carry a measurement.</li>
       </ul>
 
-      <h2>How the template lives inside the builder</h2>
-      <p>The builder ships a complete copy of the template under
-        <code>template/</code> so a non-technical user needs <b>neither git nor a
-        network connection</b> (<code>acquire_template()</code> in
-        <code>app/project.py</code> copies it into each generated project, and the
-        builder runs the project's own <code>opt/</code> scripts).</p>
-      <p>That directory is a <b>git subtree</b> of the upstream template repo — the
-        files are committed in the builder (offline-safe), but their history is
-        linked upstream so updates pull in with one command.</p>
+      <h2>Extending from outside</h2>
+      <p>An analysis registers through a <code>dims.steps</code> entry point; a tab
+        is one self-registering file. Neither needs a change to DIMS itself. If your
+        tool already produces a time series with a time column in seconds, the work
+        is a unit conversion and a filename, not an integration.</p>
 
-      <h2>Adding a feature to the dashboard</h2>
-      <ol class="steps">
-        <li>
-          <h4>Open a PR against the template</h4>
-          <p>Branch <b>DIMS_dashboard_template</b> (frontend or <code>opt/</code>
-            scripts) and open a pull request.</p>
-        </li>
-        <li>
-          <h4>Test it on real data</h4>
-          <p>Try the branch on <b>DIMS_Dashboard</b> and preview with
-            <code>serve.py</code> — see <a href="workflow.html">Integration
-            workflow</a>.</p>
-        </li>
-        <li>
-          <h4>Merge to <code>template/main</code></h4>
-          <p>This is the single bless point.</p>
-        </li>
-        <li>
-          <h4>Integrate into the builder</h4>
-          <pre class="code">cd DIMS_dashboard_builder
-scripts/update-template.sh
-<span class="c"># equivalently:</span>
-<span class="c"># git subtree pull --prefix=template \</span>
-<span class="c">#     https://github.com/dims-network/DIMS_dashboard_template.git main --squash</span></pre>
-          <p>Review the squashed merge, do a quick build to sanity-check, then
-            <code>git push</code> the builder.</p>
-        </li>
-      </ol>
-
-      <div class="callout tip">Existing generated projects pick up new scripts
-        automatically: on the next build, <code>acquire_template()</code> refreshes
-        a project's template <i>code</i> (<code>opt/</code>, frontend, deploy
-        workflow) from the bundled copy while preserving the user's
-        <code>config.json</code> and <code>assets/</code>.</div>
+      <h2>Code of conduct</h2>
+      <p>Participation is covered by our
+        <a href="https://github.com/dims-network/dims/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a>.</p>
 
       <div class="docs-nextprev">
         <a href="workflow.html">← Integration workflow</a>

@@ -29,20 +29,23 @@
 
       <div class="eyebrow">Documentation</div>
       <h1>DIMS documentation</h1>
-      <p class="lede">Technical reference for how the DIMS dashboard, its template,
-        the no-code builder, and the canonical data site fit together — and the
-        workflow for developing and integrating changes across them.</p>
+      <p class="lede">Technical reference for the DIMS core, its self-registering
+        tabs, the Python analyses and the no-code builder — and the workflow for
+        changing any of them.</p>
 
       <div class="callout tip">New here? The <a href="../tutorial.html">Tutorial</a>
-        shows how to build your own dashboard (no-code builder or hand-edited
-        template). These pages are the <b>technical / maintainer</b> reference.</div>
+        shows how to build your own dashboard — with the no-code builder, or by
+        hand from the scaffold. These pages are the <b>technical</b> reference.
+        To work on DIMS itself, start from
+        <a href="https://github.com/dims-network/dims/blob/main/AGENTS.md">AGENTS.md</a>
+        in the core repository.</div>
 
       <h2>Sections</h2>
       <div class="grid">
         <div class="card web">
           <h3><a href="architecture.html">Architecture</a></h3>
-          <p>The repositories and how code flows from a single source of truth to
-            the builder and the canonical dashboard.</p>
+          <p>One core repository, self-registering tabs, and one small repo per
+            study pinning a released version of the core.</p>
           <div class="links"><a href="architecture.html">Read →</a></div>
         </div>
         <div class="card web">
@@ -53,8 +56,8 @@
         </div>
         <div class="card web">
           <h3><a href="analyses.html">Analyses</a></h3>
-          <p>RQA, cross-RQA, and cross-wavelet: inputs, the scripts that produce
-            them, and the JSON the dashboard renders.</p>
+          <p>RQA, cross-RQA and cross-wavelet: inputs, outputs, and how to read a
+            coherence value against its null.</p>
           <div class="links"><a href="analyses.html">Read →</a></div>
         </div>
         <div class="card py">
