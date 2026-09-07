@@ -23,7 +23,7 @@ that carry only their configuration, their data, and a pinned version of that
 core.
 
 To work on DIMS itself, start from
-[`AGENTS.md`](https://github.com/dims-network/dims/blob/main/AGENTS.md) in that
+[its README](https://github.com/dims-network/dims#working-on-dims) in that
 repository — it is a map telling you which single document to read for the task
 you have.
 

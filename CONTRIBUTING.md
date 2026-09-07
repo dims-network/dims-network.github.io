@@ -3,7 +3,7 @@
 > Canonical / web version: <https://dims-network.github.io/docs/contributing.html>
 
 All code is in **[dims-network/dims](https://github.com/dims-network/dims)**.
-Start with its [`AGENTS.md`](https://github.com/dims-network/dims/blob/main/AGENTS.md) —
+Start with its [its README](https://github.com/dims-network/dims#working-on-dims) —
 a map telling you which single document to read for the task you have, rather
 than asking you to read everything.
 
