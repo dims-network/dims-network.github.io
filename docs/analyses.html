@@ -93,6 +93,16 @@ dims-analysis run --config config.json   <span class="c"># everything this study
         <code>coi</code>, and significance fields including
         <code>sig95_wtc</code>.</div>
 
+      <h3>Gaps in a coherence plot</h3>
+      <p>A blank cell means <b>no coherence to report</b>, not zero and not one.
+        Where neither signal has any power in a band — a limb that is not moving,
+        a piece sitting still — there is no phase relationship to measure, so the
+        cell is left undefined and drawn as a gap.</p>
+      <p class="muted">Before September 2026 those cells were clipped to 1.0,
+        which painted <i>perfect coupling</i> across every stretch where nothing
+        happened. On a study whose velocity signals are zero about half the time
+        that affected 8% of the field.</p>
+
       <h3>Reading a coherence value</h3>
       <p>Coherence does not sit at zero when two signals are unrelated. It is a
         ratio taken over a smoothing neighbourhood, so a handful of random phase
