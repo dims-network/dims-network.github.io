@@ -28,6 +28,10 @@ const DOCS_NAV = [
         "href": "assets.html"
       },
       {
+        "title": "Analysis output",
+        "href": "analysis-output.html"
+      },
+      {
         "title": "Wavelet coherence",
         "href": "coherence.html"
       },

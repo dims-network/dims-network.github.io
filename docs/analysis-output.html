@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Analysis output · DIMS docs</title>
+<meta name="description" content="What an analysis result must contain, and why: the bounds, the encoding, the window, asked-for beside achieved, and which significance level is the right one." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1>Contract: what an analysis output is</h1>
+      <p><a href="assets.html">Asset layout</a> says where a result goes and what it is called. This
+      says what has to be <strong>in</strong> it, and why each requirement exists.</p>
+      <p>It exists because nine defects were found in these outputs one at a time, each
+      by accident, and they were not nine unrelated bugs: nothing stated what an
+      output was supposed to be, so every check could only ask &quot;did it crash?&quot;. Every
+      requirement below is stated once and tested against
+      <a href="https://github.com/dims-network/dims/blob/v2.0.0/examples/reference/README.md"><code>examples/reference/</code></a>, a synthetic study
+      whose answers are known before anything runs.</p>
+      <hr />
+      <h2>A1 — Stated input bounds, refused before allocating</h2>
+      <p>An analysis states the shortest and longest input it accepts, in samples, with
+      the reason.</p>
+      <p>RQA and cross-RQA build a dense N×N matrix, so the maximum follows from memory:
+      a 58,000-point recording is 3.4 billion cells and <strong>27 GB</strong>, and there was no
+      guard at all. <code>common/limits.py</code> holds one implementation of the arithmetic;
+      <code>check_length</code> refuses <strong>before</strong> allocating and names the limit, the actual
+      length, and what to do about it.</p>
+      <p>The lower bound is a minimum of <code>MIN_POINTS</code> samples and a <strong>non-zero
+      variance</strong>. Both recurrence analyses normalise by the standard deviation, and a
+      constant series divides by zero: measured before the check existed, a flat
+      signal reported <code>recurrence_rate = -0.000977517</code> — a negative share of cells,
+      which reached a dashboard caption. It is refused with a sentence, not analysed
+      into a NaN.</p>
+      <p>Both steps normalise through one <code>series.normalise</code>. They used to do it two
+      ways — one divided by <code>np.std(x)</code>, the other by <code>np.std(x) + 1e-6</code> — which does
+      not move DET or RR, because the threshold is a percentile and the analysis is
+      scale-free, but does move the stored <code>threshold</code>, so the two steps' thresholds
+      were not comparable.</p>
+      <p>A pairwise analysis interpolates both series onto one grid at the <strong>finer</strong> of
+      the two sampling intervals, so a 10 Hz series paired with a 100 Hz one produces
+      a 100 Hz grid — ten times the points, a hundred times the matrix, and no added
+      information. The length guard therefore applies to the <strong>common grid</strong>, not to
+      either input.</p>
+      <h2>A2 — One file format</h2>
+      <p><strong>JSON, with base64 little-endian typed arrays for anything large.</strong> No <code>.npz</code>
+      anywhere. Every array field is either a plain JSON list — small, and something
+      a person opens the file to read — or an object naming its encoding:</p>
+      <pre><code class="language-jsonc">{&quot;encoding&quot;: &quot;bitmap-b64&quot;, &quot;rows&quot;: 500, &quot;cols&quot;: 500, &quot;data&quot;: &quot;…&quot;}
+      {&quot;encoding&quot;: &quot;f32-b64&quot;,    &quot;shape&quot;: [128, 3026],      &quot;data&quot;: &quot;…&quot;}
+      </code></pre>
+      <p>The <code>encoding</code> field is the design. A reader that meets one it does not know
+      <strong>says so by name</strong>; a format that changed silently is how a tab ends up
+      drawing an empty panel with nothing in the log. One decoder in Python
+      (<code>common/arrays.py</code>), one in JavaScript (<code>DIMS.decodeArray</code>), tested against
+      each other with vectors the Python side produced.</p>
+      <p>There used to be two artifacts per analysis, and measured file by file the
+      second one mostly held nothing the first did not:</p>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th>what the <code>.npz</code> uniquely held</th>
+        <th>verdict</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>RQA</td>
+        <td><code>time</code> + <code>signal</code>, byte-identical to the source CSV after the documented cleaning; windowed metrics that duplicate the JSON's exactly</td>
+        <td>redundant</td>
+      </tr>
+      <tr>
+        <td>cRQA</td>
+        <td>the prepared signals on the common grid; metrics duplicated</td>
+        <td>nearly redundant</td>
+      </tr>
+      <tr>
+        <td>cross-wavelet</td>
+        <td>coherence, power and phase at 6× the time resolution</td>
+        <td>the real thing</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>Meanwhile the assets contract told readers &quot;<strong>Analyse from the <code>.npz</code></strong>&quot; —
+      pointing them, for RQA, at the file holding <em>less</em>.</p>
+      <p>A recurrence matrix is a <strong>bitmap</strong>, one bit per cell, not a list of
+      <code>[row, col]</code> pairs. Pairs cost about ten bytes per recurrent cell; a bitmap
+      costs one bit per cell whatever the density. Measured on one ORTHO gaze matrix:
+      <strong>7,300,452 bytes as pairs against 133,803 as a bitmap, 54.6×</strong>. Sparse only
+      wins below about 1.2 % density, and RQA targets 7 % while ORTHO's gaze channels
+      run 63–89 %.</p>
+      <p><strong>Nothing derived is stored.</strong> <code>sig95_xwt</code> — joint power divided by its own
+      per-scale level, broadcast across time — was a third full grid holding the
+      quotient of two fields already in the file, and a quarter of the full-resolution
+      output. A reader divides.</p>
+      <p>The measured cost, stated rather than glossed. On the reference study:</p>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th>before</th>
+        <th>after</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>RQA (JSON + <code>.npz</code>)</td>
+        <td>781,681</td>
+        <td>207,459</td>
+        <td><strong>3.8× smaller</strong></td>
+      </tr>
+      <tr>
+        <td>cRQA</td>
+        <td>309,186</td>
+        <td>137,937</td>
+        <td><strong>2.2× smaller</strong></td>
+      </tr>
+      <tr>
+        <td>cross-wavelet, what a page fetches</td>
+        <td>4,881,299</td>
+        <td>2,238,164</td>
+        <td><strong>2.2× smaller</strong></td>
+      </tr>
+      <tr>
+        <td>cross-wavelet, full resolution</td>
+        <td>6,979,924</td>
+        <td>12,721,453</td>
+        <td><strong>1.8× larger</strong></td>
+      </tr>
+      </tbody>
+      </table>
+      <p>The last row is the price: base64 float32 against a deflate-compressed <code>.npz</code>.
+      It is paid by the file a browser never fetches, and it buys one format with one
+      decoder and one schema. A study that does not want it sets
+      <code>analysis.crosswavelet.saveFullResolution: false</code>.</p>
+      <h2>A3 — Two resolutions, and only where the second has content</h2>
+      <p>Same schema, two files:</p>
+      <ul>
+      <li><code>{video}_{analysis}_data.json</code> — reduced, what the browser fetches</li>
+      <li><code>{video}_crosswavelet_full.json</code> — full resolution</li>
+      </ul>
+      <p>They differ <strong>only</strong> in the time axis; field names and schema are identical, so
+      one reader serves both, and a notebook written against the payload does not
+      break on the file it is supposed to prefer.</p>
+      <p><strong>Only cross-wavelet gets the second file</strong>, and that is measured rather than
+      assumed: only there are the large fields two-dimensional (128 × 3026 against
+      128 × 504 drawn). Everything in a recurrence result except the matrix is
+      one-dimensional and small — a 6,000-point signal is 24 kB as float32 — so the
+      full-resolution signal travels in the single file, and there is nothing a second
+      one could hold.</p>
+      <p><strong>The recurrence matrix is not stored at any resolution.</strong> It is quadratic:
+      3,000 points bit-packed is 1.1 MB, but 58,000 is 420 MB. The signal and the
+      threshold are stored, and the matrix is one <code>cdist</code> away.</p>
+      <p>Every payload carries <code>payload_version</code>. A tab meeting a newer one says so
+      rather than drawing nothing.</p>
+      <h2>A4 — Reduction is recorded, and a cap is a cap</h2>
+      <p>Everything a browser draws is reduced, and the reduction is part of the result:
+      factor, method, the full length it came from, and the recurrence rate both
+      before and after.</p>
+      <p><code>n // factor &lt;= max_points</code>, and the two words matter. <code>factor_for</code>
+      floor-divided, so 999 points against a cap of 500 gave a factor of 1 and drew
+      all 999 — anything between the cap and twice the cap was not reduced at all,
+      which is quadratic in a recurrence plot. The same defect existed a second time,
+      inside the cross-wavelet step, which computed its own factors.</p>
+      <p>Budgets, in drawn elements: a recurrence plot at most <strong>500 × 500</strong>, a
+      cross-wavelet picture at most <strong>500 × 100</strong>.</p>
+      <p><code>rate_full</code> and <code>rate_drawn</code> are both recorded because they can differ: on a
+      very sparse matrix, reproducing the rate exactly would reduce a recurrent line
+      to a couple of dots. The picture must never silently contradict the number
+      printed beside it.</p>
+      <h2>A5 — The window is a parameter of the result</h2>
+      <p>DET, LAM, RR and L_MAX are shares of the structure inside one window, and every
+      one of them moves with how long that window is. So a windowed analysis records
+      <code>window</code>: the length and step <strong>asked for</strong>, the length and step <strong>used</strong>, the
+      number of windows, and a sentence when they differ.</p>
+      <p>They differ often. A 20 s window does not fit twice in a 20.48 s recording, and
+      one trivial window renders a blank chart, so it is shortened — correctly, and
+      until this contract existed, silently: 20 s and 1 s requested, 10.24 s and 0.5 s
+      used, nothing said. Two recordings of different lengths were then analysed at
+      different window lengths and their metric series compared as if they were not.</p>
+      <p>The placement is decided <strong>in seconds</strong>, and sample indices derived from times.
+      Doing it in samples made the reported time axis move with the sampling rate: the
+      same 2 s sine at 50 Hz and 100 Hz produced steps of 0.5 s and 0.51 s and last
+      window centres of 15.12 s and 15.32 s. A unit error like that is invisible on
+      real data, because every number stays plausible.</p>
+      <p>One implementation: <code>common/window.py</code>, used by both recurrence steps.</p>
+      <h2>A6 — Asked-for and achieved are both recorded</h2>
+      <p>Wherever an analysis aims at something it may not hit, the payload carries both
+      numbers and a warning when they are far apart.</p>
+      <ul>
+      <li><strong>Recurrence rate.</strong> The threshold is a percentile of the distance matrix, so
+      a signal with many exactly-equal distances lands on a plateau and the target
+      cannot be reached. That is common in real data — a game piece at rest, a
+      quantised sensor — and it went unrecorded: an ORTHO series reached 12.7 %
+      against a 7 % target in silence, and a four-level quantised signal reaches
+      33.7 %. DET and LAM depend strongly on the rate, so two recordings analysed at
+      materially different rates are not comparable, and that is a fact about the
+      data rather than an error: it is reported, not raised.</li>
+      <li><strong>The window</strong>, as A5 describes.</li>
+      <li><strong><code>mcCount</code></strong>, so a study computed partly at 100 surrogates and partly at 300
+      cannot be silently inconsistent.</li>
+      <li><strong>The core version that produced the file</strong>, in <code>provenance</code>.</li>
+      </ul>
+      <p>Rounding is uniform. Every payload passes through <code>round_payload</code> and carries a
+      <code>precision</code> block; a study-owned step that skips it produces a file whose stated
+      precision is not its actual precision.</p>
+      <h2>A7 — A stated compute budget</h2>
+      <p><code>analysis.crosswavelet.mcCount</code> is the number of Monte Carlo surrogates behind
+      the coherence null. 300 is the publication setting; the whole ORTHO study at
+      that setting is <strong>~2.8 hours</strong>, and the bottleneck is a Python double loop
+      inside <code>pycwt.wct_significance</code> — 6.9M <code>numpy.ma.__getitem__</code> calls per six
+      surrogates — not the wavelet mathematics. Rewriting a published numerical
+      routine is out of scope; running independent pairs concurrently is not.</p>
+      <p><code>--jobs</code> does that, defaulting to one process per core. <strong>Serial and parallel
+      output must be byte-identical</strong>, and that is the acceptance check rather than a
+      hope: the null is seeded on its own parameters rather than drawn from a shared
+      stream, and results are collected in the order the pairs were listed rather than
+      as they finish, because a payload is a dict written in insertion order. Measured
+      on the reference study with a cold null cache, ten cores, seven pairs: <strong>95.3 s
+      serially against 37.1 s in parallel</strong>, byte for byte the same file.</p>
+      <h2>A8 — What is computed is shown, or it is not computed</h2>
+      <p>A system can sit in a third state — paying for something nobody reads — and
+      nothing says so. The coherence null was exactly that: every study computed it,
+      and one tab in one study read it.</p>
+      <p>The rule: <strong>the Monte Carlo is available to every study, and its default
+      follows from what the study contains.</strong></p>
+      <ul>
+      <li><code>analysis.crosswavelet.mcCount</code> works in any case repository. Anyone who
+      wants to display or work with coherence elsewhere turns it on; nothing about
+      the pipeline has to change for them.</li>
+      <li><strong>Default 100</strong> when the config enables something that reads <code>sig95_wtc</code> —
+      today that is <code>include_network</code>. <strong>Default 0 otherwise</strong>, skipping the
+      simulation entirely.</li>
+      <li>An explicit <code>mcCount</code> always wins, in both directions.</li>
+      <li>The step <strong>says which it chose and why</strong>, and records the choice in the
+      payload per A6, so it is visible after the fact and not only in a log nobody
+      kept.</li>
+      <li>A tab that wants <code>sig95_wtc</code> and does not find it <strong>says so</strong> — &quot;this output
+      was built without a coherence null; set <code>analysis.crosswavelet.mcCount</code> and
+      rebuild&quot; — rather than drawing nothing. That is what keeps the default safe
+      when someone adds such a tab later.</li>
+      </ul>
+      <h2>A9 — Significance levels are the published ones</h2>
+      <p>The cross-wavelet spectrum is the square root of a product of two chi-squares
+      (Torrence &amp; Compo 1998, eq. 30), <strong>not</strong> a chi-square. All three significance
+      levels used the chi-square anyway, and evaluated the background at the mean of
+      the two AR(1) coefficients rather than combining the two series' own spectra.
+      Measured: the local level was 1.50× too high with matched coefficients and 2.39×
+      at α = (0.95, 0.2); the time-averaged 1.32–1.37×; the scale-averaged 1.267×.</p>
+      <p>One implementation, <code>common/tc98.py</code>, with the equation number beside each
+      formula and the paper itself in <code>examples/reference/</code>. Its transcription is
+      tested against the two values the paper prints (Z₁ = 2.182, Z₂ = 3.999) and
+      against <code>pycwt</code> under substitution — put the chi-square back and hand it one
+      spectrum twice, and it must reproduce <code>pycwt.significance</code> exactly.</p>
+      <p><code>examples/reference/TORRENCE_COMPO.md</code> transcribes every constant used, with
+      its table and equation number, so a reader can check the transcription rather
+      than trust it.</p>
+      <hr />
+      <h2>Acceptance</h2>
+      <ul>
+      <li><code>python -m pytest examples/reference/tests -q -rs</code> is green, and every skip is
+      one you meant. It is a <strong>gate</strong>: CI runs it, and the generated
+      <code>core-update.yml</code> in every study runs it against a candidate release before
+      offering the bump, because the analyses are not vendored — a study installs
+      them from the core it pins.</li>
+      <li>A 60,000-point series is refused with a message naming the limit, before
+      anything is allocated.</li>
+      <li><code>tests/baseline.json</code> pins every number these analyses produce. When it moves,
+      the commit says which numbers moved and why.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v2.0.0/docs/contracts/analysis-output.md"><code>docs/contracts/analysis-output.md</code></a>
+        at <code>v2.0.0</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

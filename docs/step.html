@@ -192,8 +192,8 @@
         <td><code>write_payload</code>, which merges; <code>compare_entries</code>, which says what a re-run replaced</td>
       </tr>
       <tr>
-        <td><code>npz</code></td>
-        <td><code>add_group</code>, appending a full-resolution array group without recompressing the file</td>
+        <td><code>arrays</code></td>
+        <td><code>pack_bitmap</code> / <code>pack_f32</code>, for anything too large to be a readable JSON list</td>
       </tr>
       <tr>
         <td><code>payload</code></td>
@@ -214,7 +214,8 @@
       module-level constant cannot vary per study without editing the source,
       which is exactly how a fork ends up maintaining its own copy of an analysis.</li>
       <li><strong>Write both resolutions.</strong> The JSON is the browser payload and may be
-      reduced; the <code>.npz</code> beside it is the real result. Record the reduction
+      reduced; <code>_full.json</code> beside it, where one exists, is the real result at
+      the resolution it was computed at. Record the reduction
       factor in the payload — a reader who cannot tell a 500-point plot from a
       6000-point one does not know what the axis means. Never let a reduction be
       the only surviving analysis.</li>
@@ -246,8 +247,8 @@
       external root, and <code>git status</code> is clean afterwards.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.5.1/docs/contracts/step.md"><code>docs/contracts/step.md</code></a>
-        at <code>v1.5.1</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v2.0.0/docs/contracts/step.md"><code>docs/contracts/step.md</code></a>
+        at <code>v2.0.0</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

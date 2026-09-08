@@ -1,40 +1,76 @@
 {
   "repo": "https://github.com/dims-network/dims",
-  "ref": "v1.5.1",
+  "ref": "v2.0.0",
   "_comment": "The release these pages were rendered from. Bump it, re-render, commit. CI checks that the committed HTML is what this ref produces, so the site cannot drift from the code it documents.",
   "pages": [
-    {"group": "Getting started",
-     "items": [
-       {"source": "docs/getting-started.md", "out": "getting-started.html",
-        "title": "Getting started",
-        "description": "From raw data to a running dashboard, with the commands that work."},
-       {"source": "docs/architecture.md", "out": "architecture.html",
-        "title": "Architecture",
-        "description": "One core repository, self-registering tabs, and one small repo per study pinning a released version."}
-     ]},
-    {"group": "Reference",
-     "items": [
-       {"source": "docs/contracts/assets.md", "out": "assets.html",
-        "title": "Asset layout",
-        "description": "Where every file goes, what an analysis writes, and how a payload is reduced."},
-       {"source": "docs/coherence.md", "out": "coherence.html",
-        "title": "Wavelet coherence",
-        "description": "What the chance level is, what it assumes, and how to read a coherence value."},
-       {"source": "docs/contracts/data-visibility.md", "out": "data-visibility.html",
-        "title": "Public and private data",
-        "description": "How a study declares its visibility, and the guards that enforce it."}
-     ]},
-    {"group": "Extending DIMS",
-     "items": [
-       {"source": "docs/contracts/tab.md", "out": "tab.html",
-        "title": "Writing a tab",
-        "description": "The contract a tab implements, and the acceptance checks for it."},
-       {"source": "docs/contracts/step.md", "out": "step.html",
-        "title": "Writing an analysis",
-        "description": "A study-owned script or a registered step — which to write, and how."},
-       {"source": "docs/contracts/case.md", "out": "case.html",
-        "title": "A study repository",
-        "description": "What a case repo holds, what a version bump regenerates, and what it never touches."}
-     ]}
+    {
+      "group": "Getting started",
+      "items": [
+        {
+          "source": "docs/getting-started.md",
+          "out": "getting-started.html",
+          "title": "Getting started",
+          "description": "From raw data to a running dashboard, with the commands that work."
+        },
+        {
+          "source": "docs/architecture.md",
+          "out": "architecture.html",
+          "title": "Architecture",
+          "description": "One core repository, self-registering tabs, and one small repo per study pinning a released version."
+        }
+      ]
+    },
+    {
+      "group": "Reference",
+      "items": [
+        {
+          "source": "docs/contracts/assets.md",
+          "out": "assets.html",
+          "title": "Asset layout",
+          "description": "Where every file goes, what an analysis writes, and how a payload is reduced."
+        },
+        {
+          "source": "docs/contracts/analysis-output.md",
+          "out": "analysis-output.html",
+          "title": "Analysis output",
+          "description": "What an analysis result must contain, and why: the bounds, the encoding, the window, asked-for beside achieved, and which significance level is the right one."
+        },
+        {
+          "source": "docs/coherence.md",
+          "out": "coherence.html",
+          "title": "Wavelet coherence",
+          "description": "What the chance level is, what it assumes, and how to read a coherence value."
+        },
+        {
+          "source": "docs/contracts/data-visibility.md",
+          "out": "data-visibility.html",
+          "title": "Public and private data",
+          "description": "How a study declares its visibility, and the guards that enforce it."
+        }
+      ]
+    },
+    {
+      "group": "Extending DIMS",
+      "items": [
+        {
+          "source": "docs/contracts/tab.md",
+          "out": "tab.html",
+          "title": "Writing a tab",
+          "description": "The contract a tab implements, and the acceptance checks for it."
+        },
+        {
+          "source": "docs/contracts/step.md",
+          "out": "step.html",
+          "title": "Writing an analysis",
+          "description": "A study-owned script or a registered step \u2014 which to write, and how."
+        },
+        {
+          "source": "docs/contracts/case.md",
+          "out": "case.html",
+          "title": "A study repository",
+          "description": "What a case repo holds, what a version bump regenerates, and what it never touches."
+        }
+      ]
+    }
   ]
 }

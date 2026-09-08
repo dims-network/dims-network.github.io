@@ -88,7 +88,7 @@
       guards exist to prevent.</p>
       <h2>3. Say what the study contains</h2>
       <p><code>config.json</code> lists the recordings and switches on the analyses and tabs. The
-      full schema is <a href="https://github.com/dims-network/dims/blob/v1.5.1/contracts/config.schema.json"><code>config.schema.json</code></a>.</p>
+      full schema is <a href="https://github.com/dims-network/dims/blob/v2.0.0/contracts/config.schema.json"><code>config.schema.json</code></a>.</p>
       <pre><code class="language-jsonc">{
         &quot;title&quot;: &quot;My study&quot;,
         &quot;videoIDs&quot;: [&quot;session01&quot;, &quot;session02&quot;],
@@ -109,8 +109,13 @@
         &quot;include_cRQA&quot;:        [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
         &quot;include_crosswavelet&quot;: [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
 
-        // Tabs that need no analysis are plain switches.
-        &quot;include_elan&quot;: true
+        // Tabs that need no analysis of their own are plain switches.
+        &quot;include_elan&quot;: true,
+
+        // The cross-effector network draws its edges from the cross-wavelet output
+        // above, and switching it on also switches on the Monte Carlo coherence
+        // null -- without which no edge can be told from chance.
+        &quot;include_network&quot;: true
       }
       </code></pre>
       <p>The distinction is the one thing here worth reading twice: an analysis key
@@ -125,11 +130,15 @@
       <p><code>--check</code> installs nothing and computes nothing. It tells you which recordings
       it can see, which analyses are switched on, and which time series it could not
       find — which is the fastest way to discover that a file is misnamed.</p>
-      <p>The cross-wavelet step estimates its significance level by simulation and is
-      the slow one; on a long recording it is minutes per pair, not seconds.</p>
-      <p>Each analysis writes two files: a reduced JSON the browser draws, and a
-      full-resolution <code>.npz</code> beside it. <strong>Continue your own analysis from the
-      <code>.npz</code></strong>, never from the JSON.</p>
+      <p>The cross-wavelet step estimates its coherence chance level by simulation and
+      is the slow one; on a long recording it is minutes per pair, not seconds. It
+      runs only when something in your config reads it, and the step says which it
+      chose — see <a href="analysis-output.html">analysis output</a>, A8.</p>
+      <p>Each analysis writes one JSON, reduced to a few hundred points so a page can
+      draw it. Cross-wavelet writes a second, <code>_full.json</code>, in the same schema at the
+      resolution it was computed at. <strong>Continue your own analysis from <code>_full.json</code></strong>
+      where it exists; a recurrence payload carries its own full-resolution signal, so
+      there is nothing beside it to prefer.</p>
       <h2>5. Look at it</h2>
       <pre><code class="language-sh">python serve.py        # http://localhost:8000
       </code></pre>
@@ -166,8 +175,8 @@
       the same package, so a project it produces and a project you make by hand are
       the same project.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.5.1/docs/getting-started.md"><code>docs/getting-started.md</code></a>
-        at <code>v1.5.1</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v2.0.0/docs/getting-started.md"><code>docs/getting-started.md</code></a>
+        at <code>v2.0.0</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
