@@ -294,7 +294,7 @@
       <hr />
       <h2>Acceptance</h2>
       <ul>
-      <li><code>python -m pytest examples/reference/tests -q -rs</code> is green, and every skip is
+      <li><code>python -m pytest tests/reference -q -rs</code> is green, and every skip is
       one you meant. It is a <strong>gate</strong>: CI runs it, and the generated
       <code>core-update.yml</code> in every study runs it against a candidate release before
       offering the bump, because the analyses are not vendored — a study installs
