@@ -57,7 +57,7 @@
       of this example omitted the key, and a study written by hand from it had guards
       that declared themselves private and blocked nothing.</p>
       <h2>What <code>private</code> turns on</h2>
-      <p>Four independent guards, ordered by how early they catch the mistake:</p>
+      <p>Three independent guards, ordered by how early they catch the mistake:</p>
       <ol>
       <li><strong>Pre-commit hook</strong> — refuses to stage restricted paths. This is the one that
       matters: it stops data before it enters history, where removing it needs a
@@ -65,11 +65,9 @@
       <li><strong>Pre-push hook</strong> — the same check across the push range.</li>
       <li><strong>CI</strong> — fails if any <em>tracked</em> file matches a restricted path, and fails if
       <code>&quot;visibility&quot;: &quot;private&quot;</code> while the GitHub repo is public. That last check
-      catches the case nobody plans for: someone flipping visibility months later.</li>
-      <li><strong><code>AGENTS.md</code></strong> in the core repository — states the rule where an automated
-      contributor reads it before touching anything.</li>
+      catches the case nobody plans for: someone flipping visibility months later.
+      Enable the hooks once per clone:</li>
       </ol>
-      <p>Enable the hooks once per clone:</p>
       <pre><code class="language-sh">git config core.hooksPath .githooks
       </code></pre>
       <p>A <code>.gitignore</code> is not one of these guards. It is a convention, and <code>git add -f</code>
@@ -111,8 +109,8 @@
       <li>A private case runs locally, renders every tab, and leaves <code>git status</code> clean.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v2.1.0/docs/contracts/data-visibility.md"><code>docs/contracts/data-visibility.md</code></a>
-        at <code>v2.1.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/contracts/data-visibility.md"><code>docs/contracts/data-visibility.md</code></a>
+        at <code>v1.0.0</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
