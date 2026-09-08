@@ -45,7 +45,8 @@
       <p>Every value has to be read against a null. That is what <code>sig95_wtc</code> is for.</p>
       <h2>The null, and how it is obtained</h2>
       <p>For wavelet <strong>power</strong> there is an analytic significance level (Torrence &amp; Compo
-      1998), stored as <code>sig95_xwt</code>. For <strong>coherence</strong> no closed form is available, so
+      1998, eq. 31), stored per scale as <code>signif_xwt</code>. For <strong>coherence</strong> no closed
+      form is available, so
       the level is estimated by simulation, following Grinsted, Moore &amp; Jevrejeva
       (2004):</p>
       <ol>
@@ -62,7 +63,7 @@
       <p>The level is not flat. It sits around 0.58–0.60 through the middle of a band
       and rises at both ends — above 0.7 at the extremes — where fewer independent
       cycles fit inside the record.</p>
-      <h3><code>sig95_wtc</code> and <code>sig95_xwt</code> are not interchangeable</h3>
+      <h3><code>sig95_wtc</code> and <code>signif_xwt</code> are not interchangeable</h3>
       <p>This is the trap that has caught this project once already, and it does not
       announce itself: both are arrays of the right shape, so using the wrong one
       produces a plausible picture rather than an error.</p>
@@ -76,7 +77,7 @@
       </thead>
       <tbody>
       <tr>
-        <td><code>sig95_xwt</code></td>
+        <td><code>signif_xwt</code></td>
         <td>cross-wavelet <strong>power</strong> against red noise</td>
         <td>&quot;is there unusually much joint energy here?&quot;</td>
       </tr>
@@ -87,7 +88,7 @@
       </tr>
       </tbody>
       </table>
-      <p><code>sig95_xwt</code> is not a test of coupling. Two people moving vigorously at the same
+      <p><code>signif_xwt</code> is not a test of coupling. Two people moving vigorously at the same
       time have joint energy whether or not their movements are related.</p>
       <h3>What the method assumes</h3>
       <p>Five assumptions, each of which is a judgement rather than a measurement:</p>
