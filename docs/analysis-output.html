@@ -173,8 +173,22 @@
       <p><strong>The recurrence matrix is not stored at any resolution.</strong> It is quadratic:
       3,000 points bit-packed is 1.1 MB, but 58,000 is 420 MB. The signal and the
       threshold are stored, and the matrix is one <code>cdist</code> away.</p>
-      <p>Every payload carries <code>payload_version</code>. A tab meeting a newer one says so
-      rather than drawing nothing.</p>
+      <p>Every payload carries <code>payload_version</code>, and it is not decoration.</p>
+      <p>A tab checks it before drawing and, when it cannot read the file, says which
+      core wrote it and what to run — an older asset says &quot;rebuild&quot;, a newer one says
+      &quot;update the vendored core&quot;, because those are opposite fixes. A blank panel is
+      indistinguishable from a study with no data, and that is the failure this
+      release most wants nobody to find by looking at a dashboard.</p>
+      <p>The merge honours it too. <code>write_payload</code> preserves entries an incoming run did
+      not rewrite — that is what keeps a study-owned analysis alive across a run of a
+      shared step — but <strong>nothing is merged across a version change</strong>, because an
+      entry nothing rewrote is one the new reader cannot read. Found by rebuilding
+      ORTHO: four of twelve recordings came out stamped v2 while holding v1 entries.
+      What is dropped is named.</p>
+      <p>A payload with <strong>no</strong> version written into a file that has one is <strong>refused</strong>,
+      not merged. Otherwise a study-owned step that forgot the field would drop every
+      entry already in the file, including analyses it did not produce — turning one
+      missing line into the silent loss that merging exists to prevent.</p>
       <h2>A4 — Reduction is recorded, and a cap is a cap</h2>
       <p>Everything a browser draws is reduced, and the reduction is part of the result:
       factor, method, the full length it came from, and the recurrence rate both
