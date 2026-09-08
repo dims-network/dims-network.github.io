@@ -1,6 +1,6 @@
 {
   "repo": "https://github.com/dims-network/dims",
-  "ref": "v1.0.0",
+  "ref": "v1.0.1",
   "_comment": "The release these pages were rendered from. Bump it, re-render, commit. CI checks that the committed HTML is what this ref produces, so the site cannot drift from the code it documents.",
   "pages": [
     {

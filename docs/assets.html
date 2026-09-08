@@ -32,22 +32,22 @@
       <p>The dashboard finds files by convention. There is no index; the name <em>is</em> the
       interface, so a misnamed file is an invisible file.</p>
       <pre><code>assets/
-        videos/{videoID}.mp4                        one per session
-        timeseries/{videoID}_{dataType}.csv         one measure per file
-        transcripts/{videoID}_transcript.json
-        elan/{videoID}.eaf
-        rqa/{videoID}_rqa_data.json                 written by analyses
-        crqa/{videoID}_crqa_data.json
-        crosswavelet/{videoID}_crosswavelet_data.json
-      </code></pre>
+  videos/{videoID}.mp4                        one per session
+  timeseries/{videoID}_{dataType}.csv         one measure per file
+  transcripts/{videoID}_transcript.json
+  elan/{videoID}.eaf
+  rqa/{videoID}_rqa_data.json                 written by analyses
+  crqa/{videoID}_crqa_data.json
+  crosswavelet/{videoID}_crosswavelet_data.json
+</code></pre>
       <p><code>videoID</code> and <code>dataType</code> come from <code>config.json</code>. Neither may contain <code>_</code>
       beyond the separator shown, because the name is split on it.</p>
       <h2>Time series CSV</h2>
       <p>Two columns: a time column and one measurement.</p>
       <pre><code class="language-csv">Time,bodysync
-      0.000,0.1959
-      0.020,0.2213
-      </code></pre>
+0.000,0.1959
+0.020,0.2213
+</code></pre>
       <ul>
       <li>The time column is matched <strong>case-insensitively</strong> and normalised to <code>Time</code>.</li>
       <li>Time is in <strong>seconds</strong>, ascending. Not milliseconds, not frames.</li>
@@ -63,12 +63,12 @@
       which significance level is the right one — is
       <a href="analysis-output.html">analysis output</a>.</p>
       <pre><code>{output_dir}/{videoID}_{slug}_data.json
-      {
-        &quot;video_id&quot;: &quot;3120&quot;,
-        &quot;&lt;container&gt;&quot;: { &quot;&lt;entity&gt;&quot;: { … } },
-        &quot;precision&quot;:   { &quot;significant_figures&quot;: 6, &quot;note&quot;: … }
-      }
-      </code></pre>
+{
+  &quot;video_id&quot;: &quot;3120&quot;,
+  &quot;&lt;container&gt;&quot;: { &quot;&lt;entity&gt;&quot;: { … } },
+  &quot;precision&quot;:   { &quot;significant_figures&quot;: 6, &quot;note&quot;: … }
+}
+</code></pre>
       <p><code>entity</code> is a data type for single-series analyses (<code>&quot;bodysync&quot;</code>), and
       <code>&quot;{a}_vs_{b}&quot;</code> for pairwise ones (<code>&quot;bodysync_vs_neuralsync&quot;</code>).</p>
       <p>The container key is <strong>not</strong> uniform, and reading the wrong one gets you an
@@ -103,21 +103,21 @@
       <p>Every per-entity entry carries a <code>visualization</code> block, and it is a
       <strong>reduction</strong> — a few hundred points regardless of how long the recording was.</p>
       <pre><code class="language-jsonc">&quot;visualization&quot;: {
-        &quot;time&quot;: [...], &quot;data&quot;: [...],      // &quot;data_x&quot;/&quot;data_y&quot; for a pairwise analysis
-        &quot;matrix_size&quot;: 500,
-        &quot;matrix&quot;: {                        // one bit per cell of a 500x500 grid
-          &quot;encoding&quot;: &quot;bitmap-b64&quot;, &quot;rows&quot;: 500, &quot;cols&quot;: 500, &quot;data&quot;: &quot;…&quot;
-        },
-        &quot;reduction&quot;: {
-          &quot;factor&quot;: 12,
-          &quot;series&quot;: &quot;block-mean&quot;,          // &quot;block mode (categorical)&quot; for coded series
-          &quot;matrix&quot;: &quot;density-preserving&quot;,
-          &quot;n_points_full&quot;: 6013,
-          &quot;rate_full&quot;: 0.0700,             // the analysis
-          &quot;rate_drawn&quot;: 0.0699             // what the picture actually shows
-        }
-      }
-      </code></pre>
+  &quot;time&quot;: [...], &quot;data&quot;: [...],      // &quot;data_x&quot;/&quot;data_y&quot; for a pairwise analysis
+  &quot;matrix_size&quot;: 500,
+  &quot;matrix&quot;: {                        // one bit per cell of a 500x500 grid
+    &quot;encoding&quot;: &quot;bitmap-b64&quot;, &quot;rows&quot;: 500, &quot;cols&quot;: 500, &quot;data&quot;: &quot;…&quot;
+  },
+  &quot;reduction&quot;: {
+    &quot;factor&quot;: 12,
+    &quot;series&quot;: &quot;block-mean&quot;,          // &quot;block mode (categorical)&quot; for coded series
+    &quot;matrix&quot;: &quot;density-preserving&quot;,
+    &quot;n_points_full&quot;: 6013,
+    &quot;rate_full&quot;: 0.0700,             // the analysis
+    &quot;rate_drawn&quot;: 0.0699             // what the picture actually shows
+  }
+}
+</code></pre>
       <p>Large arrays name their encoding; short axes stay plain JSON lists. Decode with
       <code>DIMS.decodeArray(field)</code> in a tab, or <code>common.arrays.unpack(field)</code> in Python.
       The full rules — and why a bitmap rather than the <code>[row, col]</code> index pairs this
@@ -128,8 +128,8 @@
       drew, so the picture never silently contradicts the number printed beside it.</p>
       <h2>Two resolutions, one format</h2>
       <pre><code>{output_dir}/{videoID}_{slug}_data.json          the browser payload — reduced
-      {output_dir}/{videoID}_crosswavelet_full.json    the analysis — full resolution
-      </code></pre>
+{output_dir}/{videoID}_crosswavelet_full.json    the analysis — full resolution
+</code></pre>
       <p>Same schema, same field names; only the time axis differs, so one reader serves
       both. <strong>Only cross-wavelet has a second file</strong>, because only its large fields
       are two-dimensional: 128 scales × 3026 times against 128 × 504 drawn. A
@@ -143,15 +143,15 @@
       windowed metrics at full resolution — from which the matrix is one <code>cdist</code> away.</p>
       <p>Read it with:</p>
       <pre><code class="language-python">import json
-      from dims_analysis.common import arrays
+from dims_analysis.common import arrays
 
-      with open(&quot;assets/crosswavelet/3120_crosswavelet_full.json&quot;) as fh:
-          payload = json.load(fh)
-      v = payload[&quot;crosswavelet_pairs&quot;][&quot;bodysync_vs_neuralsync&quot;][&quot;visualization&quot;]
-      coherence = arrays.unpack(v[&quot;coherence&quot;])   # (periods, time)
-      period    = v[&quot;period&quot;]
-      null      = v[&quot;sig95_wtc&quot;]                  # the 95% AR(1) level, or null
-      </code></pre>
+with open(&quot;assets/crosswavelet/3120_crosswavelet_full.json&quot;) as fh:
+    payload = json.load(fh)
+v = payload[&quot;crosswavelet_pairs&quot;][&quot;bodysync_vs_neuralsync&quot;][&quot;visualization&quot;]
+coherence = arrays.unpack(v[&quot;coherence&quot;])   # (periods, time)
+period    = v[&quot;period&quot;]
+null      = v[&quot;sig95_wtc&quot;]                  # the 95% AR(1) level, or null
+</code></pre>
       <h3>Precision</h3>
       <p>The JSON is <strong>rounded to 6 significant figures</strong>, and says so: every output
       carries a <code>precision</code> block naming the figure count and what it applies to.</p>
@@ -216,8 +216,8 @@
       rather than an empty tab.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/contracts/assets.md"><code>docs/contracts/assets.md</code></a>
-        at <code>v1.0.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/contracts/assets.md"><code>docs/contracts/assets.md</code></a>
+        at <code>v1.0.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

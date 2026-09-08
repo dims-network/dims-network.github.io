@@ -37,8 +37,8 @@
       <p>DIMS is not on PyPI yet (<code>dims</code> is taken by an unrelated project, and the name
       <code>dims-network</code> is not published). Install it from a checkout:</p>
       <pre><code class="language-sh">git clone https://github.com/dims-network/dims
-      pip install -e ./dims
-      </code></pre>
+pip install -e ./dims
+</code></pre>
       <p>That gives you two commands: <code>dims-case</code>, which creates and maintains a study,
       and <code>dims-analysis</code>, which runs the analyses.</p>
       <blockquote>
@@ -50,7 +50,7 @@
       <p>A <em>study</em> — a &quot;case&quot; — is a small repository holding one study's configuration,
       its data, and a pinned copy of the dashboard code.</p>
       <pre><code class="language-sh">dims-case new mystudy --visibility public     # creates ./case-mystudy
-      </code></pre>
+</code></pre>
       <p><code>--visibility</code> is the question you have to answer honestly, once. Choose
       <code>private</code> if the data identifies anyone — video of faces, named transcripts —
       and the study is created with commit and push guards that refuse to let data
@@ -63,61 +63,61 @@
       <p>The dashboard finds files by name. There is no index, so a misnamed file is an
       invisible file — the full rules are in <a href="assets.html">asset layout</a>.</p>
       <pre><code>assets/
-        videos/{videoID}.mp4
-        timeseries/{videoID}_{dataType}.csv      Time in SECONDS, ascending
-        transcripts/{videoID}_transcript.json
-        elan/{videoID}.eaf
-      </code></pre>
+  videos/{videoID}.mp4
+  timeseries/{videoID}_{dataType}.csv      Time in SECONDS, ascending
+  transcripts/{videoID}_transcript.json
+  elan/{videoID}.eaf
+</code></pre>
       <p>A time series is two columns, a time column and one measurement:</p>
       <pre><code class="language-csv">Time,bodysync
-      0.000,0.1959
-      0.020,0.2213
-      </code></pre>
+0.000,0.1959
+0.020,0.2213
+</code></pre>
       <p>Tools that emit milliseconds — several EnvisionBox modules do — need a unit
       change and a rename, nothing more.</p>
       <h3>If the data cannot go in the repository</h3>
       <p>For a private study, it should not. Leave <code>assets/</code> empty and say where the
       data really is:</p>
       <pre><code class="language-sh">cp data.local.json.example data.local.json
-      </code></pre>
+</code></pre>
       <pre><code class="language-json">{ &quot;assetsRoot&quot;: &quot;/Volumes/Data/mystudy/assets&quot; }
-      </code></pre>
+</code></pre>
       <p><code>serve.py</code> and every analysis resolve through that file, so everything runs
       against the real data with an empty tracked <code>assets/</code>. Nothing has to be copied
       into the repository — and on a private study, copying it in is exactly what the
       guards exist to prevent.</p>
       <h2>3. Say what the study contains</h2>
       <p><code>config.json</code> lists the recordings and switches on the analyses and tabs. The
-      full schema is <a href="https://github.com/dims-network/dims/blob/v1.0.0/contracts/config.schema.json"><code>config.schema.json</code></a>.</p>
+      full schema is <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/contracts/config.schema.json"><code>config.schema.json</code></a>.</p>
       <pre><code class="language-jsonc">{
-        &quot;title&quot;: &quot;My study&quot;,
-        &quot;videoIDs&quot;: [&quot;session01&quot;, &quot;session02&quot;],
+  &quot;title&quot;: &quot;My study&quot;,
+  &quot;videoIDs&quot;: [&quot;session01&quot;, &quot;session02&quot;],
 
-        // Which measures each recording has. An object keyed by recording, not a
-        // flat list: two sessions rarely carry exactly the same measures, and this
-        // is what the time-series tab reads to know what to offer.
-        &quot;dataTypes&quot;: {
-          &quot;session01&quot;: [&quot;bodysync&quot;, &quot;neuralsync&quot;],
-          &quot;session02&quot;: [&quot;bodysync&quot;]
-        },
+  // Which measures each recording has. An object keyed by recording, not a
+  // flat list: two sessions rarely carry exactly the same measures, and this
+  // is what the time-series tab reads to know what to offer.
+  &quot;dataTypes&quot;: {
+    &quot;session01&quot;: [&quot;bodysync&quot;, &quot;neuralsync&quot;],
+    &quot;session02&quot;: [&quot;bodysync&quot;]
+  },
 
-        // Which data types to analyse -- not true/false. The list is the answer to
-        // &quot;which of them&quot;, and true does not say.
-        &quot;include_RQA&quot;: [&quot;bodysync&quot;, &quot;neuralsync&quot;],
+  // Which data types to analyse -- not true/false. The list is the answer to
+  // &quot;which of them&quot;, and true does not say.
+  &quot;include_RQA&quot;: [&quot;bodysync&quot;, &quot;neuralsync&quot;],
 
-        // Pairwise analyses take pairs.
-        &quot;include_cRQA&quot;:        [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
-        &quot;include_crosswavelet&quot;: [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
+  // Pairwise analyses take pairs.
+  &quot;include_cRQA&quot;:        [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
+  &quot;include_crosswavelet&quot;: [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
 
-        // Tabs that need no analysis of their own are plain switches.
-        &quot;include_elan&quot;: true,
+  // Tabs that need no analysis of their own are plain switches.
+  &quot;include_elan&quot;: true,
 
-        // The cross-effector network draws its edges from the cross-wavelet output
-        // above, and switching it on also switches on the Monte Carlo coherence
-        // null -- without which no edge can be told from chance.
-        &quot;include_network&quot;: true
-      }
-      </code></pre>
+  // The cross-effector network draws its edges from the cross-wavelet output
+  // above, and switching it on also switches on the Monte Carlo coherence
+  // null -- without which no edge can be told from chance.
+  &quot;include_network&quot;: true
+}
+</code></pre>
       <p>The distinction is the one thing here worth reading twice: an analysis key
       names <strong>what to analyse</strong>, a tab key is a <strong>switch</strong>. Writing
       <code>&quot;include_RQA&quot;: true</code> is refused with a message saying what to write instead.</p>
@@ -125,8 +125,8 @@
       are the same key.</p>
       <h2>4. Build the assets</h2>
       <pre><code class="language-sh">python build_assets.py --check     # what would run, and what is missing
-      python build_assets.py             # actually run it
-      </code></pre>
+python build_assets.py             # actually run it
+</code></pre>
       <p><code>--check</code> installs nothing and computes nothing. It tells you which recordings
       it can see, which analyses are switched on, and which time series it could not
       find — which is the fastest way to discover that a file is misnamed.</p>
@@ -141,7 +141,7 @@
       there is nothing beside it to prefer.</p>
       <h2>5. Look at it</h2>
       <pre><code class="language-sh">python serve.py        # http://localhost:8000
-      </code></pre>
+</code></pre>
       <p><code>serve.py</code> is a plain static server that also resolves <code>data.local.json</code>, so
       video and assets outside the repository are served correctly. Opening
       <code>index.html</code> directly from the filesystem will not work — the browser blocks
@@ -149,7 +149,7 @@
       <h2>6. Record what a complete build looks like</h2>
       <p>Once the assets are right:</p>
       <pre><code class="language-sh">python build_assets.py --write-manifest
-      </code></pre>
+</code></pre>
       <p>This writes <code>assets/MANIFEST.json</code> — names, sizes and checksums, never content.
       It is the only thing in a private study's repository that says what a complete
       set of assets is, so a later rebuild can be checked rather than hoped about.
@@ -161,22 +161,22 @@
       setting. The checklist is in <a href="data-visibility.html">data visibility</a>.</p>
       <h2>Keeping up with the core</h2>
       <pre><code class="language-sh">dims-case sync .        # refresh the vendored core to the newest release
-      dims-case check .       # verify nothing under vendor/ was edited
-      </code></pre>
+dims-case check .       # verify nothing under vendor/ was edited
+</code></pre>
       <p>A bot opens this as a pull request every Monday. Never edit anything under
       <code>vendor/</code>: CI rebuilds it from the release tag and compares, so a hand edit is a
       red build rather than a silent fork. Fix it in the core and bump the pin.</p>
       <h2>Without a terminal</h2>
       <pre><code class="language-sh">pip install -e &quot;./dims[builder]&quot;
-      dims-builder
-      </code></pre>
+dims-builder
+</code></pre>
       <p>The builder asks for the same things this page does — recordings, time series,
       annotations — and writes a study with them. It runs the same analyses through
       the same package, so a project it produces and a project you make by hand are
       the same project.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/getting-started.md"><code>docs/getting-started.md</code></a>
-        at <code>v1.0.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/getting-started.md"><code>docs/getting-started.md</code></a>
+        at <code>v1.0.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

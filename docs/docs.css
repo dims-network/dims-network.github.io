@@ -65,3 +65,8 @@
   .docs-side{position:static;border-right:0;border-bottom:1px solid var(--line);
     padding:0 0 14px;margin-bottom:18px}
 }
+
+/* The "generated from the core at <ref>" footer on every docs page. */
+.source-note{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);
+  color:var(--dim);font-size:.82rem}
+.source-note code{font-size:.82rem}

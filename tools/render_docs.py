@@ -121,14 +121,14 @@ def link_rewrites(spec):
     return out
 
 
-def render_markdown(text, rewrites, repo_url, ref):
+def render_markdown(text, rewrites, repo_url, ref, source):
     import mistune
 
     renderer = mistune.HTMLRenderer(escape=False)
     original_link = renderer.link
 
     def link(text_, url, title=None):
-        url = resolve_link(url, rewrites, repo_url, ref)
+        url = resolve_link(url, rewrites, repo_url, ref, source)
         return original_link(text_, url, title)
 
     renderer.link = link
@@ -137,7 +137,7 @@ def render_markdown(text, rewrites, repo_url, ref):
     return convert(text)
 
 
-def resolve_link(url, rewrites, repo_url, ref):
+def resolve_link(url, rewrites, repo_url, ref, source):
     """Point a link at the rendered page, or at the file in the core."""
     if not url or url.startswith(("http://", "https://", "#", "mailto:")):
         return url
@@ -148,13 +148,35 @@ def resolve_link(url, rewrites, repo_url, ref):
         return rewrites[key] + anchor
     # Not a page we build (config.schema.json, a source file): send the reader
     # to it in the core, at the pinned ref, rather than to a 404 here.
-    return f"{repo_url}/blob/{ref}/{key.lstrip('/')}" + anchor
+    #
+    # The link is relative to the markdown that carried it, so resolve it
+    # against that file's directory. Reading it as repository-relative is what
+    # sent `contracts/config.schema.json` in docs/getting-started.md to
+    # /blob/<ref>/contracts/..., which does not exist.
+    target = os.path.normpath(os.path.join(os.path.dirname(source), clean))
+    return f"{repo_url}/blob/{ref}/{target.lstrip('/')}" + anchor
 
 
 def indent(body, spaces=6):
+    """Indent the body to sit inside the template, leaving <pre> alone.
+
+    Whitespace is significant inside <pre>, so padding those lines put six
+    spaces in front of every line but the first of every code block -- which
+    is to say nothing copied out of a docs page pasted as valid shell. The
+    line that opens the block is still padded: its spaces sit before <pre>,
+    outside the content.
+    """
     pad = " " * spaces
-    return "\n".join(pad + line if line.strip() else line
-                     for line in body.splitlines())
+    out = []
+    in_pre = False
+    for line in body.splitlines():
+        out.append(line if in_pre else (pad + line if line.strip() else line))
+        opens, closes = line.count("<pre"), line.count("</pre>")
+        if opens > closes:
+            in_pre = True
+        elif closes:
+            in_pre = False
+    return "\n".join(out)
 
 
 def build(dims_root, spec):
@@ -170,7 +192,7 @@ def build(dims_root, spec):
                 sys.exit(f"error: {item['source']} is not in {dims_root} at {ref}")
             with open(path) as fh:
                 text = fh.read()
-            body = render_markdown(text, rewrites, repo_url, ref)
+            body = render_markdown(text, rewrites, repo_url, ref, item["source"])
             pages[item["out"]] = PAGE.format(
                 title=html.escape(item["title"]),
                 description=html.escape(item["description"], quote=True),

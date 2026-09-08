@@ -26,7 +26,15 @@
   <header>
     <div class="eyebrow">Dynamic Interaction &amp; Multimodal Signals</div>
     <h1>The DIMS-network</h1>
-    <p class="lede">An open family of tools for visualizing <b>multimodal social-interaction data</b> — time series, video, transcripts, and analyses like RQA, cross-wavelet, and ELAN annotations — to bridge qualitative and quantitative research. One canonical dashboard, its forks for specific studies, and companion Python viewers.</p>
+    <p class="lede">An open family of tools for <b>multimodal social-interaction data</b> — time series,
+      video, transcripts and ELAN annotations on one timeline, beside the analyses that say how two
+      signals relate: recurrence, cross-recurrence, cross-wavelet coherence and a cross-effector
+      network. Coherence is read against a chance level estimated by simulation, because two unrelated
+      signals score about 0.25, not 0. One core; one small repository per study, each pinning a
+      release of it.</p>
+    <p class="hero-cta"><a href="https://dims-network.github.io/case-demo/">See a live dashboard →</a>
+      <span class="hero-note">Click the timeline; the video and every chart follow.
+      Latest core release: <a href="https://github.com/dims-network/dims/releases/tag/v1.0.1">v1.0.1</a>.</span></p>
   </header>
 
   <section id="repo-network">
@@ -36,8 +44,9 @@
         aria-label="Diagram of the DIMS repositories: the core, and the studies and tools that pin a released version of it"></canvas>
       <div class="legend">
         <span><i class="dot" style="background:var(--web)"></i> Static dashboards (JS · GitHub Pages)</span>
-        <span><i class="dot" style="background:var(--py)"></i> Python / Dash viewers</span>
+        <span><i class="dot" style="background:var(--py)"></i> Python apps (the builder, the viewers)</span>
         <span><i class="ln"></i> pins a released core version</span>
+        <span><i class="ln dash"></i> ships inside the core</span>
       </div>
       <p class="hint">click any node to open its repository</p>
     </div>
@@ -67,29 +76,38 @@
 <script>
 const repos = [
   {id:"dims", name:"dims", short:"DIMS core", fam:"web", kind:"core",
-   desc:"The monorepo — dashboard core, self-registering tabs, the Python analyses and the no-code builder. Everything else pins a released version of this.",
+   desc:"The monorepo — dashboard core, self-registering tabs, the Python analyses and the no-code builder. Every study pins a release of this.",
    url:"https://github.com/dims-network/dims"},
-  {id:"builder", name:"dims · builder", short:"Dashboard builder", fam:"web", kind:"tool",
-   desc:"No-code wizard — turns recordings, time series and annotations into a populated, deployable dashboard. No git or command line needed.",
+  {id:"builder", name:"dims · apps/builder", short:"Dashboard builder", fam:"py", kind:"tool",
+   desc:"No-code wizard — turns recordings, time series and annotations into a working dashboard. It ships inside the core rather than pinning it, so a study it makes is identical to a hand-built one. No git, no command line.",
    url:"https://github.com/dims-network/dims/tree/main/apps/builder"},
   {id:"root", name:"case-demo", short:"Reference study", fam:"web", kind:"case",
-   desc:"The reference dashboard with real data: time series, video, transcript, RQA, cross-RQA, cross-wavelet coherence and ELAN annotations.",
+   desc:"The living reference dashboard, rebuilt on each core release: time series, video, transcript, RQA, cross-RQA, cross-wavelet coherence and ELAN annotations.",
    url:"https://github.com/dims-network/case-demo", live:"https://dims-network.github.io/case-demo/"},
+  {id:"frozen", name:"dims-dashboard-demo", short:"Frozen demo", fam:"web", kind:"case",
+   desc:"The same study, frozen: pinned at core 1.0.0 and self-contained, with its libraries served from the repository instead of a CDN. It opens with no network and is not updated, so it is the link to hand someone who needs one that will not move.",
+   url:"https://github.com/dims-network/dims-dashboard-demo", live:"https://dims-network.github.io/dims-dashboard-demo/"},
   {id:"ortho", name:"case-ortho", short:"ORTHO study", fam:"web", kind:"case",
    desc:"ORTHO — a two-person tabletop game: trajectories over the play space, multi-perspective video, recurrence and coherence.",
    url:"https://github.com/dims-network/case-ortho", live:"https://dims-network.github.io/case-ortho/"},
   {id:"karnatak", name:"case-karnatak", short:"Karnatak study", fam:"web", kind:"case",
-   desc:"Karnatak music lessons — two-person motion tracking and a cross-effector coherence network. Private: the recordings are identifiable, so the data lives outside the repository and there is no public dashboard.",
-   url:"https://github.com/dims-network/case-karnatak"},
-  {id:"orthoview", name:"DIMS_ORTHO_VIEWER", short:"ORTHO Explorer", fam:"py", kind:"app",
-   desc:"Dash application over a database of ORTHO game sessions — trajectories, kinematics and recurrence analyses across many recordings.",
-   url:"https://github.com/mikub97/DIMS_ORTHO_VIEWER"},
+   desc:"Karnatak music lessons — two-person motion tracking, and the only study running the cross-effector network. The recordings identify the people in them, so the study is private: no public repository, and no public dashboard.",
+   private:true},
+  {id:"orthoview", name:"Ortho-viewer", short:"ORTHO Explorer", fam:"py", kind:"app",
+   desc:"Dash application over a database of ORTHO game sessions — trajectories, kinematics and recurrence across many recordings. Not a dashboard, and it does not pin the core.",
+   url:"https://github.com/dims-network/Ortho-viewer"},
+  {id:"bots", name:"bots-viewer", short:"Bots viewer", fam:"py", kind:"app",
+   desc:"Dash application for a two-player grid game — trajectories with RQA and cross-RQA across many sessions. Not a dashboard, and it does not pin the core.",
+   url:"https://github.com/dims-network/bots-viewer"},
 ];
 const edges = [
-  {from:"dims", to:"builder",  label:"pins"},
+  // The builder is not a study: it lives inside the core, so it takes a change
+  // by being in the same repository, not by bumping a pin.
+  {from:"dims", to:"builder",  label:"inside", style:"dash"},
   {from:"dims", to:"root",     label:"pins"},
   {from:"dims", to:"ortho",    label:"pins"},
   {from:"dims", to:"karnatak", label:"pins"},
+  {from:"dims", to:"frozen",   label:"pins"},
 ];
 // Logical layout, in the canvas's own coordinates (see its width/height).
 //
@@ -102,9 +120,9 @@ const edges = [
 // again.
 const pos = {
   dims:{x:330,y:76},
-  builder:{x:110,y:236}, root:{x:330,y:236},
-  ortho:{x:550,y:236},   karnatak:{x:770,y:236},
-  orthoview:{x:990,y:236},
+  orthoview:{x:770,y:76},  bots:{x:990,y:76},
+  builder:{x:110,y:236},   root:{x:330,y:236}, ortho:{x:550,y:236},
+  karnatak:{x:770,y:236},  frozen:{x:990,y:236},
 };
 
 function assertLayout(){
@@ -205,7 +223,7 @@ function clusterLabel(text,x){
 function draw(){
   ctx.clearRect(0,0,W,H);
   clusterLabel("ONE CORE, PINNED BY EVERY STUDY", 440);
-  clusterLabel("ELSEWHERE", 990);
+  clusterLabel("NOT DASHBOARDS", 880);
   edges.forEach(drawEdge);
   repos.forEach(drawNode);
 }
@@ -226,23 +244,28 @@ function hit(e){
 }
 if(layoutOK){
 canvas.addEventListener("mousemove",e=>{const r=hit(e);const id=r?r.id:null;
-  if(id!==hover){hover=id;canvas.style.cursor=id?"pointer":"default";draw();}});
+  if(id!==hover){hover=id;canvas.style.cursor=(r&&r.url)?"pointer":"default";draw();}});
 canvas.addEventListener("mouseleave",()=>{if(hover){hover=null;draw();}});
-canvas.addEventListener("click",e=>{const r=hit(e);if(r)window.open(r.url,"_blank","noopener");});
+canvas.addEventListener("click",e=>{const r=hit(e);if(r&&r.url)window.open(r.url,"_blank","noopener");});
 }
 
 // repo cards
-const kindBadge={core:["core","root"],tool:["tool","tmpl"],case:["case study","base"],app:["app","fork"]};
+const kindBadge={core:["core","root"],tool:["tool","tool"],case:["case study","base"],app:["app","app"]};
 // Rendered whatever the diagram did: these cards are the page, the picture is a picture.
 document.getElementById("cards").innerHTML = repos.map(r=>{
   const [label,cls]=kindBadge[r.kind] || [r.kind,"base"];
-  const famBadge = r.fam==="web" ? "static · js" : "python · dash";
+  const famBadge = r.fam==="web" ? "static · js" : "python";
+  // A private study is listed but not linked: the repository 404s for anyone
+  // outside the org, and a link that only works for its owners is worse than
+  // none. The card still says what the study is and why it is not here.
+  const title = r.url ? `<a href="${r.url}">${r.name}</a>` : r.name;
   return `<div class="card ${r.fam}">
-    <h3><a href="${r.url}">${r.name}</a></h3>
-    <div class="badges"><span class="badge ${cls}">${label}</span><span class="badge">${famBadge}</span></div>
+    <h3>${title}</h3>
+    <div class="badges"><span class="badge ${cls}">${label}</span><span class="badge">${famBadge}</span>${
+      r.private?`<span class="badge private">private</span>`:""}</div>
     <p>${r.desc}</p>
     <div class="links">
-      <a href="${r.url}">Repository →</a>
+      ${r.url?`<a href="${r.url}">Repository →</a>`:`<span class="muted">No public repository</span>`}
       ${r.live?`<a class="live" href="${r.live}">Live demo</a>`:""}
     </div>
   </div>`;

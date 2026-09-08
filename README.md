@@ -13,10 +13,12 @@ timeline, with the analyses that say how two signals relate.
 Open the [live dashboard](https://dims-network.github.io/case-demo/) and click
 the timeline — the video and every chart follow the point you pick.
 
-To build your own, you need Python and nothing else:
+To build your own you need Python 3.10+ and nothing else. DIMS is **not on
+PyPI yet**, so install it from a checkout:
 
 ```sh
-pip install "dims-network[builder]"
+git clone https://github.com/dims-network/dims
+pip install -e './dims[builder]'
 dims-builder
 ```
 

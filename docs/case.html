@@ -40,23 +40,23 @@
       builds time series and clips from ORTHO datalogs, and means nothing to any
       other study.</p>
       <pre><code>case-ortho/
-        dims-case.json        visibility, pinned core, publishable paths, hashes
-        config.json           the study (see config.schema.json)
-        data.local.json       untracked; where the data really lives
-        data.local.json.example   tracked; what to copy it from
-        assets/               data, or empty but for MANIFEST.json on a private study
-        build_assets.py       rebuild every asset from this study's raw data
-        requirements.txt      what that rebuild needs
-        serve.py              the local server; generated, refreshed by a bump
-        index.html            loads vendor/; generated
-        vendor/dims-core/     the pinned core, written by tooling, never by hand
-        vendor/dims-tabs/     likewise
-        tabs/                 optional: tabs that belong to this study alone
-        opt/                  optional: this study's own analysis steps
-        tools/                optional: this study's own data preparation
-        .githooks/            private studies: the commit and push guards
-        .github/workflows/    generated; thin callers into the shared workflows
-      </code></pre>
+  dims-case.json        visibility, pinned core, publishable paths, hashes
+  config.json           the study (see config.schema.json)
+  data.local.json       untracked; where the data really lives
+  data.local.json.example   tracked; what to copy it from
+  assets/               data, or empty but for MANIFEST.json on a private study
+  build_assets.py       rebuild every asset from this study's raw data
+  requirements.txt      what that rebuild needs
+  serve.py              the local server; generated, refreshed by a bump
+  index.html            loads vendor/; generated
+  vendor/dims-core/     the pinned core, written by tooling, never by hand
+  vendor/dims-tabs/     likewise
+  tabs/                 optional: tabs that belong to this study alone
+  opt/                  optional: this study's own analysis steps
+  tools/                optional: this study's own data preparation
+  .githooks/            private studies: the commit and push guards
+  .github/workflows/    generated; thin callers into the shared workflows
+</code></pre>
       <p>Three of these are <strong>generated and refreshed by a core bump</strong> — <code>serve.py</code>,
       <code>index.html</code>, <code>.github/workflows/</code>, and on a private study <code>.githooks/</code>. Editing
       one is pointless: the next <code>dims-case sync</code> overwrites it.</p>
@@ -86,9 +86,9 @@
       <p><strong>Never edit <code>vendor/</code>.</strong> Fix it in the monorepo and bump the pin.</p>
       <h2>Creating one</h2>
       <pre><code class="language-sh">tools/dims-case new ortho --visibility public                  # -&gt; ./case-ortho
-      tools/dims-case new ortho --visibility public --dir path/to/it # somewhere else
-      tools/dims-case adopt path/ --name ortho --visibility public   # an existing one
-      </code></pre>
+tools/dims-case new ortho --visibility public --dir path/to/it # somewhere else
+tools/dims-case adopt path/ --name ortho --visibility public   # an existing one
+</code></pre>
       <p><code>new</code> takes a <strong>name</strong>, not a path; <code>--dir</code> is how you choose where it lands.</p>
       <p><code>adopt</code> is deliberately a separate verb: <code>new</code> refuses a non-empty directory so
       it can never write over someone's data, while <code>adopt</code> keeps <code>config.json</code> and
@@ -110,8 +110,8 @@
       the push hook independently.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/contracts/case.md"><code>docs/contracts/case.md</code></a>
-        at <code>v1.0.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/contracts/case.md"><code>docs/contracts/case.md</code></a>
+        at <code>v1.0.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

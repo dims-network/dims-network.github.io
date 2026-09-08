@@ -35,7 +35,7 @@
       by accident, and they were not nine unrelated bugs: nothing stated what an
       output was supposed to be, so every check could only ask &quot;did it crash?&quot;. Every
       requirement below is stated once and tested against
-      <a href="https://github.com/dims-network/dims/blob/v1.0.0/examples/reference/README.md"><code>examples/reference/</code></a>, a synthetic study
+      <a href="https://github.com/dims-network/dims/blob/v1.0.1/examples/reference/README.md"><code>examples/reference/</code></a>, a synthetic study
       whose answers are known before anything runs.</p>
       <hr />
       <h2>A1 — Stated input bounds, refused before allocating</h2>
@@ -67,8 +67,8 @@
       anywhere. Every array field is either a plain JSON list — small, and something
       a person opens the file to read — or an object naming its encoding:</p>
       <pre><code class="language-jsonc">{&quot;encoding&quot;: &quot;bitmap-b64&quot;, &quot;rows&quot;: 500, &quot;cols&quot;: 500, &quot;data&quot;: &quot;…&quot;}
-      {&quot;encoding&quot;: &quot;f32-b64&quot;,    &quot;shape&quot;: [128, 3026],      &quot;data&quot;: &quot;…&quot;}
-      </code></pre>
+{&quot;encoding&quot;: &quot;f32-b64&quot;,    &quot;shape&quot;: [128, 3026],      &quot;data&quot;: &quot;…&quot;}
+</code></pre>
       <p>The <code>encoding</code> field is the design. A reader that meets one it does not know
       <strong>says so by name</strong>; a format that changed silently is how a tab ends up
       drawing an empty panel with nothing in the log. One decoder in Python
@@ -305,8 +305,8 @@
       the commit says which numbers moved and why.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/contracts/analysis-output.md"><code>docs/contracts/analysis-output.md</code></a>
-        at <code>v1.0.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/contracts/analysis-output.md"><code>docs/contracts/analysis-output.md</code></a>
+        at <code>v1.0.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

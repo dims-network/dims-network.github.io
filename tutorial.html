@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tutorial · DIMS-network</title>
-<meta name="description" content="Two ways to build your own DIMS dashboard for your data: the no-code Dashboard Builder, or cloning the template and editing it by hand." />
+<meta name="description" content="Two ways to build your own DIMS dashboard for your data: the no-code Dashboard Builder, or creating a study with dims-case and editing it by hand." />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -34,7 +34,7 @@
         <li><b>Time series</b> — a <code>.csv</code> with a time column (named
           <code>Time</code>, <code>time</code>, any casing) in <b>seconds</b>, plus one or more
           measurement columns. The <b>builder auto-splits</b> a
-          multi-column CSV into one data type per column; if you hand-edit the template, use
+          multi-column CSV into one data type per column; if you hand-edit the study, use
           <b>one</b> measurement column per file.</li>
         <li><b>Transcript</b> (optional) — JSON shaped as
           <code>{ "segments": [ {start, end, speaker, text} ] }</code>.</li>
@@ -48,7 +48,7 @@
       <button class="toggle-btn active" data-panel="builder" role="tab" aria-selected="true">
         🧩 No-code <span class="tag">Dashboard Builder</span></button>
       <button class="toggle-btn" data-panel="manual" role="tab" aria-selected="false">
-        ⌨️ Hands-on <span class="tag">edit the template</span></button>
+        ⌨️ Hands-on <span class="tag">edit the study</span></button>
     </div>
   </header>
 
@@ -56,30 +56,34 @@
   <section id="builder" class="tabpanel">
     <div class="path builder">
       <h3>For non-coders — the Dashboard Builder</h3>
-      <div class="callout"><b>Install:</b>
-        <code>pip install "dims-network[builder]"</code> then run
-        <code>dims-builder</code>. It opens in your browser and walks you through
-        it. <span class="muted">(Not on PyPI yet — for now, clone
-        <a href="https://github.com/dims-network/dims">dims-network/dims</a> and
-        run <code>pip install -e ".[builder]"</code>.)</span></div>
+      <div class="callout"><b>Install:</b> DIMS is <b>not on PyPI yet</b>, so install it from a
+        checkout of <a href="https://github.com/dims-network/dims">dims-network/dims</a>:
+        <pre class="code">git clone https://github.com/dims-network/dims
+pip install -e "./dims[builder]"
+dims-builder</pre>
+        The last command opens the wizard in your browser and walks you through it.
+        <span class="muted">Once the package is published this becomes
+        <code>pip install "dims-network[builder]"</code>.</span></div>
       <p class="sub">A point-and-click app: drop your files in, click through a wizard, get a
         ready-to-deploy dashboard. No JSON editing, no file renaming, no terminal scripts.</p>
 
-      <div class="callout"><b>One prerequisite:</b> you need <b>Python 3.9+</b> installed (a free,
+      <div class="callout"><b>One prerequisite:</b> you need <b>Python 3.10–3.12</b> installed (a free,
         one-time install from <a href="https://www.python.org/downloads/">python.org/downloads</a>).
-        That's the only thing — <b>no git, no internet</b> required once you have the builder.</div>
+        3.13 works for everything except motion capture, which has no <code>mediapipe</code> wheel for it.
+        Once the builder is installed, <b>no internet is required</b> to build a dashboard.</div>
 
       <ol class="steps">
         <li>
-          <h4>Download the builder</h4>
-          <p><a class="dl" href="https://github.com/dims-network/dims">Get the builder →</a></p>
-          <p>Unzip it — <b>no git needed</b>. The DIMS dashboard code is bundled inside, so
-            there's nothing else to download.</p>
+          <h4>Get the builder</h4>
+          <p><a class="dl" href="https://github.com/dims-network/dims">dims-network/dims →</a></p>
+          <p>Clone it, or download the ZIP from that page and unzip it. The builder is the
+            <code>apps/builder/</code> folder, and the dashboard code it builds against is in the
+            same repository — so there is nothing else to fetch.</p>
         </li>
         <li>
           <h4>Start it — one click</h4>
-          <p>Double-click the launcher in the unzipped folder. It installs everything the first
-            time and then opens the wizard in your browser:</p>
+          <p>Double-click the launcher in <code>apps/builder/</code>. It installs everything the
+            first time and then opens the wizard in your browser:</p>
           <ul>
             <li><b>macOS:</b> <code>run.command</code></li>
             <li><b>Windows:</b> <code>run.bat</code></li>
@@ -91,16 +95,22 @@
             scroll to <b>Security</b>, and click <b>Open Anyway</b> next to <code>run.command</code>.
             This only happens once. (It's macOS flagging any downloaded, unsigned script — not a
             problem with the builder.)</div>
-          <p>Prefer the terminal? That also avoids the macOS prompt above — open a terminal in the
-            unzipped folder and run:</p>
+          <p>Prefer the terminal? That also avoids the macOS prompt above — open a terminal in
+            <code>apps/builder/</code> and run exactly what the launcher runs:</p>
           <pre class="code">pip install -r requirements.txt
-python builder.py</pre>
+python -m dims_builder</pre>
+          <p class="sub"><code>requirements.txt</code> installs what the builder needs, not the
+            builder itself, so run it as a module from that folder. If you installed the package
+            (<code>pip install -e "./dims[builder]"</code>) the command is just
+            <code>dims-builder</code>, from anywhere.</p>
         </li>
         <li>
           <h4>Create a project</h4>
-          <p>Choose an empty output folder and a title/authors. The builder uses its
-            <b>built-in</b> copy of the template — no internet or git required. (Advanced users
-            can opt to clone the latest from GitHub instead.)</p>
+          <p>Choose an empty output folder and a title/authors, and say <b>who may see the
+            data</b> — private is the default, and it turns on the commit hook, push hook and CI
+            check that keep recordings out of git. There is nothing to choose about the dashboard
+            code: one scaffold ships in the repository and it is the one used, so a study the
+            builder makes is identical to one made by hand.</p>
         </li>
         <li>
           <h4>Add your files</h4>
@@ -113,9 +123,18 @@ python builder.py</pre>
             into one data type per column, so you don't have to prepare separate files by hand.</p>
         </li>
         <li>
+          <h4>Align video &amp; data</h4>
+          <p>This is where the mismatch warned about at the top of this page gets fixed. Per
+            session, a shared-timeline preview shows the video track above each measurement track,
+            and you either <b>trim the video</b> to a window you pick with a dual-handle slider, or
+            <b>pad the measurements</b> with zeros at either end. Edits are
+            <b>non-destructive</b>: your originals are never modified, and the trim or pad is
+            applied only to the copies written at build time.</p>
+        </li>
+        <li>
           <h4>Choose optional analyses</h4>
-          <p>Toggle <b>RQA</b>, <b>cross-wavelet</b>, <b>cross-RQA</b>, and <b>ELAN</b> annotations —
-            the wizard explains what each tab shows.</p>
+          <p>Toggle <b>RQA</b>, <b>cross-wavelet</b>, <b>cross-RQA</b>, the <b>cross-effector
+            network</b>, and <b>ELAN</b> annotations — the wizard explains what each tab shows.</p>
           <ul>
             <li><b>RQA</b> — recurrence within a single signal; pick which data types to compute.</li>
             <li><b>Cross-wavelet</b> &amp; <b>cross-RQA</b> — coupling between <b>two</b> signals.
@@ -123,13 +142,29 @@ python builder.py</pre>
               default), and you click to toggle — so you can run, say,
               <code>bodysync&nbsp;×&nbsp;neuralsync</code> and <code>neuralsync&nbsp;×&nbsp;gaze</code>
               but skip <code>bodysync&nbsp;×&nbsp;gaze</code>. A signal can appear in several pairs.</li>
+            <li><b>Cross-effector network</b> — one picture of which signals are coupled with which,
+              moving with the playhead. It reads the cross-wavelet results, so it needs that
+              analysis and its chance level; group your measures here (two people, two conditions)
+              or every one of them lands in a single undifferentiated column.</li>
           </ul>
+          <p>Each analysis has a <b>Settings</b> panel for what the study can tune — the recurrence
+            window and target rate, the cross-wavelet picture size and its surrogate count. A line
+            at the foot of the step totals up how many runs that comes to and flags the slow ones,
+            because the first sign that a choice was expensive should not be being forty minutes
+            into the next step.</p>
         </li>
         <li>
           <h4>Build &amp; precompute</h4>
           <p>Build writes <code>config.json</code> and copies your files into the exact
             <code>assets/</code> layout. Precompute then runs the RQA / cross-wavelet / cross-RQA
-            scripts for you in a project-local Python environment — progress streams live.</p>
+            steps for you in a project-local Python environment — progress streams live.</p>
+          <div class="callout warn"><b>The chance level is the expensive part.</b> Coherence is only
+            interpretable against a level estimated by simulation, and that simulation is most of
+            the compute. The cost follows <b>pairs × recordings × number of scales</b> — not minutes
+            of video, so a long recording is not necessarily a slow one. At the publication setting
+            of 300 surrogates a twelve-recording study can take a couple of hours. Start with the
+            default of 100 to see the shape of your data, and raise it when you are ready to
+            report.</div>
         </li>
         <li>
           <h4>Preview &amp; deploy</h4>
@@ -199,6 +234,7 @@ cd case-my-dashboard</pre>
   <span class="k">"include_RQA"</span>: ["bodysync", "neuralsync"],
   <span class="k">"include_crosswavelet"</span>: [["bodysync", "neuralsync"]],
   <span class="k">"include_cRQA"</span>: [["bodysync", "neuralsync"]],
+  <span class="k">"include_network"</span>: { "band": [0.0, 12.0] },
   <span class="k">"include_elan"</span>: false,
   <span class="k">"defaultWindowSize"</span>: 5,
   <span class="k">"title"</span>: "My DIMS Dashboard",
@@ -211,6 +247,12 @@ cd case-my-dashboard</pre>
             so you control exactly which pairs run. Every name you reference must have a matching CSV.
             (<code>include_crosswavelet</code> also still accepts a flat list of data types, expanded
             to all pairs, for backward compatibility.)</p>
+          <p><code>include_network</code> switches on the cross-effector network, drawn from the
+            cross-wavelet results — setting it also switches on the chance-level simulation, at 100
+            surrogates, because without one no edge can be told from chance. If your measures divide
+            into groups (two people, two instruments), say so here, or they all land in one column:
+            <code>"groups": [{"label": "Teacher", "match": "^teacher"}, …]</code>, each
+            <code>match</code> a regular expression on the data type name.</p>
         </li>
         <li>
           <h4>(Optional) Precompute the analyses</h4>
@@ -237,8 +279,10 @@ python build_assets.py</pre>
         </li>
         <li>
           <h4>Deploy</h4>
-          <p>Push to GitHub and enable <b>Pages</b> (branch <code>main</code>, folder <code>/root</code>),
-            or host on any static host. Just make sure it serves <b>Range requests</b> so video seeking works.</p>
+          <p>A public study created with <code>dims-case</code> already carries the Pages workflow
+            that deploys it: push to <code>main</code> and it goes live. (Setting Pages up by hand
+            is branch <code>main</code>, folder <code>/ (root)</code>.) Any static host works —
+            just make sure it serves <b>Range requests</b>, or video seeking will not.</p>
         </li>
       </ol>
 

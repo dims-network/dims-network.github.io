@@ -6,10 +6,8 @@ website.
 
 - **The map** — which single document to read for the task you have:
   [dims/README.md](https://github.com/dims-network/dims#working-on-dims)
-- **Automated contributors**:
-  [AGENTS.md](https://github.com/dims-network/dims/blob/main/AGENTS.md)
 - **Issues**: [dims-network/dims/issues](https://github.com/dims-network/dims/issues).
-  Those labelled `agent-ready` name the files, link the contract and state the
+  Those labelled `ready` name the files, link the contract and state the
   acceptance check.
 
 ## Changing the documentation on this site

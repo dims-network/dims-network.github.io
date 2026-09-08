@@ -35,19 +35,19 @@
       <h2>Declare it</h2>
       <p><code>dims-case.json</code>, at the root of every case repo:</p>
       <pre><code class="language-json">{
-        &quot;case&quot;: &quot;karnatak&quot;,
-        &quot;visibility&quot;: &quot;private&quot;,
-        &quot;dimsCore&quot;: &quot;1.3.1&quot;,
-        &quot;publishable&quot;: [],
-        &quot;restricted&quot;: [
-          &quot;assets/videos&quot;,
-          &quot;assets/timeseries&quot;,
-          &quot;assets/transcripts&quot;,
-          &quot;assets/elan&quot;,
-          &quot;assets/motion_tracking&quot;
-        ]
-      }
-      </code></pre>
+  &quot;case&quot;: &quot;karnatak&quot;,
+  &quot;visibility&quot;: &quot;private&quot;,
+  &quot;dimsCore&quot;: &quot;1.3.1&quot;,
+  &quot;publishable&quot;: [],
+  &quot;restricted&quot;: [
+    &quot;assets/videos&quot;,
+    &quot;assets/timeseries&quot;,
+    &quot;assets/transcripts&quot;,
+    &quot;assets/elan&quot;,
+    &quot;assets/motion_tracking&quot;
+  ]
+}
+</code></pre>
       <p><code>visibility</code> is <code>&quot;public&quot;</code> or <code>&quot;private&quot;</code>, chosen once when the case is created.
       <code>publishable</code> is a <strong>default-deny allowlist</strong>: for a private case, nothing under
       <code>assets/</code> may be committed unless a path here says so. <code>restricted</code> is what the
@@ -69,7 +69,7 @@
       Enable the hooks once per clone:</li>
       </ol>
       <pre><code class="language-sh">git config core.hooksPath .githooks
-      </code></pre>
+</code></pre>
       <p>A <code>.gitignore</code> is not one of these guards. It is a convention, and <code>git add -f</code>
       walks straight through it.</p>
       <h2>Working with private data comfortably</h2>
@@ -97,7 +97,7 @@
       <li>Flip <code>visibility</code> to <code>&quot;public&quot;</code>.</li>
       <li>Only now does the Pages workflow become available.</li>
       </ol>
-      <h2>For automated contributors</h2>
+      <h2>Working in a private case</h2>
       <p>In a private case: never push, and never move asset content into anything
       external — an issue, a prompt, a hosted page, a paste. Describing the data is
       fine. Reproducing it is not.</p>
@@ -109,8 +109,8 @@
       <li>A private case runs locally, renders every tab, and leaves <code>git status</code> clean.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/contracts/data-visibility.md"><code>docs/contracts/data-visibility.md</code></a>
-        at <code>v1.0.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/contracts/data-visibility.md"><code>docs/contracts/data-visibility.md</code></a>
+        at <code>v1.0.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

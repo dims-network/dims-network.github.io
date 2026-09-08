@@ -67,11 +67,21 @@ canvas{width:100%;height:auto;display:block;border-radius:10px}
   padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .badge.root{color:#fff;background:var(--web);border-color:transparent}
 .badge.base{color:#fff;background:var(--py);border-color:transparent}
-.badge.fork{color:var(--accent);border-color:#aacbf2}
-.badge.tmpl{color:var(--amber);border-color:#e6cf94}
+.badge.app{color:var(--accent);border-color:#aacbf2}
+.badge.tool{color:var(--amber);border-color:#e6cf94}
+.badge.private{color:var(--amber);border-color:#e6cf94;background:#fdf6e3}
 .card p{margin:0 0 14px;color:var(--muted);font-size:.92rem;flex:1}
 .links{display:flex;gap:14px;flex-wrap:wrap;font-size:.86rem;font-weight:600}
 .links .live::before{content:"▶ ";color:var(--web)}
+
+/* Used by the markup but previously undefined, so each rendered unstyled. */
+.muted{color:var(--dim)}
+.hero-cta{margin:14px 0 0;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.hero-cta a{font-weight:700;font-size:1rem}
+.hero-note{color:var(--muted);font-size:.88rem;font-weight:400}
+.tabpanel[hidden]{display:none}
+.diagram-error{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--amber);
+  border-radius:10px;padding:14px 16px;color:var(--muted);font-size:.9rem;margin:0}
 
 .cite{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--py);
   border-radius:10px;padding:16px 18px;color:var(--muted);font-size:.92rem}

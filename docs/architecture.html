@@ -30,17 +30,17 @@
       <div class="crumbs">Getting started</div>
       <h1>How DIMS fits together</h1>
       <pre><code>                dims-network/dims          all the code, released as vX.Y.Z
-                             │
-              ┌──────────────┴──────────────┐
-        vendor/ , pinned            dims-analysis, installed
-        what the browser loads      what rebuilds the assets
-        (bot PR; CI rebuilds it     (pip install -e ./dims —
-         from the release tag)       not on PyPI yet)
-              │                              │
-         ┌────┴─────┬──────────────┐         └── used by every study, and by the builder
-      case-demo  case-ortho  case-karnatak
-       (public)   (public)     (PRIVATE — data lives outside the repository)
-      </code></pre>
+                       │
+        ┌──────────────┴──────────────┐
+  vendor/ , pinned            dims-analysis, installed
+  what the browser loads      what rebuilds the assets
+  (bot PR; CI rebuilds it     (pip install -e ./dims —
+   from the release tag)       not on PyPI yet)
+        │                              │
+   ┌────┴─────┬──────────────┐         └── used by every study, and by the builder
+case-demo  case-ortho  case-karnatak
+ (public)   (public)     (PRIVATE — data lives outside the repository)
+</code></pre>
       <p>Both halves move together and carry the same version number. A study's
       <code>dims-case.json</code> names it once: it is the tag CI fetches to verify <code>vendor/</code>,
       and it is the version of <code>dims-analysis</code> that produced the study's assets.</p>
@@ -101,8 +101,8 @@
       with a time column in seconds. That is why integrating an outside toolbox is a
       unit conversion rather than a merge.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/architecture.md"><code>docs/architecture.md</code></a>
-        at <code>v1.0.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/architecture.md"><code>docs/architecture.md</code></a>
+        at <code>v1.0.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

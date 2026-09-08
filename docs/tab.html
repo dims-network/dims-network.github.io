@@ -48,37 +48,37 @@
       in the same commit, so it cannot rot unnoticed.</p>
       <h2>The shape</h2>
       <pre><code class="language-js">(function () {
-        'use strict';
+  'use strict';
 
-        window.DIMS.registerTab({
-          id:    'trajectory',               // also names the pane: #trajectoryContainer
-          label: 'Trajectories',             // the button text
-          order: 50,                         // sort order; built-ins use 10..50
+  window.DIMS.registerTab({
+    id:    'trajectory',               // also names the pane: #trajectoryContainer
+    label: 'Trajectories',             // the button text
+    order: 50,                         // sort order; built-ins use 10..50
 
-          // Shown only when this returns true. Read config, nothing else.
-          gate(config) {
-            return Array.isArray(config.include_crosswavelet)
-                &amp;&amp; config.include_crosswavelet.length &gt;= 1;
-          },
+    // Shown only when this returns true. Read config, nothing else.
+    gate(config) {
+      return Array.isArray(config.include_crosswavelet)
+          &amp;&amp; config.include_crosswavelet.length &gt;= 1;
+    },
 
-          // First time the tab is shown. May be async. `container` is your pane;
-          // you own everything inside it and nothing outside it.
-          async onActivate(app, container) { … },
+    // First time the tab is shown. May be async. `container` is your pane;
+    // you own everything inside it and nothing outside it.
+    async onActivate(app, container) { … },
 
-          // Shown again, already activated. Cheap redraw.
-          onUpdate(app) { … },
+    // Shown again, already activated. Cheap redraw.
+    onUpdate(app) { … },
 
-          // The playhead moved. Called for whichever tab is visible.
-          onTimeUpdate(app, time, windowSize) { … },
+    // The playhead moved. Called for whichever tab is visible.
+    onTimeUpdate(app, time, windowSize) { … },
 
-          // A different video was selected. Drop cached data here.
-          onVideoChange(app, videoID) { … },
+    // A different video was selected. Drop cached data here.
+    onVideoChange(app, videoID) { … },
 
-          // Another tab was selected. Release anything expensive.
-          onDeactivate(app) { … }
-        });
-      })();
-      </code></pre>
+    // Another tab was selected. Release anything expensive.
+    onDeactivate(app) { … }
+  });
+})();
+</code></pre>
       <p>Only <code>id</code>, <code>label</code> and <code>onActivate</code> are required.</p>
       <h2>What you may use from <code>app</code></h2>
       <table>
@@ -145,8 +145,8 @@
       <li>Moving the playhead updates it while it is the visible tab.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.0/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a>
-        at <code>v1.0.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a>
+        at <code>v1.0.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
