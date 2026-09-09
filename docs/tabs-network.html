@@ -119,6 +119,29 @@
       </ul>
       <p>Neither layout is force-directed, deliberately: a force layout moves nodes
       between frames, and this picture is read by comparing one moment with another.</p>
+      <h2>Building it in the wizard</h2>
+      <p>The no-code builder draws this diagram in step 4 and asks you to fill it in,
+      which is the same decision as writing the config below by hand.</p>
+      <ul>
+      <li><strong>Add a person</strong> for each figure you want, and name it. That is a <code>group</code>.</li>
+      <li><strong>Click an empty circle</strong> — head, either hand, torso, hip or foot — and pick a
+      time series from the list. That is one <code>effectors</code> entry.</li>
+      <li><strong>Click two placed nodes</strong> to draw a dashed line between them. That is one
+      <code>include_crosswavelet</code> pair, which is what the tab turns into an edge; without
+      it two nodes are simply two nodes.</li>
+      <li>The <code>×</code> on a node takes it back off, and takes its lines with it.</li>
+      </ul>
+      <p>Choosing the figure layout is not a separate step: placing anything on a body
+      means <code>layout: &quot;figure&quot;</code>, because a body diagram that configured a column chart
+      would be a lie.</p>
+      <p><strong>An existing study opens already filled in.</strong> Every study written before
+      <code>effectors</code> existed says all of this by naming its measures
+      <code>teacher_righthandspeed</code>, so the wizard runs the same inference the tab runs —
+      the group's regular expression for the person, a body-part token in what is left
+      of the name for the spot — and shows you the result, saying that it guessed.
+      Pressing Next writes it out in the explicit form. The two render identically;
+      that is asserted by a test, because a migration that quietly moved a node would
+      be worse than no migration.</p>
       <h2>Saying which series is which node</h2>
       <p>By default the tab infers everything about a node from its name — the group from
       a regular expression, the label by deleting that expression, the body part from a
@@ -220,7 +243,7 @@
       <tbody>
       <tr>
         <td><code>groups</code></td>
-        <td>how the measures divide. <code>label</code>, an optional <code>color</code>, and a <code>match</code> regex when you are not declaring effectors</td>
+        <td>how the measures divide. <code>label</code>, an optional <code>color</code>, and a <code>match</code> regex when you are not declaring effectors. The wizard writes no <code>match</code> of its own; it carries one through if a study already had it</td>
       </tr>
       <tr>
         <td><code>band</code></td>
@@ -234,10 +257,10 @@
       </table>
       <p><code>include_network: true</code> means &quot;on, with everything inferred&quot;.</p>
       <p>The full shape, with every constraint, is in
-      <a href="https://github.com/dims-network/dims/blob/v1.2.0/docs/contracts/config.schema.json"><code>docs/contracts/config.schema.json</code></a>.</p>
+      <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/contracts/config.schema.json"><code>docs/contracts/config.schema.json</code></a>.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.2.0/docs/tabs/network.md"><code>docs/tabs/network.md</code></a>
-        at <code>v1.2.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/tabs/network.md"><code>docs/tabs/network.md</code></a>
+        at <code>v1.3.0</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
