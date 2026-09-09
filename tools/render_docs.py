@@ -74,7 +74,7 @@ PAGE = """<!DOCTYPE html>
 </div>
 
 <script src="docs.js"></script>
-</body>
+{scripts}</body>
 </html>
 """
 
@@ -179,6 +179,45 @@ def indent(body, spaces=6):
     return "\n".join(out)
 
 
+def script_tags(item):
+    """The `<script>` tags a page asked for, or nothing at all.
+
+    A page that declares no scripts renders exactly as it did before this
+    existed, so adding the mechanism moves no existing byte.
+    """
+    out = []
+    for src in item.get("scripts", []):
+        crossorigin = ' crossorigin="anonymous"' if src.startswith("http") else ""
+        out.append(f'<script src="{html.escape(src, quote=True)}"{crossorigin}></script>\n')
+    return "".join(out)
+
+
+def copy_assets(dims_root, spec, ref):
+    """Files a page needs beside it -- demo data, plotting code -- from the core.
+
+    They live in the core with the markdown that uses them, so a figure and the
+    page describing it are released together and `--check` catches either one
+    going stale. Only the basename survives the copy, because that is what the
+    `<script src>` in SOURCE.json refers to.
+    """
+    assets = {}
+    seen = {}
+    for group in spec["pages"]:
+        for item in group["items"]:
+            for src in item.get("assets", []):
+                name = os.path.basename(src)
+                if seen.get(name, src) != src:
+                    sys.exit(f"error: {src} and {seen[name]} both copy to "
+                             f"docs/{name}; give one of them a different name")
+                seen[name] = src
+                path = os.path.join(dims_root, src)
+                if not os.path.exists(path):
+                    sys.exit(f"error: {src} is not in {dims_root} at {ref}")
+                with open(path) as fh:
+                    assets[name] = fh.read()
+    return assets
+
+
 def build(dims_root, spec):
     rewrites = link_rewrites(spec)
     repo_url = spec["repo"].rstrip("/")
@@ -198,9 +237,12 @@ def build(dims_root, spec):
                 description=html.escape(item["description"], quote=True),
                 group=html.escape(group["group"]),
                 body=indent(body),
+                scripts=script_tags(item),
                 source=html.escape(item["source"]),
                 source_url=f"{repo_url}/blob/{ref}/{item['source']}",
                 ref=html.escape(ref))
+
+    pages.update(copy_assets(dims_root, spec, ref))
 
     nav = [{"group": g["group"],
             "items": [{"title": i["title"], "href": i["out"]} for i in g["items"]]}
@@ -237,7 +279,7 @@ def build_index(spec):
     return PAGE.format(title="Documentation", group="Documentation",
                        description="Technical reference for DIMS: architecture, "
                                    "asset layout, the analysis and tab contracts.",
-                       body=body, source="tools/SOURCE.json",
+                       body=body, scripts="", source="tools/SOURCE.json",
                        source_url=spec["repo"], ref=html.escape(spec["ref"]))
 
 

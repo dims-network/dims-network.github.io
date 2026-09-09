@@ -70,3 +70,31 @@
 .source-note{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);
   color:var(--dim);font-size:.82rem}
 .source-note code{font-size:.82rem}
+
+/* Figures on the Analyses pages: Plotly draws into these.
+
+   They break out of the 46rem text measure, because a heatmap of period
+   against time needs the width and a paragraph does not. The min-height is
+   reserved before the plot exists so the page does not jump when it arrives. */
+.figure{
+  margin:22px -40px;
+  padding:10px 12px 4px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
+  min-height:300px;
+}
+.fig-note{
+  margin:-10px -40px 26px;
+  padding:0 14px;
+  color:var(--muted);
+  font-size:.85rem;
+  line-height:1.55;
+}
+.fig-note code{font-size:.8rem}
+.fig-error{color:var(--amber);font-size:.85rem;padding:12px}
+
+@media(max-width:1100px){
+  .figure{margin-left:0;margin-right:0}
+  .fig-note{margin-left:0;margin-right:0;padding:0 2px}
+}

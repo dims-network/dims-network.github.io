@@ -1,6 +1,6 @@
 {
   "repo": "https://github.com/dims-network/dims",
-  "ref": "v1.0.1",
+  "ref": "v1.0.2",
   "_comment": "The release these pages were rendered from. Bump it, re-render, commit. CI checks that the committed HTML is what this ref produces, so the site cannot drift from the code it documents.",
   "pages": [
     {
@@ -21,6 +21,67 @@
       ]
     },
     {
+      "group": "Analyses",
+      "items": [
+        {
+          "source": "docs/analyses/index.md",
+          "out": "analyses.html",
+          "title": "Overview",
+          "description": "What the three analyses answer, how a study turns them on, and the payload conventions they share.",
+          "assets": [
+            "docs/analyses/demo/analyses-plots.js",
+            "docs/analyses/demo/demo_signals.json"
+          ],
+          "scripts": [
+            "https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js",
+            "analyses-plots.js"
+          ]
+        },
+        {
+          "source": "docs/analyses/crosswavelet.md",
+          "out": "crosswavelet.html",
+          "title": "Cross-wavelet & coherence",
+          "description": "Shared timescales, lead and lag, and the four significance levels — including which one actually tests coupling.",
+          "assets": [
+            "docs/analyses/demo/analyses-plots.js",
+            "docs/analyses/demo/demo_crosswavelet.json"
+          ],
+          "scripts": [
+            "https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js",
+            "analyses-plots.js"
+          ]
+        },
+        {
+          "source": "docs/analyses/rqa.md",
+          "out": "rqa.html",
+          "title": "Recurrence (RQA)",
+          "description": "Recurrence plots without time-delay embedding: the fixed-rate threshold, the four measures, and what is not computed.",
+          "assets": [
+            "docs/analyses/demo/analyses-plots.js",
+            "docs/analyses/demo/demo_rqa.json"
+          ],
+          "scripts": [
+            "https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js",
+            "analyses-plots.js"
+          ]
+        },
+        {
+          "source": "docs/analyses/crqa.md",
+          "out": "crqa.html",
+          "title": "Cross-recurrence (cRQA)",
+          "description": "The same machinery across a pair of signals, what the windows actually measure, and where a lag goes unreported.",
+          "assets": [
+            "docs/analyses/demo/analyses-plots.js",
+            "docs/analyses/demo/demo_crqa.json"
+          ],
+          "scripts": [
+            "https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js",
+            "analyses-plots.js"
+          ]
+        }
+      ]
+    },
+    {
       "group": "Reference",
       "items": [
         {
@@ -34,12 +95,6 @@
           "out": "analysis-output.html",
           "title": "Analysis output",
           "description": "What an analysis result must contain, and why: the bounds, the encoding, the window, asked-for beside achieved, and which significance level is the right one."
-        },
-        {
-          "source": "docs/coherence.md",
-          "out": "coherence.html",
-          "title": "Wavelet coherence",
-          "description": "What the chance level is, what it assumes, and how to read a coherence value."
         },
         {
           "source": "docs/contracts/data-visibility.md",
@@ -62,7 +117,7 @@
           "source": "docs/contracts/step.md",
           "out": "step.html",
           "title": "Writing an analysis",
-          "description": "A study-owned script or a registered step \u2014 which to write, and how."
+          "description": "A study-owned script or a registered step — which to write, and how."
         },
         {
           "source": "docs/contracts/case.md",

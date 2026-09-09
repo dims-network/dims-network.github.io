@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cross-recurrence (cRQA) · DIMS docs</title>
+<meta name="description" content="The same machinery across a pair of signals, what the windows actually measure, and where a lag goes unreported." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Analyses</div>
+      <h1>Cross-recurrence quantification (cRQA)</h1>
+      <p>Cross-recurrence asks the same question as <a href="rqa.html">RQA</a>, but across two
+      signals: <em>was signal X, at moment i, in a state that signal Y was in at moment
+      j?</em> The plot is no longer symmetric and no longer has a line of identity, and
+      the diagonal stops being trivial — a line <strong>on</strong> the diagonal means the two
+      signals are doing the same thing at the same time, and a line <strong>parallel to</strong> it
+      means one is doing what the other did, at a fixed delay.</p>
+      <ul>
+      <li>Step id <code>crqa</code>, gated by <code>include_cRQA</code>, a list of <code>[type1, type2]</code> pairs.</li>
+      <li>Writes <code>assets/crqa/{video}_crqa_data.json</code>.</li>
+      <li>Same machinery as RQA: <code>cdist</code>, one percentile threshold, the same four
+      measures.</li>
+      </ul>
+      <div class="figure" id="fig-crqa-lag"></div>
+
+      <h2>The method</h2>
+      <pre><code>CR(i, j) = Θ( ε − |xᵢ − yⱼ| )
+</code></pre>
+      <p>on two z-scored signals sampled on one common grid. Rows index the <strong>first</strong>
+      series, columns the <strong>second</strong>, from <code>cdist(series1, series2)</code> — so the payload's
+      <code>data_x</code> runs down the rows and <code>data_y</code> across the columns.</p>
+      <p>As in RQA, <strong>no time-delay embedding is applied</strong>: both series are reshaped to
+      <code>(N, 1)</code>, so the embedding dimension is 1 and the delay is 0. The function that
+      builds the matrix would accept <code>(N, d)</code> arrays and its docstring still says
+      &quot;embedded&quot;, but its only caller passes <code>d = 1</code>. Everything the
+      <a href="rqa.html">RQA page says about that</a> applies here unchanged.</p>
+      <h3>Alignment is the real preprocessing</h3>
+      <p>Cross-recurrence needs both signals on one clock, and that, rather than
+      detrending or tapering, is where the preparation happens:</p>
+      <ol>
+      <li>Read both CSVs through the shared loader — NaNs dropped, sorted by time.</li>
+      <li>Refuse either series with fewer than 10 usable points or zero variance.</li>
+      <li>Require the two time ranges to overlap at all.</li>
+      <li>Build a uniform grid over the overlap at <code>min(Δt₁, Δt₂)</code>, the <strong>finer</strong> of
+      the two median sampling intervals, and check the length of <em>that</em> grid
+      against the 2 GiB matrix budget.</li>
+      <li>Linearly interpolate both series onto it.</li>
+      <li>z-score each.</li>
+      </ol>
+      <p>There is <strong>no detrending and no taper</strong> here. The cross-wavelet step does both;
+      this one does not, because a recurrence threshold is a percentile of the
+      distances and a shared linear trend moves that percentile without changing the
+      structure much. If your signals have strong drift, know that it will show up as
+      large low-recurrence blocks off the diagonal.</p>
+      <h3>The threshold</h3>
+      <p>The same fixed-recurrence-rate rule as RQA, with one difference: there is no
+      line of identity to exclude, so the percentile is taken over the <strong>whole</strong>
+      matrix rather than the upper triangle, and</p>
+      <pre><code>RR = ΣR / (n · m)
+</code></pre>
+      <p>with no subtraction. For the same reason DET's denominator here is the full
+      recurrent count — the diagonal scan skips nothing, so nothing is excluded from
+      what it is a share of. LAM is unchanged.</p>
+      <h2>What it measures, and what it does not</h2>
+      <div class="figure" id="fig-crqa-pair"></div>
+
+      <p>The four measures are the same — RR, DET, LAM and L_MAX in seconds — and they
+      are computed over <strong>square blocks on the main diagonal</strong> of the cross-recurrence
+      matrix, sliding in seconds exactly as in RQA.</p>
+      <p>That placement is the important limitation, and it is easy to miss because the
+      plot shows more than the numbers do:</p>
+      <ul>
+      <li><strong>The windowed metrics describe simultaneity.</strong> A block on the main diagonal
+      covers moments where <em>i</em> and <em>j</em> are close, so DET and LAM here answer &quot;how
+      structured is what these two do at the same time?&quot;</li>
+      <li><strong>A lag is visible and unquantified.</strong> In the figure above, <code>lead</code> and <code>lag</code>
+      are the same signal 2 s apart and the recurrent band sits neatly off the
+      diagonal — and nothing in the payload reports &quot;2 s&quot;. There is no diagonal-wise
+      cross-recurrence profile, no maximum-of-lag search, no line-of-synchronisation
+      estimate.</li>
+      </ul>
+      <p>If you need the lag, the matrix is one <code>cdist</code> away (the recipe on the
+      <a href="rqa.html">RQA page</a> works here with <code>cdist(x, y)</code> and <code>self_paired=False</code>), and
+      the diagonal-wise profile is <code>[R.diagonal(k).mean() for k in range(-n+1, n)]</code>.</p>
+      <h2>Parameters</h2>
+      <p>Under <code>analysis.crqa</code>, identical to RQA:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>default</th>
+        <th>what it does</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>window</code></td>
+        <td>seconds</td>
+        <td>20.0</td>
+        <td>length of the sliding window</td>
+      </tr>
+      <tr>
+        <td><code>step</code></td>
+        <td>seconds</td>
+        <td>1.0</td>
+        <td>how far it moves between windows</td>
+      </tr>
+      <tr>
+        <td><code>targetRecurrence</code></td>
+        <td>fraction, 0 &lt; x &lt; 1</td>
+        <td>0.07</td>
+        <td>recurrence rate the threshold search aims for</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><strong>A flat list of data types does not work here.</strong> <code>include_cRQA</code> wants
+      <code>[[type1, type2], …]</code>; an entry that is not a two-element list is skipped with a
+      warning, and if none survive the step writes nothing at all. The config schema
+      shares one definition with <code>include_crosswavelet</code>, which <em>does</em> accept the flat
+      form, so validation will not catch this.</p>
+      <h2>What it writes</h2>
+      <p>One entry per pair under <code>crqa_data</code>, keyed <code>&quot;{type1}_vs_{type2}&quot;</code>:</p>
+      <pre><code class="language-jsonc">{
+  &quot;video_id&quot;: &quot;demo&quot;,
+  &quot;payload_version&quot;: 2,
+  &quot;crqa_data&quot;: {
+    &quot;sig_a_vs_sig_b&quot;: {
+      &quot;pair_name&quot;: &quot;sig_a_vs_sig_b&quot;,
+      &quot;series_names&quot;: [&quot;sig_a&quot;, &quot;sig_b&quot;],
+      &quot;threshold&quot;: 0.127593,
+      &quot;global_recurrence_rate&quot;: 0.0700026,
+      &quot;time_range&quot;: [0.0, 59.8],
+      &quot;windowed_metrics&quot;: { &quot;time&quot;: [], &quot;RR&quot;: [], &quot;DET&quot;: [], &quot;LAM&quot;: [], &quot;L_MAX&quot;: [] },
+      &quot;window&quot;: { &quot;length_requested_sec&quot;: 12.0, &quot;length_used_sec&quot;: 12.0,
+                  &quot;step_requested_sec&quot;: 0.5, &quot;step_used_sec&quot;: 0.5,
+                  &quot;n_windows&quot;: 96 },
+      &quot;visualization&quot;: {
+        &quot;time&quot;: [], &quot;data_x&quot;: [], &quot;data_y&quot;: [], &quot;matrix_size&quot;: 299,
+        &quot;matrix&quot;: { &quot;encoding&quot;: &quot;bitmap-b64&quot;, &quot;rows&quot;: 299, &quot;cols&quot;: 299, &quot;data&quot;: &quot;…&quot; },
+        &quot;reduction&quot;: { &quot;factor&quot;: 2, &quot;series&quot;: &quot;block-mean&quot;,
+                       &quot;matrix&quot;: &quot;density-preserving&quot;, &quot;n_points_full&quot;: 599,
+                       &quot;rate_full&quot;: 0.0700026, &quot;rate_drawn&quot;: 0.0699768 }
+      },
+      &quot;full_stats&quot;: {
+        &quot;n_points&quot;: 599, &quot;window_size_sec&quot;: 12.0, &quot;step_size_sec&quot;: 0.5,
+        &quot;time&quot;:     { &quot;encoding&quot;: &quot;f32-b64&quot;, &quot;shape&quot;: [599], &quot;data&quot;: &quot;…&quot; },
+        &quot;signal_x&quot;: { &quot;encoding&quot;: &quot;f32-b64&quot;, &quot;shape&quot;: [599], &quot;data&quot;: &quot;…&quot; },
+        &quot;signal_y&quot;: { &quot;encoding&quot;: &quot;f32-b64&quot;, &quot;shape&quot;: [599], &quot;data&quot;: &quot;…&quot; }
+      }
+    }
+  },
+  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.0.2&quot;, &quot;target_recurrence&quot;: 0.07,
+                  &quot;max_points_drawn&quot;: 500 },
+  &quot;precision&quot;: { &quot;significant_figures&quot;: 6 }
+}
+</code></pre>
+      <table>
+      <thead>
+      <tr>
+        <th>field</th>
+        <th>type</th>
+        <th>units / notes</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>series_names</code></td>
+        <td>list of 2</td>
+        <td><code>[rows, columns]</code>, in that order</td>
+      </tr>
+      <tr>
+        <td><code>threshold</code></td>
+        <td>float</td>
+        <td>Euclidean distance in z-score units</td>
+      </tr>
+      <tr>
+        <td><code>global_recurrence_rate</code></td>
+        <td>float</td>
+        <td>share of all <code>n · m</code> cells</td>
+      </tr>
+      <tr>
+        <td><code>windowed_metrics</code></td>
+        <td>object</td>
+        <td>as in RQA; <code>L_MAX</code> in seconds</td>
+      </tr>
+      <tr>
+        <td><code>window</code></td>
+        <td>object</td>
+        <td>requested beside used</td>
+      </tr>
+      <tr>
+        <td><code>visualization.data_x</code>, <code>.data_y</code></td>
+        <td>list</td>
+        <td>the reduced signals, z-scored; <code>data_x</code> runs down the rows</td>
+      </tr>
+      <tr>
+        <td><code>visualization.matrix</code></td>
+        <td><code>bitmap-b64</code></td>
+        <td>rows = first series, columns = second</td>
+      </tr>
+      <tr>
+        <td><code>full_stats.signal_x</code>, <code>.signal_y</code></td>
+        <td><code>f32-b64</code></td>
+        <td>both series on the common grid, z-scored</td>
+      </tr>
+      </tbody>
+      </table>
+      <h3>Three differences from the RQA payload</h3>
+      <p>Worth knowing before you write code that reads both:</p>
+      <ol>
+      <li><strong>The rate has a different name.</strong> <code>global_recurrence_rate</code> here,
+      <code>recurrence_rate</code> in RQA.</li>
+      <li><strong>Asked-for and achieved are not both recorded.</strong> RQA writes
+      <code>target_recurrence</code>, <code>achieved_recurrence</code> and <code>recurrence_rate_warning</code>;
+      this step writes none of them, so a threshold search that landed on a plateau
+      goes unreported. The target survives only in <code>provenance.target_recurrence</code>.
+      That is a gap against contract A6 in
+      <a href="analysis-output.html">analysis output</a>, not a deliberate
+      difference — until it is closed, compare <code>global_recurrence_rate</code> against
+      <code>provenance.target_recurrence</code> yourself.</li>
+      <li><strong><code>full_stats</code> carries the window settings and <code>full_data</code> does not</strong> — and
+      the ones it carries are the values <strong>requested</strong>, not the ones used. When
+      they differ, <code>window.length_used_sec</code> is the truth.</li>
+      </ol>
+      <h2>Further reading</h2>
+      <ul>
+      <li><a href="https://www.recurrence-plot.tk/"><strong>recurrence-plot.tk</strong></a> — cross-recurrence
+      plots, joint recurrence plots, and the diagonal-wise profile this
+      implementation does not compute.</li>
+      <li>Marwan, N., &amp; Kurths, J. (2002). Nonlinear analysis of bivariate data with
+      cross recurrence plots. <em>Physics Letters A</em>, <strong>302</strong>(5–6), 299–307.
+      <a href="https://doi.org/10.1016/S0375-9601(02)01170-2">doi:10.1016/S0375-9601(02)01170-2</a>
+      — the line of synchronisation, and reading a lag off a cross-recurrence plot.</li>
+      <li><a href="rqa.html">RQA</a> for the measures, the threshold rule and the embedding question,
+      all of which are shared.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/analyses/crqa.md"><code>docs/analyses/crqa.md</code></a>
+        at <code>v1.0.2</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+<script src="https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js" crossorigin="anonymous"></script>
+<script src="analyses-plots.js"></script>
+</body>
+</html>

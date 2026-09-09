@@ -3,21 +3,278 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Moved · DIMS docs</title>
-<link rel="canonical" href="coherence.html" />
-<meta http-equiv="refresh" content="0; url=coherence.html" />
+<title>Overview · DIMS docs</title>
+<meta name="description" content="What the three analyses answer, how a study turns them on, and the payload conventions they share." />
 <link rel="stylesheet" href="../style.css" />
 <link rel="stylesheet" href="docs.css" />
 </head>
 <body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
 <div class="wrap">
-  <main class="docs-main">
-    <h1>This page moved</h1>
-    <p>“Analyses” has been replaced by <a href="coherence.html">coherence.html</a>,
-      which is generated from the core repository rather than written here.
-      You should be redirected automatically.</p>
-    <p><a href="index.html">All documentation →</a></p>
-  </main>
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Analyses</div>
+      <h1>The analyses DIMS ships</h1>
+      <p>Three analyses come with the core. Each one reads prepared time series from
+      <code>assets/timeseries/</code>, and each one writes a single JSON payload that a dashboard
+      tab draws and a notebook can read back.</p>
+      <table>
+      <thead>
+      <tr>
+        <th>analysis</th>
+        <th>takes</th>
+        <th>asks</th>
+        <th>writes</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><a href="crosswavelet.html">Cross-wavelet &amp; coherence</a></td>
+        <td>a <strong>pair</strong></td>
+        <td>at which timescales, and when, do two signals share energy — and do they keep a consistent timing relationship?</td>
+        <td><code>assets/crosswavelet/{video}_crosswavelet_data.json</code></td>
+      </tr>
+      <tr>
+        <td><a href="rqa.html">Recurrence, RQA</a></td>
+        <td><strong>one</strong> signal</td>
+        <td>when does a signal return to a value it held before, and how structured are those returns?</td>
+        <td><code>assets/rqa/{video}_rqa_data.json</code></td>
+      </tr>
+      <tr>
+        <td><a href="crqa.html">Cross-recurrence, cRQA</a></td>
+        <td>a <strong>pair</strong></td>
+        <td>when is one signal where the other has been, and how long do the two stay together?</td>
+        <td><code>assets/crqa/{video}_crqa_data.json</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p>Which to reach for is mostly a question of what you think the structure is. The
+      wavelet analysis works in the frequency domain and answers questions about
+      <em>rhythm</em>: it is at its best when there is something oscillating, even briefly,
+      and it will tell you at which period and with what lead or lag. The recurrence
+      analyses make no assumption that anything repeats at a fixed rate — they ask
+      whether the signal keeps coming back to where it has been, which is a question
+      you can ask of a signal with no rhythm at all.</p>
+      <p>Read them beside the two contracts that govern their output:
+      <a href="assets.html">asset layout</a> says where every file goes and what a
+      <code>visualization</code> block holds; <a href="analysis-output.html">analysis output</a>
+      says what any analysis must record and why.</p>
+      <h2>The running example</h2>
+      <p>Every figure in this section is real output. A generator builds six synthetic
+      signals whose answers are known before anything runs, feeds them to
+      <code>dims-analysis run</code>, and the pages plot the payloads that come out —
+      <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/analyses/demo/make_demo_data.py"><code>docs/analyses/demo/make_demo_data.py</code></a>, and the
+      committed results beside it. Nothing here is an illustration of what the code
+      is supposed to do.</p>
+      <p>Two of those six are the running example, carried through all three pages:</p>
+      <div class="figure" id="fig-signals"></div>
+
+      <p><code>sig_a</code> and <code>sig_b</code> are built to make one distinction visible. Both contain a
+      4-second oscillation, with <code>sig_b</code> delayed by 0.7 s — a constant phase lag, so
+      their <em>timing relationship at that period is perfectly consistent</em>. Both also
+      contain a burst between 20 s and 35 s, at a period of 1.2 s in <code>sig_a</code> and
+      1.45 s in <code>sig_b</code> — plenty of energy in both at almost the same time, but with a
+      relationship that drifts. On top of each sits independent AR(1) noise, which is
+      the kind of thing the chance level is estimated against.</p>
+      <p>That pair is the reason both cross-wavelet <em>power</em> and <em>coherence</em> exist: power
+      finds the burst, coherence does not.</p>
+      <h2>What goes in</h2>
+      <p>One CSV per recording per signal, at <code>assets/timeseries/{video}_{type}.csv</code>,
+      with a <code>Time</code> column in seconds and one value column:</p>
+      <pre><code class="language-csv">Time,sig_a
+0.000000,0.101474
+0.100000,0.264876
+0.200000,0.451709
+</code></pre>
+      <p>The rules are in <a href="assets.html">asset layout</a>, and all three analyses
+      read through one loader, so they agree about what the file says: the time column
+      is matched under any casing, rows with missing values are dropped, and the
+      series is sorted by time. What differs between them is the guard afterwards —
+      cross-wavelet refuses fewer than 50 samples, the recurrence analyses refuse
+      fewer than 10 and refuse a signal that does not vary at all.</p>
+      <h2>Turning them on</h2>
+      <p>Each analysis is gated by one key in the study's <code>config.json</code>, and the shape of
+      that key is not the same for all three:</p>
+      <pre><code class="language-jsonc">{
+  &quot;videoIDs&quot;: [&quot;demo&quot;],
+
+  &quot;include_RQA&quot;: [&quot;sig_a&quot;, &quot;periodic&quot;, &quot;noisy&quot;],          // data types
+  &quot;include_cRQA&quot;: [[&quot;sig_a&quot;, &quot;sig_b&quot;], [&quot;lead&quot;, &quot;lag&quot;]],  // pairs
+  &quot;include_crosswavelet&quot;: [[&quot;sig_a&quot;, &quot;sig_b&quot;]],           // pairs
+
+  &quot;analysis&quot;: {
+    &quot;rqa&quot;:  { &quot;window&quot;: 12.0, &quot;step&quot;: 0.5, &quot;targetRecurrence&quot;: 0.07 },
+    &quot;crqa&quot;: { &quot;window&quot;: 12.0, &quot;step&quot;: 0.5, &quot;targetRecurrence&quot;: 0.07 },
+    &quot;crosswavelet&quot;: { &quot;mcCount&quot;: 200, &quot;maxPeriod&quot;: 20.0 }
+  }
+}
+</code></pre>
+      <p>Three things about those keys are worth knowing before they cost you a rebuild.</p>
+      <p><strong>A list, not <code>true</code>.</strong> <code>&quot;include_RQA&quot;: true</code> is refused with a message naming
+      the fix, because the key has to say <em>which</em> signals. The same goes for a bare
+      string: write <code>[&quot;sig_a&quot;]</code>, not <code>&quot;sig_a&quot;</code>.</p>
+      <p><strong>Case does not matter, but a duplicate does.</strong> <code>include_crqa</code> and
+      <code>include_cRQA</code> are the same key. Writing both in one file is an error rather
+      than a preference — which of them applied would otherwise be arbitrary.</p>
+      <p><strong>A flat list of types expands to pairs for cross-wavelet, and only for
+      cross-wavelet.</strong> <code>&quot;include_crosswavelet&quot;: [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</code> is a legacy form
+      meaning all three unique pairs. <code>&quot;include_cRQA&quot;: [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</code> is <em>not</em>: the
+      step wants <code>[type1, type2]</code> entries, skips anything else with a warning, and
+      then writes nothing. The config schema shares one definition between the two
+      keys, so it will not catch this for you.</p>
+      <p>Tuning goes under <code>analysis.&lt;step id&gt;</code>, where the step id is <code>rqa</code>, <code>crqa</code> or
+      <code>crosswavelet</code> — the names <code>dims-analysis list</code> prints, not the gate keys. Each
+      page below documents its own parameters; the schema that validates them is
+      <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/contracts/config.schema.json"><code>contracts/config.schema.json</code></a>.</p>
+      <h2>What comes out</h2>
+      <p>One file per recording per analysis, always this shape:</p>
+      <pre><code class="language-jsonc">{
+  &quot;video_id&quot;: &quot;demo&quot;,
+  &quot;payload_version&quot;: 2,
+  &quot;&lt;container key&gt;&quot;: { /* keyed by data type, or by &quot;{a}_vs_{b}&quot; */ },
+  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.0.2&quot;, &quot;...&quot;: &quot;the settings actually used&quot; },
+  &quot;precision&quot;: { &quot;significant_figures&quot;: 6, &quot;note&quot;: &quot;...&quot; }
+}
+</code></pre>
+      <table>
+      <thead>
+      <tr>
+        <th>analysis</th>
+        <th>container key</th>
+        <th>entries keyed by</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>rqa</code></td>
+        <td><code>rqa_data</code></td>
+        <td>data type — <code>&quot;sig_a&quot;</code></td>
+      </tr>
+      <tr>
+        <td><code>crqa</code></td>
+        <td><code>crqa_data</code></td>
+        <td>pair — <code>&quot;sig_a_vs_sig_b&quot;</code></td>
+      </tr>
+      <tr>
+        <td><code>crosswavelet</code></td>
+        <td><code>crosswavelet_pairs</code></td>
+        <td>pair — <code>&quot;sig_a_vs_sig_b&quot;</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p>Writing merges one level deep rather than replacing the file, so a study-owned
+      analysis can add its own entries to <code>rqa_data</code> without erasing the core's.</p>
+      <h3>Numbers are rounded, arrays are packed</h3>
+      <p>Every small field is rounded to <strong>six significant figures</strong> — significant
+      figures, not decimal places — and non-finite values become <code>null</code>, because
+      <code>json.dump</code> writes a bare <code>NaN</code> token that <code>JSON.parse</code> rejects outright.</p>
+      <p>The large arrays skip the rounding and travel packed, in one of two
+      self-naming encodings:</p>
+      <pre><code class="language-jsonc">{&quot;encoding&quot;: &quot;bitmap-b64&quot;, &quot;rows&quot;: 300, &quot;cols&quot;: 300, &quot;data&quot;: &quot;…&quot;}
+{&quot;encoding&quot;: &quot;f32-b64&quot;,    &quot;shape&quot;: [40, 150],       &quot;data&quot;: &quot;…&quot;}
+</code></pre>
+      <p><code>bitmap-b64</code> is one bit per cell, most-significant-first, with each <strong>row</strong>
+      starting on a byte boundary — so a cell is <code>byte[row * stride + (col &gt;&gt; 3)]</code>
+      where <code>stride = (cols + 7) &gt;&gt; 3</code>. It is what carries a recurrence matrix, which
+      is binary and dense: measured on one study's gaze matrix, index pairs cost
+      7,300,452 bytes against 133,803 as a bitmap.</p>
+      <p><code>f32-b64</code> is little-endian float32 — stated rather than inherited, because numpy
+      follows the platform and the browser's <code>DataView</code> defaults to big-endian. NaN
+      survives it, and means what it means in the analysis: <em>this cell has no value</em>.</p>
+      <p>Reading either one is a few lines. This is the decoder the figures on these
+      pages actually use:</p>
+      <pre><code class="language-js">function decodeF32(o) {
+  const raw = Uint8Array.from(atob(o.data), c =&gt; c.charCodeAt(0));
+  const flat = new Float32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4);
+  const [rows, cols] = o.shape.length === 2 ? o.shape : [1, o.shape[0]];
+  const out = [];
+  for (let r = 0; r &lt; rows; r++) {
+    const row = new Array(cols);
+    for (let c = 0; c &lt; cols; c++) {
+      const v = flat[r * cols + c];
+      row[c] = Number.isNaN(v) ? null : v;   // Plotly reads null as a gap
+    }
+    out.push(row);
+  }
+  return o.shape.length === 2 ? out : out[0];
+}
+
+function decodeBitmap(o) {
+  const raw = Uint8Array.from(atob(o.data), c =&gt; c.charCodeAt(0));
+  const stride = (o.cols + 7) &gt;&gt; 3, out = [];
+  for (let r = 0; r &lt; o.rows; r++) {
+    const row = new Array(o.cols);
+    for (let c = 0; c &lt; o.cols; c++) {
+      row[c] = (raw[r * stride + (c &gt;&gt; 3)] &gt;&gt; (7 - (c &amp; 7))) &amp; 1;
+    }
+    out.push(row);
+  }
+  return out;
+}
+</code></pre>
+      <p>In Python, <code>dims_analysis.common.arrays.unpack()</code> walks a payload and returns
+      whichever it finds, so you do not have to know in advance which fields grew
+      large enough to be packed.</p>
+      <h3>A picture and the analysis are not the same file</h3>
+      <p>Every payload holds a <code>visualization</code> block that has been <strong>reduced</strong> to
+      something a browser can draw, and records how:</p>
+      <pre><code class="language-jsonc">&quot;reduction&quot;: {
+  &quot;factor&quot;: 2,
+  &quot;series&quot;: &quot;block-mean&quot;,
+  &quot;matrix&quot;: &quot;density-preserving&quot;,
+  &quot;n_points_full&quot;: 600,
+  &quot;rate_full&quot;: 0.0700,
+  &quot;rate_drawn&quot;: 0.0699
+}
+</code></pre>
+      <p>A recurrence matrix is reduced density-preserving rather than by block-mean and
+      a threshold, so the drawn plot has the same recurrence rate as the real one —
+      <code>rate_full</code> beside <code>rate_drawn</code> is there to be checked. A cross-wavelet grid is
+      block-averaged, except phase, which is averaged through the unit circle because
+      the mean of 179° and −179° is not 0°.</p>
+      <p>For cross-wavelet there is a second file, <code>{video}_crosswavelet_full.json</code>, at
+      the resolution the analysis actually ran at. <strong>Analyse that one.</strong> The reduced
+      payload is a picture. For the recurrence analyses there is no second file,
+      because there is nothing in it that the payload does not already carry: the
+      matrix is quadratic and is rebuilt in two lines from the stored signal and
+      threshold, which each page shows.</p>
+      <p>The rule and its rationale are contract A3 in
+      <a href="analysis-output.html">analysis output</a>.</p>
+      <h2>Where these figures came from</h2>
+      <p>The demo payloads were produced by running the real steps over the synthetic
+      signals, against the pinned dependencies. Re-generate them with:</p>
+      <pre><code class="language-sh">python docs/analyses/demo/make_demo_data.py
+</code></pre>
+      <p>Everything is seeded — the signals, and the Monte Carlo null behind the
+      coherence chance level — so two runs produce identical files, and a change in a
+      figure means a change in the analysis.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/analyses/index.md"><code>docs/analyses/index.md</code></a>
+        at <code>v1.0.2</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
 </div>
+
+<script src="docs.js"></script>
+<script src="https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js" crossorigin="anonymous"></script>
+<script src="analyses-plots.js"></script>
 </body>
 </html>

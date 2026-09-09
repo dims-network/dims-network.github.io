@@ -98,9 +98,9 @@ for video_id in config['videoIDs']:
       <p>A class in <code>packages/dims-analysis/dims_analysis/steps/</code>, found through an
       entry point. The runner never lists steps, so adding one edits no existing
       file.</p>
-      <pre><code class="language-python">from dims_analysis.base import Step
+      <pre><code class="language-python">from dims_analysis.base import Step as BaseStep
 
-class RQAStep(Step):
+class Step(BaseStep):          # the entry point below points at this name
     id          = &quot;rqa&quot;                       # also the CLI selector
     config_key  = &quot;include_RQA&quot;               # gate key in config.json
     output_dir  = &quot;assets/rqa&quot;                # default; resolved through data.local.json
@@ -113,7 +113,7 @@ class RQAStep(Step):
             ctx.write_result(self, video_id, {&quot;rqa_data&quot;: ...})
 </code></pre>
       <pre><code class="language-toml">[project.entry-points.&quot;dims.steps&quot;]
-rqa = &quot;dims_analysis.steps.rqa:RQAStep&quot;
+rqa = &quot;dims_analysis.steps.rqa:Step&quot;
 </code></pre>
       <p>A step in a <em>separate</em> package registers the same way — that is how an outside
       module joins the pipeline without a change here.</p>
@@ -247,8 +247,8 @@ rqa = &quot;dims_analysis.steps.rqa:RQAStep&quot;
       external root, and <code>git status</code> is clean afterwards.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.1/docs/contracts/step.md"><code>docs/contracts/step.md</code></a>
-        at <code>v1.0.1</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/contracts/step.md"><code>docs/contracts/step.md</code></a>
+        at <code>v1.0.2</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

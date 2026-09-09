@@ -21,6 +21,27 @@ const DOCS_NAV = [
     ]
   },
   {
+    "group": "Analyses",
+    "items": [
+      {
+        "title": "Overview",
+        "href": "analyses.html"
+      },
+      {
+        "title": "Cross-wavelet & coherence",
+        "href": "crosswavelet.html"
+      },
+      {
+        "title": "Recurrence (RQA)",
+        "href": "rqa.html"
+      },
+      {
+        "title": "Cross-recurrence (cRQA)",
+        "href": "crqa.html"
+      }
+    ]
+  },
+  {
     "group": "Reference",
     "items": [
       {
@@ -30,10 +51,6 @@ const DOCS_NAV = [
       {
         "title": "Analysis output",
         "href": "analysis-output.html"
-      },
-      {
-        "title": "Wavelet coherence",
-        "href": "coherence.html"
       },
       {
         "title": "Public and private data",

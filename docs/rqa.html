@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Recurrence (RQA) · DIMS docs</title>
+<meta name="description" content="Recurrence plots without time-delay embedding: the fixed-rate threshold, the four measures, and what is not computed." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Analyses</div>
+      <h1>Recurrence quantification (RQA)</h1>
+      <p>A recurrence plot asks one question of one signal, for every pair of moments in
+      it: <em>were these two moments in nearly the same state?</em> Mark the cell black if
+      they were, white if they were not, and the resulting picture makes structure
+      visible that a time-series plot hides. Long diagonal lines mean the signal
+      repeated a whole stretch of its history. Vertical and horizontal blocks mean it
+      stopped moving. Isolated speckle means it never came back to anywhere twice in a
+      row.</p>
+      <p>RQA is the practice of turning that picture into numbers.</p>
+      <ul>
+      <li>Step id <code>rqa</code>, gated by <code>include_RQA</code>, a list of data types.</li>
+      <li>Writes <code>assets/rqa/{video}_rqa_data.json</code>.</li>
+      <li>Pure numpy and scipy — the only import that matters is
+      <code>scipy.spatial.distance.cdist</code>.</li>
+      </ul>
+      <div class="figure" id="fig-rqa-plot"></div>
+
+      <h2>This implementation uses no time-delay embedding</h2>
+      <p>Textbook RQA reconstructs a phase space from a scalar signal first, using
+      Takens' method: each point becomes a vector of <em>m</em> samples spaced <em>τ</em> apart, and
+      distances are taken between those vectors. <strong>DIMS does not do this.</strong> The whole
+      of the state-space construction is one line:</p>
+      <pre><code class="language-python">ts_normalized = _series.normalise(time_series)   # z-score
+ts_reshaped = ts_normalized.reshape(-1, 1)       # embedding dimension m = 1
+distance_matrix = cdist(ts_reshaped, ts_reshaped, metric='euclidean')
+</code></pre>
+      <p>Embedding dimension <strong>m = 1</strong>, delay <strong>τ = 0</strong>, so the distance between moments
+      <em>i</em> and <em>j</em> is simply <code>|xᵢ − xⱼ|</code> on the z-scored signal. There is no
+      <code>dimension</code>, <code>delay</code>, <code>tau</code> or <code>embedding</code> parameter anywhere in the package,
+      and none is applied silently — the reshape is the whole of it.</p>
+      <p>Three consequences you should carry into any interpretation:</p>
+      <ol>
+      <li><strong>This measures amplitude recurrence, not trajectory recurrence.</strong> Two
+      moments count as recurrent when the signal has the same <em>value</em>, regardless
+      of whether it was rising at one and falling at the other. An embedded
+      analysis would separate those; this one does not.</li>
+      <li><strong>The numbers are not comparable with published values</strong> from an embedded
+      analysis of the same data. DET in particular is systematically different —
+      an unembedded plot has more short diagonals, because a value can recur
+      without the trajectory recurring.</li>
+      <li><strong>It is still a well-defined measurement, and it is stable.</strong> Nothing here
+      depends on choosing <em>m</em> and <em>τ</em>, which in practice is where most of the
+      analyst-to-analyst variance in published RQA comes from. What you lose in
+      dynamical interpretation you gain in reproducibility.</li>
+      </ol>
+      <p>If your question genuinely needs an embedded phase space, the honest route is a
+      study-owned step — see <a href="step.html">writing an analysis</a> — rather than
+      reading these numbers as though they were embedded.</p>
+      <h2>The threshold is a recurrence rate, not a radius</h2>
+      <p>The other choice that defines a recurrence plot is ε, the distance below which
+      two moments count as &quot;the same&quot;. Most implementations take a fixed radius. DIMS
+      takes a <strong>fixed recurrence rate</strong>: ε is the percentile of the distance matrix
+      that makes a stated fraction of pairs recurrent.</p>
+      <pre><code class="language-python">values = distance_matrix[np.triu_indices_from(distance_matrix, k=1)]
+threshold = np.percentile(values, target_recurrence * 100)
+recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
+</code></pre>
+      <p>The strict upper triangle is used, so the line of identity — n zeros that would
+      drag the percentile down — is excluded. The default target is <strong>0.07</strong>.</p>
+      <p>This trade is deliberate and it has consequences:</p>
+      <ul>
+      <li><strong>RR is not informative globally.</strong> It is fixed by construction at whatever
+      you asked for. The windowed RR still is informative, because a window can be
+      denser or sparser than the record as a whole.</li>
+      <li><strong>DET and LAM depend strongly on the rate.</strong> Two recordings analysed at
+      different <code>targetRecurrence</code> values are not comparable, and neither are
+      yours against a paper that used a fixed radius.</li>
+      <li><strong>The target is not always reachable.</strong> A quantised sensor or a signal that
+      is partly still produces many exactly-equal distances, and the percentile
+      lands on a plateau. When that happens the payload says so:
+      <code>achieved_recurrence</code> sits beside <code>target_recurrence</code>, and
+      <code>recurrence_rate_warning</code> is a sentence explaining what is not comparable.
+      Measured cases: a real gaze series reached 12.7 % against a 7 % target, and a
+      signal quantised to four levels reached 33.7 %.</li>
+      </ul>
+      <p><strong>There is no Theiler window.</strong> The only exclusion is the line of identity
+      itself, <code>k = 0</code>, skipped in the diagonal scan and subtracted from the recurrence
+      rate. Implementations that exclude a band around the diagonal report lower DET
+      than this one on the same data, because the short diagonals immediately beside
+      the identity line — which are an artefact of the signal being continuous, not a
+      finding — are counted here.</p>
+      <div class="figure" id="fig-rqa-compare"></div>
+
+      <h2>The measures</h2>
+      <p>All four come from <code>common/recurrence.py</code>, computed over each window. The
+      minimum line length is <strong>fixed at 2</strong> — a &quot;line&quot; of one point is a point.</p>
+      <p>With <code>R</code> the binary matrix, <code>n</code> its side, and <code>ℓ</code> the length of a run:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>measure</th>
+        <th>formula</th>
+        <th>units</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><strong>RR</strong> — recurrence rate</td>
+        <td><code>(ΣR − n) / (n² − n)</code></td>
+        <td>share, 0…1</td>
+      </tr>
+      <tr>
+        <td><strong>DET</strong> — determinism</td>
+        <td><code>Σ{ℓ over diagonals, ℓ ≥ 2} / (ΣR − n)</code></td>
+        <td>share, 0…1</td>
+      </tr>
+      <tr>
+        <td><strong>LAM</strong> — laminarity</td>
+        <td><code>Σ{ℓ over verticals, ℓ ≥ 2} / ΣR</code></td>
+        <td>share, 0…1</td>
+      </tr>
+      <tr>
+        <td><strong>L_MAX</strong> — longest diagonal</td>
+        <td><code>max(ℓ over diagonals) × Δt</code></td>
+        <td><strong>seconds</strong></td>
+      </tr>
+      </tbody>
+      </table>
+      <p>DET and LAM have <strong>different denominators</strong>, and that is not an oversight. Both
+      are shares of the recurrent points that lie on lines, and the rule is that
+      whatever a line extraction ignores, its denominator must ignore too. The
+      diagonal scan skips the line of identity, so DET's denominator excludes those
+      <code>n</code> points; the vertical scan skips nothing, so LAM's is every recurrent point.
+      Sharing one denominator got this wrong in both directions in turn — first
+      deflating DET by 17–25 % on real data, then, once corrected, inflating LAM
+      above 1.0, which a share of points cannot be. Separated, LAM matches pyrqa to
+      four decimal places on a pure sine.</p>
+      <p><code>L_MAX</code> is in <strong>seconds</strong>, not samples. Multiplying by Δt is what makes it
+      comparable between a 50 Hz and a 100 Hz recording of the same movement.</p>
+      <h3>What is not computed</h3>
+      <p>L (mean diagonal line length), ENTR (Shannon entropy of the line-length
+      histogram), TT (trapping time), V_MAX, DIV, RATIO, TREND and the recurrence-time
+      measures are <strong>not</strong> in the payload. The line-length histograms that would
+      produce them are built and then reduced to a sum and a maximum. If you need one
+      of them, the matrix is two lines away from being back in memory — see below.</p>
+      <h2>Windows</h2>
+      <p>The four measures are shares of the structure inside one window, and every one
+      of them moves with how long that window is. So the window is a parameter of the
+      result in the same way the recurrence rate is, and the same rule applies: what
+      was asked for and what was used are both recorded.</p>
+      <p>Windows are square blocks along the main diagonal of the full-resolution matrix,
+      placed in <strong>seconds</strong> rather than samples — the same 2 s window on a 50 Hz and a
+      100 Hz recording gives the same answer. A window is shortened rather than
+      honoured when the recording cannot hold twenty of them, and the payload's
+      <code>window</code> block then carries a <code>warning</code> saying so in a sentence.</p>
+      <div class="figure" id="fig-rqa-metrics"></div>
+
+      <h2>Parameters</h2>
+      <p>Under <code>analysis.rqa</code> in the study's <code>config.json</code>:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>default</th>
+        <th>what it does</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>window</code></td>
+        <td>seconds</td>
+        <td>20.0</td>
+        <td>length of the sliding window</td>
+      </tr>
+      <tr>
+        <td><code>step</code></td>
+        <td>seconds</td>
+        <td>1.0</td>
+        <td>how far it moves between windows</td>
+      </tr>
+      <tr>
+        <td><code>targetRecurrence</code></td>
+        <td>fraction, 0 &lt; x &lt; 1</td>
+        <td>0.07</td>
+        <td>the recurrence rate the threshold search aims for</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>A value that is not a number is an error naming the key, not a silent fall back
+      to the default: <code>&quot;window&quot;: &quot;20s&quot;</code> is refused.</p>
+      <p>Fixed in the step: minimum line length 2, no Theiler window, Euclidean distance,
+      z-score normalisation, 20 windows minimum before a window is shortened, and 500
+      points as the cap on the drawn matrix.</p>
+      <h3>Bounds</h3>
+      <ul>
+      <li>Fewer than <strong>10 usable samples</strong>, or a signal whose standard deviation is 0,
+      and the data type is skipped with a message. The variance guard exists
+      because both this and cross-recurrence normalise by the standard deviation; a
+      constant signal once produced <code>recurrence_rate = −0.000977517</code>, a negative
+      share of cells, and it reached a dashboard caption.</li>
+      <li>The distance matrix is <code>n × n</code> float64, so it is refused before allocation
+      above a <strong>2 GiB</strong> budget — about <strong>16,384 samples</strong>. At 50 Hz that is five and
+      a half minutes of recording. Downsample, or window the input, rather than
+      raising the budget.</li>
+      </ul>
+      <h2>What it writes</h2>
+      <p>One entry per data type under <code>rqa_data</code>:</p>
+      <pre><code class="language-jsonc">{
+  &quot;video_id&quot;: &quot;demo&quot;,
+  &quot;payload_version&quot;: 2,
+  &quot;rqa_data&quot;: {
+    &quot;sig_a&quot;: {
+      &quot;data_type&quot;: &quot;sig_a&quot;,
+      &quot;threshold&quot;: 0.127161,
+      &quot;recurrence_rate&quot;: 0.07,
+      &quot;target_recurrence&quot;: 0.07,
+      &quot;achieved_recurrence&quot;: 0.07,
+      &quot;recurrence_rate_warning&quot;: null,
+      &quot;time_range&quot;: [0.0, 59.9],
+      &quot;windowed_metrics&quot;: { &quot;time&quot;: [], &quot;RR&quot;: [], &quot;DET&quot;: [], &quot;LAM&quot;: [], &quot;L_MAX&quot;: [] },
+      &quot;window&quot;: { &quot;length_requested_sec&quot;: 12.0, &quot;length_used_sec&quot;: 12.0,
+                  &quot;step_requested_sec&quot;: 0.5, &quot;step_used_sec&quot;: 0.5,
+                  &quot;n_windows&quot;: 96 },
+      &quot;visualization&quot;: {
+        &quot;time&quot;: [], &quot;data&quot;: [], &quot;matrix_size&quot;: 300,
+        &quot;matrix&quot;: { &quot;encoding&quot;: &quot;bitmap-b64&quot;, &quot;rows&quot;: 300, &quot;cols&quot;: 300, &quot;data&quot;: &quot;…&quot; },
+        &quot;reduction&quot;: { &quot;factor&quot;: 2, &quot;series&quot;: &quot;block-mean&quot;,
+                       &quot;matrix&quot;: &quot;density-preserving&quot;, &quot;n_points_full&quot;: 600,
+                       &quot;rate_full&quot;: 0.07155, &quot;rate_drawn&quot;: 0.0715556 }
+      },
+      &quot;full_data&quot;: {
+        &quot;n_points&quot;: 600, &quot;time_range&quot;: [0.0, 59.9],
+        &quot;time&quot;:   { &quot;encoding&quot;: &quot;f32-b64&quot;, &quot;shape&quot;: [600], &quot;data&quot;: &quot;…&quot; },
+        &quot;signal&quot;: { &quot;encoding&quot;: &quot;f32-b64&quot;, &quot;shape&quot;: [600], &quot;data&quot;: &quot;…&quot; }
+      }
+    }
+  },
+  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.0.2&quot;, &quot;target_recurrence&quot;: 0.07,
+                  &quot;max_points_drawn&quot;: 500 },
+  &quot;precision&quot;: { &quot;significant_figures&quot;: 6 }
+}
+</code></pre>
+      <table>
+      <thead>
+      <tr>
+        <th>field</th>
+        <th>type</th>
+        <th>units / notes</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>threshold</code></td>
+        <td>float</td>
+        <td>Euclidean distance <strong>in z-score units</strong>, not in the signal's own</td>
+      </tr>
+      <tr>
+        <td><code>recurrence_rate</code></td>
+        <td>float</td>
+        <td>share, off-diagonal</td>
+      </tr>
+      <tr>
+        <td><code>target_recurrence</code>, <code>achieved_recurrence</code></td>
+        <td>float</td>
+        <td>asked for, and got</td>
+      </tr>
+      <tr>
+        <td><code>recurrence_rate_warning</code></td>
+        <td>string or <code>null</code></td>
+        <td>present when those two differ by more than 0.01</td>
+      </tr>
+      <tr>
+        <td><code>windowed_metrics.time</code></td>
+        <td>list</td>
+        <td>window <strong>centres</strong>, seconds, taken from the real time axis</td>
+      </tr>
+      <tr>
+        <td><code>windowed_metrics.RR/DET/LAM</code></td>
+        <td>list</td>
+        <td>shares, 0…1</td>
+      </tr>
+      <tr>
+        <td><code>windowed_metrics.L_MAX</code></td>
+        <td>list</td>
+        <td><strong>seconds</strong></td>
+      </tr>
+      <tr>
+        <td><code>window</code></td>
+        <td>object</td>
+        <td>requested beside used, plus <code>n_windows</code> and an optional <code>warning</code></td>
+      </tr>
+      <tr>
+        <td><code>visualization.time</code>, <code>.data</code></td>
+        <td>list</td>
+        <td>the reduced signal, z-scored, at most 500 points</td>
+      </tr>
+      <tr>
+        <td><code>visualization.matrix</code></td>
+        <td><code>bitmap-b64</code></td>
+        <td><strong>time × time</strong>, symmetric, square</td>
+      </tr>
+      <tr>
+        <td><code>full_data.time</code>, <code>.signal</code></td>
+        <td><code>f32-b64</code></td>
+        <td>the cleaned, z-scored signal at full rate</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>One detail that catches people: <code>reduction.rate_full</code> and <code>rate_drawn</code> are plain
+      densities of their matrices — they <strong>include</strong> the line of identity, so they sit
+      about <code>1/n</code> above <code>recurrence_rate</code>. They are there to be compared with each
+      other, to show the drawn picture kept the density of the real one, not with the
+      recurrence rate.</p>
+      <h3>The matrix is never stored at full resolution</h3>
+      <p>It is quadratic: 600 samples is a 300×300 drawn bitmap, 16,000 samples would be
+      a 32 MB one. What is stored instead is everything needed to rebuild it exactly:</p>
+      <pre><code class="language-python">import numpy as np, json
+from scipy.spatial.distance import cdist
+from dims_analysis.common import arrays
+
+entry = json.load(open(&quot;assets/rqa/demo_rqa_data.json&quot;))[&quot;rqa_data&quot;][&quot;sig_a&quot;]
+signal = arrays.unpack(entry[&quot;full_data&quot;][&quot;signal&quot;])          # already z-scored
+R = (cdist(signal.reshape(-1, 1), signal.reshape(-1, 1)) &lt;= entry[&quot;threshold&quot;])
+</code></pre>
+      <p>That is also the route to any measure this step does not compute:
+      <code>common.recurrence.line_lengths(R, &quot;diagonal&quot;, 2, self_paired=True)</code> hands you
+      the histogram that ENTR and mean-L need.</p>
+      <h2>Further reading</h2>
+      <ul>
+      <li><a href="https://www.recurrence-plot.tk/"><strong>recurrence-plot.tk</strong></a> — the standard
+      reference site for recurrence plots and RQA: the measures, what the visual
+      structures mean, and an extensive bibliography. Start here.</li>
+      <li>Marwan, N., Romano, M. C., Thiel, M., &amp; Kurths, J. (2007). Recurrence plots
+      for the analysis of complex systems. <em>Physics Reports</em>, <strong>438</strong>(5–6), 237–329.
+      <a href="https://doi.org/10.1016/j.physrep.2006.11.001">doi:10.1016/j.physrep.2006.11.001</a>
+      — the review the site is built around, and the source of the standard
+      definitions of DET, LAM and the rest.</li>
+      <li><a href="crqa.html">Cross-recurrence</a> applies the same machinery to a pair of signals.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/analyses/rqa.md"><code>docs/analyses/rqa.md</code></a>
+        at <code>v1.0.2</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+<script src="https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js" crossorigin="anonymous"></script>
+<script src="analyses-plots.js"></script>
+</body>
+</html>
