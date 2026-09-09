@@ -143,17 +143,22 @@ def resolve_link(url, rewrites, repo_url, ref, source):
         return url
     clean = url.split("#")[0]
     anchor = url[len(clean):]
-    key = clean.lstrip("./")
-    if key in rewrites:
-        return rewrites[key] + anchor
-    # Not a page we build (config.schema.json, a source file): send the reader
-    # to it in the core, at the pinned ref, rather than to a 404 here.
-    #
+
     # The link is relative to the markdown that carried it, so resolve it
-    # against that file's directory. Reading it as repository-relative is what
-    # sent `contracts/config.schema.json` in docs/getting-started.md to
-    # /blob/<ref>/contracts/..., which does not exist.
+    # against that file's directory before anything else. This is what makes
+    # `../analyses/crosswavelet.md` in docs/tabs/network.md find the page built
+    # from it: matching on the tail alone worked only from docs/ itself, and a
+    # link one directory down fell through to a GitHub URL that renders as a
+    # working link to the wrong thing.
     target = os.path.normpath(os.path.join(os.path.dirname(source), clean))
+    for key in (target, clean.lstrip("./")):
+        if key in rewrites:
+            return rewrites[key] + anchor
+
+    # Not a page we build (config.schema.json, a source file): send the reader
+    # to it in the core, at the pinned ref, rather than to a 404 here. Reading
+    # it as repository-relative is what sent `contracts/config.schema.json` in
+    # docs/getting-started.md to /blob/<ref>/contracts/..., which does not exist.
     return f"{repo_url}/blob/{ref}/{target.lstrip('/')}" + anchor
 
 

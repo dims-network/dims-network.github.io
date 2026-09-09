@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cross-effector network · DIMS docs</title>
+<meta name="description" content="Who is coupled with whom, following the playhead: what an edge&#x27;s thickness, dashes and fading each mean, and how to say which time series is which node." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Tabs</div>
+      <h1>The cross-effector network</h1>
+      <p>One picture of who is coupled with whom, following the playhead. Each <strong>node</strong> is
+      a measure; each <strong>edge</strong> is the wavelet coherence between two measures over the
+      window around the current moment. Move the playhead and the picture changes.</p>
+      <p>It is a view of the cross-wavelet analysis, not a separate one. Everything it
+      draws comes from <code>assets/crosswavelet/{video}_crosswavelet_data.json</code>, so an
+      edge exists only where <a href="crosswavelet.html"><code>include_crosswavelet</code></a> asked
+      for that pair. <strong>A pair you did not ask for is a missing edge, and nothing says
+      so</strong> — the two nodes are still drawn, with nothing between them.</p>
+      <ul>
+      <li>Tab id <code>network</code>, gated by <code>include_network</code>.</li>
+      <li>Needs the cross-wavelet analysis, and needs its coherence chance level.</li>
+      </ul>
+      <h2>Reading an edge</h2>
+      <p>Four things are drawn on one line, and they answer different questions.</p>
+      <table>
+      <thead>
+      <tr>
+        <th>channel</th>
+        <th>means</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><strong>thickness</strong></td>
+        <td>mean coherence over the window and the period band — but <em>relative to the other visible edges</em>, not absolute</td>
+      </tr>
+      <tr>
+        <td><strong>solid or dashed</strong></td>
+        <td>solid where the coherence is above chance in more than 15 % of tested cells; dashed where it is not</td>
+      </tr>
+      <tr>
+        <td><strong>fading</strong></td>
+        <td>how much of the window both measures were actually moving for</td>
+      </tr>
+      <tr>
+        <td><strong>colour</strong></td>
+        <td>nothing, except the one edge you have selected</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><strong>Thickness is relative on purpose.</strong> The width scale pivots on the mean of the
+      currently visible above-chance edges, so the picture answers &quot;which of these
+      couplings is strongest here&quot; rather than &quot;what is the absolute number&quot; — which
+      is what the tooltip is for. It also means the same edge can look different after
+      you hide another one. The &quot;width sensitivity&quot; slider controls how hard the scale
+      pushes.</p>
+      <p><strong>Dashed means the measurement said nothing.</strong> An edge is called real when more
+      than 15 % of its tested cells beat the 95 % chance level. Not 5 % plus a
+      whisker: the fraction is itself an estimate, and a threshold sitting on the
+      chance level turns half of the at-chance edges solid.</p>
+      <h3>It needs a chance level to say anything at all</h3>
+      <p>Coherence does not sit at zero when there is no relationship — two unrelated
+      signals score around 0.25, not 0. So a network of raw coherence values draws
+      at-chance noise as findings and looks entirely convincing doing it.</p>
+      <p>Switching the network on therefore switches on the Monte Carlo null at 100
+      surrogates, because the network is the only thing that reads it. Without it
+      every edge is <code>untestable</code> and the tab says so rather than guessing. The null,
+      and what it assumes, is documented under
+      <a href="crosswavelet.html">cross-wavelet</a>.</p>
+      <h2>Co-activity: the faded edges</h2>
+      <p>Coherence is amplitude-normalised by design. A tiny shared tremor counts exactly
+      as much as a large shared movement — which is right for &quot;is the timing related&quot;
+      and a liability for &quot;are these two moving together&quot;, especially when both
+      measures are tracked from the same video and their jitter has shared sources.</p>
+      <p>So every edge also reports <strong>the share of the window in which both measures were
+      active</strong>, where a measure counts as active above 10 % of its own 95th percentile.
+      The 95th rather than the maximum, so one tracking glitch does not set the scale
+      for a whole recording.</p>
+      <p>Three things to know about that number:</p>
+      <ul>
+      <li><strong>It assumes near-zero means &quot;not moving&quot;</strong> — a speed, or another magnitude.
+      On a position channel, or anything centred on zero, it is meaningless. This is
+      the one thing to check before trusting it.</li>
+      <li><strong>It fades the edge.</strong> Below a quarter of the window, the edge is drawn faint
+      and the tooltip says <em>computed mostly from stillness; treat with care</em>. It
+      never changes a coherence value, but it does change the picture.</li>
+      <li><strong>Nothing is not zero.</strong> When the raw series are not loaded the figure is
+      omitted entirely rather than reported as 0, because &quot;we did not measure this&quot;
+      and &quot;they were still&quot; are different statements.</li>
+      </ul>
+      <h2>Where the nodes go</h2>
+      <p>Two layouts, chosen with <code>layout</code>:</p>
+      <ul>
+      <li><strong><code>columns</code></strong> (the default) — one column per group, members spread down it.</li>
+      <li><strong><code>figure</code></strong> — one human figure per group, with each measure on the body part
+      it belongs to: <code>head</code>, <code>nose</code>, <code>lefthand</code>, <code>righthand</code>, <code>hand</code>, <code>torso</code>, <code>hip</code>,
+      <code>foot</code>. Anything with no part is stacked beside the figure rather than dropped.</li>
+      </ul>
+      <p>Neither layout is force-directed, deliberately: a force layout moves nodes
+      between frames, and this picture is read by comparing one moment with another.</p>
+      <h2>Saying which series is which node</h2>
+      <p>By default the tab infers everything about a node from its name — the group from
+      a regular expression, the label by deleting that expression, the body part from a
+      token found somewhere inside what is left. That works when a study encodes person,
+      part and quantity in one string:</p>
+      <pre><code class="language-jsonc">&quot;include_network&quot;: {
+  &quot;groups&quot;: [
+    { &quot;label&quot;: &quot;Teacher&quot;, &quot;match&quot;: &quot;^teacher&quot;, &quot;color&quot;: &quot;#e84393&quot; },
+    { &quot;label&quot;: &quot;Student&quot;, &quot;match&quot;: &quot;^student&quot;, &quot;color&quot;: &quot;#00b894&quot; }
+  ],
+  &quot;layout&quot;: &quot;figure&quot;
+}
+</code></pre>
+      <p>…with measures called <code>teacher_righthandspeed</code> and <code>student_nosespeed</code>. It says
+      nothing useful about a study whose measures are called <code>bodysync</code> and
+      <code>neuralsync</code>: they match no group and contain no body part, so every measure
+      lands in one undifferentiated column.</p>
+      <p><strong><code>effectors</code> says it outright instead.</strong></p>
+      <pre><code class="language-jsonc">&quot;include_network&quot;: {
+  &quot;groups&quot;: [
+    { &quot;label&quot;: &quot;Teacher&quot;, &quot;color&quot;: &quot;#e84393&quot; },
+    { &quot;label&quot;: &quot;Student&quot;, &quot;color&quot;: &quot;#00b894&quot; }
+  ],
+  &quot;effectors&quot;: [
+    { &quot;series&quot;: &quot;teacher_righthandspeed&quot;, &quot;group&quot;: &quot;Teacher&quot;,
+      &quot;label&quot;: &quot;Right hand&quot;, &quot;part&quot;: &quot;righthand&quot; },
+    { &quot;series&quot;: &quot;teacher_nosespeed&quot;, &quot;group&quot;: &quot;Teacher&quot;,
+      &quot;label&quot;: &quot;Head&quot;, &quot;part&quot;: &quot;head&quot; },
+    { &quot;series&quot;: &quot;bodysync&quot;, &quot;group&quot;: &quot;Student&quot;,
+      &quot;label&quot;: &quot;Body&quot;, &quot;x&quot;: 0.72, &quot;y&quot;: 0.40 }
+  ],
+  &quot;layout&quot;: &quot;figure&quot;,
+  &quot;band&quot;: [0.0, 12.0]
+}
+</code></pre>
+      <table>
+      <thead>
+      <tr>
+        <th>field</th>
+        <th>what it is</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>series</code></td>
+        <td>the data type, exactly as in <code>dataTypes</code> and in <code>assets/timeseries/{video}_{series}.csv</code></td>
+      </tr>
+      <tr>
+        <td><code>label</code></td>
+        <td>what to draw under the node. Defaults to <code>series</code></td>
+      </tr>
+      <tr>
+        <td><code>group</code></td>
+        <td>the <code>label</code> of one of the groups above — no regex involved</td>
+      </tr>
+      <tr>
+        <td><code>part</code></td>
+        <td>where on the figure it sits. Ignored by the <code>columns</code> layout</td>
+      </tr>
+      <tr>
+        <td><code>x</code>, <code>y</code></td>
+        <td>position as a <strong>fraction of the chart</strong>, 0 to 1, overriding <code>part</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p>When <code>effectors</code> is given, a group needs no <code>match</code> — it is referenced by label.
+      When it is absent, nothing changes: the inference above is exactly what it was.</p>
+      <p><strong><code>series</code> must stay a real data type name</strong>, not a display name. The tab looks
+      the raw series up by that name to compute the co-activity figure above; a label
+      here would cost every edge that line, silently. That is what <code>label</code> is for.</p>
+      <p><strong><code>x</code> and <code>y</code> are fractions, not pixels.</strong> The chart's own dimensions are private
+      constants of the tab that have been retuned before, and a config written in raw
+      units would drift the day one of them moves. In the <code>figure</code> layout, omitting
+      <code>x</code> keeps the node on its own figure's centre line — which is the only way to say
+      &quot;on this person, lower down&quot;, because an explicit <code>x</code> is absolute and does not
+      follow a figure when a third group is added.</p>
+      <h3>What happens when a declaration and the data disagree</h3>
+      <p>Both directions are drawn rather than silently resolved, because both are
+      questions only the study can answer:</p>
+      <ul>
+      <li><strong>A declared effector that appears in no cross-wavelet pair</strong> gets a node with
+      no edges. You asked for it and the analysis does not cover it.</li>
+      <li><strong>A measure that appears in a pair and that no effector declares</strong> gets a node
+      in a trailing <code>Other</code> group, exactly as an unmatched name does.</li>
+      <li><strong>An effector naming a group that no group defines</strong> is a typo, not an
+      instruction to invent a column, so it also lands in <code>Other</code>.</li>
+      </ul>
+      <p>The wizard checks these before it writes a study: a <code>series</code> with no CSV and a
+      duplicated <code>series</code> are errors; an unknown <code>part</code> and an undefined <code>group</code> are
+      warnings.</p>
+      <h2>The rest of the config</h2>
+      <table>
+      <thead>
+      <tr>
+        <th>key</th>
+        <th>what it does</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>groups</code></td>
+        <td>how the measures divide. <code>label</code>, an optional <code>color</code>, and a <code>match</code> regex when you are not declaring effectors</td>
+      </tr>
+      <tr>
+        <td><code>band</code></td>
+        <td>period band in seconds, <code>[low, high]</code>, to average each edge over. <strong>This changes the answer</strong>, not its presentation — it selects which periods enter both the mean and the significance fraction</td>
+      </tr>
+      <tr>
+        <td><code>layout</code></td>
+        <td><code>columns</code> or <code>figure</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>include_network: true</code> means &quot;on, with everything inferred&quot;.</p>
+      <p>The full shape, with every constraint, is in
+      <a href="https://github.com/dims-network/dims/blob/v1.2.0/docs/contracts/config.schema.json"><code>docs/contracts/config.schema.json</code></a>.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.2.0/docs/tabs/network.md"><code>docs/tabs/network.md</code></a>
+        at <code>v1.2.0</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

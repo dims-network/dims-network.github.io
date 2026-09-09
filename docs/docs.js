@@ -42,6 +42,15 @@ const DOCS_NAV = [
     ]
   },
   {
+    "group": "Tabs",
+    "items": [
+      {
+        "title": "Cross-effector network",
+        "href": "tabs-network.html"
+      }
+    ]
+  },
+  {
     "group": "Reference",
     "items": [
       {
