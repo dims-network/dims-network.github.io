@@ -120,22 +120,35 @@
       reaching into internals.</p>
       <h2>Rules</h2>
       <ol>
-      <li><strong>Load after <code>dims-core.js</code>, before <code>DOMContentLoaded</code>.</strong> The host defines
+      <li><p><strong>Load after <code>dims-core.js</code>, before <code>DOMContentLoaded</code>.</strong> The host defines
       the registry; your file registers into it. Registering after the app has
-      been constructed is too late and is ignored.</li>
-      <li><strong>A duplicate <code>id</code> is refused</strong>, so you cannot shadow a built-in tab by
-      registering over it. Pick a distinct one.</li>
-      <li><strong>Style only with CSS custom properties</strong> — <code>var(--text)</code>, <code>var(--muted)</code>,
-      <code>var(--panel)</code>, <code>var(--accent)</code>. Never read the host's JS theme object: it is
-      a module-level variable initialised after your file runs, so it is not there
-      when you need it. Tabs that follow this rule survive theme switches with no
-      host support at all.</li>
-      <li><strong>Stay inside your container.</strong> Do not touch other panes, and do not add
-      controls to the header directly — declare them and let the host place them.</li>
-      <li><strong>Load data lazily,</strong> in <code>onActivate</code>, not at registration.</li>
-      <li><strong>Fail visibly, not fatally.</strong> A gate that throws hides only your tab;
+      been constructed is too late and is ignored.</p>
+      </li>
+      <li><p><strong>A duplicate <code>id</code> is refused</strong>, so you cannot shadow a built-in tab by
+      registering over it. Pick a distinct one.</p>
+      </li>
+      <li><p><strong>Style the DOM with CSS custom properties</strong> — <code>var(--text)</code>, <code>var(--muted)</code>,
+      <code>var(--panel)</code>, <code>var(--accent)</code>. A colour written into an element's <code>style</code>
+      attribute is fixed at the moment it is written and does not follow a theme
+      switch; a custom property does, with no host support at all.</p>
+      <p><code>DIMS.theme()</code> exists for the one case a custom property cannot serve: a
+      plotting library that needs a concrete colour value rather than a CSS
+      reference — a Plotly <code>layout.paper_bgcolor</code>, a <code>gridcolor</code>, a trace colour.
+      Use it there and nowhere else. (An earlier version of this rule said the
+      theme object was &quot;initialised after your file runs, so it is not there when
+      you need it&quot;. That was not true — it is a module-level variable set when
+      <code>dims-core.js</code> loads, which is before any tab file — and a rule with a wrong
+      reason is one people work around rather than follow.)</p>
+      </li>
+      <li><p><strong>Stay inside your container.</strong> Do not touch other panes, and do not add
+      controls to the header directly — declare them and let the host place them.</p>
+      </li>
+      <li><p><strong>Load data lazily,</strong> in <code>onActivate</code>, not at registration.</p>
+      </li>
+      <li><p><strong>Fail visibly, not fatally.</strong> A gate that throws hides only your tab;
       the others carry on. If your data is missing, render a short
-      explanation into your container. Never throw out of a hook.</li>
+      explanation into your container. Never throw out of a hook.</p>
+      </li>
       </ol>
       <h2>Acceptance</h2>
       <ul>
@@ -145,8 +158,8 @@
       <li>Moving the playhead updates it while it is the visible tab.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a>
-        at <code>v1.0.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.1.0/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a>
+        at <code>v1.1.0</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

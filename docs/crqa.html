@@ -150,6 +150,10 @@
       &quot;series_names&quot;: [&quot;sig_a&quot;, &quot;sig_b&quot;],
       &quot;threshold&quot;: 0.127593,
       &quot;global_recurrence_rate&quot;: 0.0700026,
+      &quot;recurrence_rate&quot;: 0.0700026,
+      &quot;target_recurrence&quot;: 0.07,
+      &quot;achieved_recurrence&quot;: 0.0700026,
+      &quot;recurrence_rate_warning&quot;: null,
       &quot;time_range&quot;: [0.0, 59.8],
       &quot;windowed_metrics&quot;: { &quot;time&quot;: [], &quot;RR&quot;: [], &quot;DET&quot;: [], &quot;LAM&quot;: [], &quot;L_MAX&quot;: [] },
       &quot;window&quot;: { &quot;length_requested_sec&quot;: 12.0, &quot;length_used_sec&quot;: 12.0,
@@ -170,7 +174,7 @@
       }
     }
   },
-  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.0.2&quot;, &quot;target_recurrence&quot;: 0.07,
+  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.1.0&quot;, &quot;target_recurrence&quot;: 0.07,
                   &quot;max_points_drawn&quot;: 500 },
   &quot;precision&quot;: { &quot;significant_figures&quot;: 6 }
 }
@@ -200,6 +204,21 @@
         <td>share of all <code>n · m</code> cells</td>
       </tr>
       <tr>
+        <td><code>recurrence_rate</code></td>
+        <td>float</td>
+        <td>the same number under the name RQA uses</td>
+      </tr>
+      <tr>
+        <td><code>target_recurrence</code>, <code>achieved_recurrence</code></td>
+        <td>float</td>
+        <td>asked for, and got</td>
+      </tr>
+      <tr>
+        <td><code>recurrence_rate_warning</code></td>
+        <td>string or <code>null</code></td>
+        <td>present when those two differ by more than 0.01</td>
+      </tr>
+      <tr>
         <td><code>windowed_metrics</code></td>
         <td>object</td>
         <td>as in RQA; <code>L_MAX</code> in seconds</td>
@@ -226,23 +245,23 @@
       </tr>
       </tbody>
       </table>
-      <h3>Three differences from the RQA payload</h3>
+      <h3>Two differences from the RQA payload</h3>
       <p>Worth knowing before you write code that reads both:</p>
       <ol>
-      <li><strong>The rate has a different name.</strong> <code>global_recurrence_rate</code> here,
-      <code>recurrence_rate</code> in RQA.</li>
-      <li><strong>Asked-for and achieved are not both recorded.</strong> RQA writes
-      <code>target_recurrence</code>, <code>achieved_recurrence</code> and <code>recurrence_rate_warning</code>;
-      this step writes none of them, so a threshold search that landed on a plateau
-      goes unreported. The target survives only in <code>provenance.target_recurrence</code>.
-      That is a gap against contract A6 in
-      <a href="analysis-output.html">analysis output</a>, not a deliberate
-      difference — until it is closed, compare <code>global_recurrence_rate</code> against
-      <code>provenance.target_recurrence</code> yourself.</li>
+      <li><strong>The rate is written under two names.</strong> <code>global_recurrence_rate</code> is what
+      the dashboard tab reads; <code>recurrence_rate</code> is the same number under the name
+      RQA uses. They are written from one value and cannot disagree.</li>
       <li><strong><code>full_stats</code> carries the window settings and <code>full_data</code> does not</strong> — and
       the ones it carries are the values <strong>requested</strong>, not the ones used. When
       they differ, <code>window.length_used_sec</code> is the truth.</li>
       </ol>
+      <p>Until recently there was a third: this step recorded no
+      <code>target_recurrence</code>, <code>achieved_recurrence</code> or <code>recurrence_rate_warning</code>, so a
+      threshold search that landed on a plateau went unreported and the target
+      survived only in <code>provenance</code>. That was a gap against contract A6 in
+      <a href="analysis-output.html">analysis output</a> rather than a deliberate
+      difference, and it is closed — a payload written by an older core will still be
+      missing those three fields.</p>
       <h2>Further reading</h2>
       <ul>
       <li><a href="https://www.recurrence-plot.tk/"><strong>recurrence-plot.tk</strong></a> — cross-recurrence
@@ -256,8 +275,8 @@
       all of which are shared.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/analyses/crqa.md"><code>docs/analyses/crqa.md</code></a>
-        at <code>v1.0.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.1.0/docs/analyses/crqa.md"><code>docs/analyses/crqa.md</code></a>
+        at <code>v1.1.0</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

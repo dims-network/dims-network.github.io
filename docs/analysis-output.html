@@ -35,7 +35,7 @@
       by accident, and they were not nine unrelated bugs: nothing stated what an
       output was supposed to be, so every check could only ask &quot;did it crash?&quot;. Every
       requirement below is stated once and tested against
-      <a href="https://github.com/dims-network/dims/blob/v1.0.2/examples/reference/README.md"><code>examples/reference/</code></a>, a synthetic study
+      <a href="https://github.com/dims-network/dims/blob/v1.1.0/examples/reference/README.md"><code>examples/reference/</code></a>, a synthetic study
       whose answers are known before anything runs.</p>
       <hr />
       <h2>A1 — Stated input bounds, refused before allocating</h2>
@@ -224,26 +224,18 @@
       <p>Wherever an analysis aims at something it may not hit, the payload carries both
       numbers and a warning when they are far apart.</p>
       <ul>
-      <li><p><strong>Recurrence rate.</strong> The threshold is a percentile of the distance matrix, so
+      <li><strong>Recurrence rate.</strong> The threshold is a percentile of the distance matrix, so
       a signal with many exactly-equal distances lands on a plateau and the target
       cannot be reached. That is common in real data — a game piece at rest, a
       quantised sensor — and it went unrecorded: an ORTHO series reached 12.7 %
       against a 7 % target in silence, and a four-level quantised signal reaches
       33.7 %. DET and LAM depend strongly on the rate, so two recordings analysed at
       materially different rates are not comparable, and that is a fact about the
-      data rather than an error: it is reported, not raised.</p>
-      <p><strong><code>crqa</code> does not do this yet.</strong> It writes <code>global_recurrence_rate</code> and
-      nothing to compare it against; the target survives only in
-      <code>provenance.target_recurrence</code>. A reader wanting the check has to make it
-      themselves — see <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/analyses/crqa.md">cross-recurrence</a>.</p>
-      </li>
-      <li><p><strong>The window</strong>, as A5 describes.</p>
-      </li>
-      <li><p><strong><code>mcCount</code></strong>, so a study computed partly at 100 surrogates and partly at 300
-      cannot be silently inconsistent.</p>
-      </li>
-      <li><p><strong>The core version that produced the file</strong>, in <code>provenance</code>.</p>
-      </li>
+      data rather than an error: it is reported, not raised.</li>
+      <li><strong>The window</strong>, as A5 describes.</li>
+      <li><strong><code>mcCount</code></strong>, so a study computed partly at 100 surrogates and partly at 300
+      cannot be silently inconsistent.</li>
+      <li><strong>The core version that produced the file</strong>, in <code>provenance</code>.</li>
       </ul>
       <p>Rounding is uniform. Every payload passes through <code>round_payload</code> and carries a
       <code>precision</code> block; a study-owned step that skips it produces a file whose stated
@@ -313,8 +305,8 @@
       the commit says which numbers moved and why.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.0.2/docs/contracts/analysis-output.md"><code>docs/contracts/analysis-output.md</code></a>
-        at <code>v1.0.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.1.0/docs/contracts/analysis-output.md"><code>docs/contracts/analysis-output.md</code></a>
+        at <code>v1.1.0</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
