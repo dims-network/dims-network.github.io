@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>figure-geometry.js · DIMS docs</title>
+<meta name="description" content="The body the cross-effector network is drawn on, shared with the wizard." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Extending DIMS</div>
+      <h1><code>figure-geometry.js</code> — the body, and the lines between</h1>
+      <p>One definition of the human figure the <a href="tabs-network.html">cross-effector network</a>
+      is drawn on, and of the arcs that join its nodes. A plain script that hangs a
+      single object off <code>window</code>; no build step and no module system.</p>
+      <p><strong>Two things draw this body and they must agree to the pixel</strong>, because what you
+      arrange in the wizard is what the dashboard draws:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>consumer</th>
+        <th>gets the file from</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>the dashboard's network tab (<code>network.js</code>, beside it)</td>
+        <td><code>vendor/dims-tabs/</code>, copied wholesale by <code>dims-case</code></td>
+      </tr>
+      <tr>
+        <td>the wizard's step 4 diagram (<code>builder.js</code>)</td>
+        <td>the DIMS checkout, served at <code>/vendor/figure-geometry.js</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p><strong>To move a body part, change it here.</strong> The number you change moves the node in
+      the wizard immediately, and in a built study at its next
+      <a href="cli-dims-case.html"><code>dims-case sync</code></a> — a study keeps its own vendored copy until
+      then, which is what vendoring is for.</p>
+      <h2>The coordinate space</h2>
+      <p>Everything is in <strong>viewBox units</strong>, so it scales with the picture rather than with
+      the window. The network tab's viewBox is <code>0 0 1000 560</code>.</p>
+      <table>
+      <thead>
+      <tr>
+        <th>constant</th>
+        <th>value</th>
+        <th>is</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>VIEW_W</code></td>
+        <td>1000</td>
+        <td>the diagram's viewBox width</td>
+      </tr>
+      <tr>
+        <td><code>NODE_R</code></td>
+        <td>26</td>
+        <td>node radius <strong>in the wizard</strong></td>
+      </tr>
+      <tr>
+        <td><code>TAB_NODE_R</code></td>
+        <td>12</td>
+        <td>node radius <strong>on the dashboard</strong></td>
+      </tr>
+      <tr>
+        <td><code>HEAD_Y</code>, <code>HEAD_R</code></td>
+        <td>85, 30</td>
+        <td>head centre and radius</td>
+      </tr>
+      <tr>
+        <td><code>SHOULDER_Y</code>, <code>SHOULDER_DX</code></td>
+        <td>150, 60</td>
+        <td>shoulder line</td>
+      </tr>
+      <tr>
+        <td><code>TORSO_Y</code></td>
+        <td>235</td>
+        <td>torso node</td>
+      </tr>
+      <tr>
+        <td><code>HIP_Y</code>, <code>HIP_DX</code></td>
+        <td>330, 32</td>
+        <td>hip line</td>
+      </tr>
+      <tr>
+        <td><code>HAND_Y</code>, <code>HAND_DX</code></td>
+        <td>300, 100</td>
+        <td>hand height and offset from the centre line</td>
+      </tr>
+      <tr>
+        <td><code>FOOT_Y</code>, <code>FOOT_DX</code></td>
+        <td>545, 35</td>
+        <td>foot height and offset</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><strong>The two node radii are not an inconsistency.</strong> The circle does two different
+      jobs. In the wizard it is a drop target: it has to be comfortably clickable, and
+      an empty one has to read as a place where something could go. On the dashboard it
+      is a dot at the end of a line, and <em>the line is the measurement</em> — the heaviest
+      edge the tab draws is 16 px, which a 52 px circle would swallow whole.</p>
+      <h2>Places</h2>
+      <p><code>SPOTS</code> — six places something can sit. <code>dx</code> is measured from the figure's centre
+      line, so a spot is positioned relative to whichever person it belongs to.</p>
+      <table>
+      <thead>
+      <tr>
+        <th><code>part</code></th>
+        <th>label</th>
+        <th><code>dx</code></th>
+        <th><code>y</code></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>head</code></td>
+        <td>head</td>
+        <td>0</td>
+        <td>85</td>
+      </tr>
+      <tr>
+        <td><code>righthand</code></td>
+        <td>right hand</td>
+        <td>−100</td>
+        <td>300</td>
+      </tr>
+      <tr>
+        <td><code>lefthand</code></td>
+        <td>left hand</td>
+        <td>+100</td>
+        <td>300</td>
+      </tr>
+      <tr>
+        <td><code>torso</code></td>
+        <td>torso</td>
+        <td>0</td>
+        <td>235</td>
+      </tr>
+      <tr>
+        <td><code>hip</code></td>
+        <td>hip</td>
+        <td>0</td>
+        <td>330</td>
+      </tr>
+      <tr>
+        <td><code>foot</code></td>
+        <td>foot</td>
+        <td>0</td>
+        <td>545</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>ALIASES</code> — <code>{ nose: 'head', hand: 'lefthand' }</code>. Eight accepted names, six
+      places: two are older spellings for a place that already exists. Written once here
+      rather than inline in one consumer and mapped in the other.</p>
+      <p><code>BODY_TOKENS</code> — the eight names ordered so that <strong>a compound name is tested before
+      any name it contains</strong>: <code>lefthand</code> and <code>righthand</code> come before <code>hand</code>, and <code>nose</code>
+      before <code>head</code> is irrelevant but harmless. (It is not strictly longest-first —
+      <code>righthand</code> follows the shorter <code>lefthand</code> — and it does not need to be; what
+      matters is that no token is swallowed by a substring of itself.) This is how a
+      study written before <code>effectors</code> existed still lands its
+      measures on a body: the part is read out of what is left of a measure's name once
+      the group prefix is stripped, so <code>teacher_righthandspeed</code> becomes
+      <code>righthandspeed</code> and matches <code>righthand</code>.</p>
+      <h2>Functions</h2>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>spotOf(part)</code></td>
+        <td>the real place a part name refers to, following the aliases</td>
+      </tr>
+      <tr>
+        <td><code>bodyPart(name)</code></td>
+        <td>the part a measure's name mentions, or <code>null</code>. Case-insensitive substring match against <code>BODY_TOKENS</code></td>
+      </tr>
+      <tr>
+        <td><code>spot(part)</code></td>
+        <td>the <code>SPOTS</code> record for a part name, following aliases, or <code>null</code></td>
+      </tr>
+      <tr>
+        <td><code>positions(cx)</code></td>
+        <td>every part name — <strong>aliases included</strong> — as <code>{x, y}</code> on a figure centred at <code>cx</code></td>
+      </tr>
+      <tr>
+        <td><code>personCx(index, total)</code></td>
+        <td>where the nth of <code>total</code> figures is centred: <code>VIEW_W × (index+1) / (total+1)</code>, so people are evenly spaced with margins at both ends</td>
+      </tr>
+      <tr>
+        <td><code>appendFigure(svg, {cx, color, el, opacity})</code></td>
+        <td>draws one translucent body. <code>opacity</code> defaults to <code>0.3</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>positions</code> derives the alias entries from <code>SPOTS</code> rather than listing them, so an
+      alias and the place it points at cannot drift apart.</p>
+      <p><code>appendFigure</code> takes <strong><code>el</code>, the caller's element-maker</strong> — <code>(name, attrs) → SVG element</code> — because the tab and the wizard each already have one and neither should
+      have to adopt the other's.</p>
+      <h3>Each arm stays on its own side — check the numbers, not the names</h3>
+      <p>The code pairs the <strong>right</strong> shoulder with <code>lefthand</code>, and the left shoulder with
+      <code>righthand</code>. That reads as though the arms cross. <strong>They do not.</strong></p>
+      <p>The figure faces the viewer, so the person's left side is drawn on the viewer's
+      right. Both the spot names and the shoulder offsets follow that convention, and the
+      coordinates settle it — on a figure centred at 500:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>segment</th>
+        <th>from</th>
+        <th>to</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>right shoulder → <code>lefthand</code></td>
+        <td>x = 560</td>
+        <td>x = 600</td>
+      </tr>
+      <tr>
+        <td>left shoulder → <code>righthand</code></td>
+        <td>x = 440</td>
+        <td>x = 400</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>Each segment stays on its own side of the centre line. Nothing crosses.</p>
+      <p><strong>What would cross is pairing them by name</strong> — left shoulder to <code>lefthand</code> — which
+      reaches across the chest and draws the two arms as an X. That is a mistake the file
+      made once and now avoids; the pairing you see is the fix, not the bug.</p>
+      <h2>The fan</h2>
+      <p>Every edge is drawn as a quadratic curve bowed perpendicular to its chord, and no
+      two edges by the same amount.</p>
+      <p>Straight lines between collinear nodes <strong>are the same line</strong>: three within-body
+      edges drew one thick bar with no way to tell one from three. Lines that merely
+      share an endpoint are nearly as bad — every cross-body edge crosses the middle and
+      they arrive at a node as a single smear. Fanning the whole set is what separates
+      them.</p>
+      <table>
+      <thead>
+      <tr>
+        <th>constant</th>
+        <th>value</th>
+        <th>is</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>BOW_FLOOR</code></td>
+        <td>22</td>
+        <td>even a lone edge curves this much</td>
+      </tr>
+      <tr>
+        <td><code>BOW_STEP</code></td>
+        <td>30</td>
+        <td>spacing between neighbours in the fan</td>
+      </tr>
+      <tr>
+        <td><code>BOW_MAX</code></td>
+        <td>240</td>
+        <td>the widest arc, so a large fan stays in frame</td>
+      </tr>
+      </tbody>
+      </table>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>bowRanks(count)</code></td>
+        <td>one rank per edge, symmetrical about zero — <code>[-1, 0, 1]</code> for three, <code>[-1.5, -0.5, 0.5, 1.5]</code> for four</td>
+      </tr>
+      <tr>
+        <td><code>bowStep(count)</code></td>
+        <td><code>BOW_STEP</code> until the outermost arc would leave the picture, then whatever fits</td>
+      </tr>
+      <tr>
+        <td><code>edgePath(p1, p2, rank, step)</code></td>
+        <td>the SVG path: <code>M … Q …</code>, offset along the unit perpendicular</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>bowStep</code> is why a study with twenty edges gets a <em>tighter</em> fan rather than arcs
+      sweeping off the top of the viewBox. The floor is signed with the rank so the fan
+      stays symmetrical about the chord, and it exists so that <strong>even rank 0 curves</strong> —
+      two nodes joined by a single straight line read as structure rather than as a
+      measurement.</p>
+      <p>The fan lives here rather than in the tab because the wizard draws the same lines,
+      and a request for an analysis should be the same shape as the result that comes
+      back.</p>
+      <h2>Where it lives</h2>
+      <p><a href="https://github.com/dims-network/dims/blob/v1.4.1/packages/dims-tabs/figure-geometry.js"><code>packages/dims-tabs/figure-geometry.js</code></a>.</p>
+      <p>It must be loaded <strong>before <code>network.js</code></strong> — the scaffold's <code>index.html</code> sets that
+      order. When it is missing the network tab reports it rather than throwing, so the
+      tab still registers and says what is wrong.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/reference/figure-geometry.md"><code>docs/reference/figure-geometry.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

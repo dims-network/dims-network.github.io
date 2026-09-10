@@ -78,16 +78,15 @@
       not a silent fork. It is also why a case can be archived as it stands — the
       analysis code that produced its results is inside it, at the version that
       produced them.</p>
-      <p>It is <strong>not</strong> self-contained in the browser. <code>index.html</code> loads React, Plotly,
-      PapaParse and lodash from a CDN, so a dashboard opened without a network shows
-      an empty page. Vendoring those too is
-      <a href="https://github.com/dims-network/dims/issues/12">dims#12</a>; until then, &quot;runs
-      locally&quot; means <code>serve.py</code> on a machine with a network, not on a plane.</p>
+      <p>It is <strong>not</strong> self-contained in the browser — <code>index.html</code> loads four libraries
+      from a CDN, so a dashboard opened without a network shows an empty page. That
+      caveat, and the issue tracking it, are on
+      <a href="architecture.html#why-no-build-step"><code>architecture.md</code></a>.</p>
       <p><strong>Never edit <code>vendor/</code>.</strong> Fix it in the monorepo and bump the pin.</p>
       <h2>Creating one</h2>
-      <pre><code class="language-sh">tools/dims-case new ortho --visibility public                  # -&gt; ./case-ortho
-tools/dims-case new ortho --visibility public --dir path/to/it # somewhere else
-tools/dims-case adopt path/ --name ortho --visibility public   # an existing one
+      <pre><code class="language-sh">dims-case new ortho --visibility public                  # -&gt; ./case-ortho
+dims-case new ortho --visibility public --dir path/to/it # somewhere else
+dims-case adopt path/ --name ortho --visibility public   # an existing one
 </code></pre>
       <p><code>new</code> takes a <strong>name</strong>, not a path; <code>--dir</code> is how you choose where it lands.</p>
       <p><code>adopt</code> is deliberately a separate verb: <code>new</code> refuses a non-empty directory so
@@ -110,8 +109,8 @@ tools/dims-case adopt path/ --name ortho --visibility public   # an existing one
       the push hook independently.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/contracts/case.md"><code>docs/contracts/case.md</code></a>
-        at <code>v1.3.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/contracts/case.md"><code>docs/contracts/case.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

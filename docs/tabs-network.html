@@ -40,9 +40,17 @@
       <ul>
       <li>Tab id <code>network</code>, gated by <code>include_network</code>.</li>
       <li>Needs the cross-wavelet analysis, and needs its coherence chance level.</li>
+      <li>Reads nothing else: no raw signal, no config beyond <code>include_network</code> — except
+      the raw series for the co-activity figure below, and the <strong>Window Size</strong>
+      control, seeded from <code>defaultWindowSize</code>, for how wide &quot;the moment&quot; is.</li>
       </ul>
+      <p>The window is the playhead ± half of the <strong>Window Size</strong> control, which starts
+      at <code>defaultWindowSize</code> (5 s unless the study says otherwise) and follows the
+      control from then on, and a <strong>whole recording</strong> toggle above the picture
+      switches to averaging over everything, for when you want the study rather than
+      the moment.</p>
       <h2>Reading an edge</h2>
-      <p>Four things are drawn on one line, and they answer different questions.</p>
+      <p>Five things are drawn on one line, and they answer different questions.</p>
       <table>
       <thead>
       <tr>
@@ -67,8 +75,17 @@
         <td><strong>colour</strong></td>
         <td>nothing, except the one edge you have selected</td>
       </tr>
+      <tr>
+        <td><strong>curvature</strong></td>
+        <td>nothing — it is there so you can tell edges apart</td>
+      </tr>
       </tbody>
       </table>
+      <p><strong>Every edge is bowed, and no two by the same amount.</strong> That is presentation only.
+      Straight lines between nodes on one body are <em>the same line</em>, and cross-body edges
+      all cross the middle and arrive at a node as a smear; fanning the set is what
+      separates them. A large fan tightens rather than sweeping out of frame. The
+      constants are in <a href="figure-geometry.html"><code>reference/figure-geometry.md</code></a>.</p>
       <p><strong>Thickness is relative on purpose.</strong> The width scale pivots on the mean of the
       currently visible above-chance edges, so the picture answers &quot;which of these
       couplings is strongest here&quot; rather than &quot;what is the absolute number&quot; — which
@@ -76,9 +93,56 @@
       you hide another one. The &quot;width sensitivity&quot; slider controls how hard the scale
       pushes.</p>
       <p><strong>Dashed means the measurement said nothing.</strong> An edge is called real when more
-      than 15 % of its tested cells beat the 95 % chance level. Not 5 % plus a
-      whisker: the fraction is itself an estimate, and a threshold sitting on the
-      chance level turns half of the at-chance edges solid.</p>
+      than 15 % of its tested cells beat the 95 % chance level (<code>REAL = 0.15</code> in
+      <code>network.js</code>). Not 5 % plus a whisker: the fraction is itself an estimate, and a
+      threshold sitting on the chance level turns half of the at-chance edges solid.</p>
+      <p>There is a third verdict. An edge whose payload carries no chance level at all is
+      <strong>untestable</strong> — drawn, but its tooltip says the value cannot be tested and names
+      the fix (<code>analysis.crosswavelet.mcCount</code>, then rebuild). The tab counts them and
+      says how many, rather than letting an untested picture pass for a tested one.</p>
+      <p><strong>Every edge's numbers are in its tooltip</strong>: the pair, the mean coherence, the
+      period band it was averaged over, the share of tested cells above chance and how
+      many cells that was, and what independence would have given (about 5 %).</p>
+      <p>The widths themselves run from <code>MIN_WIDTH = 1.5</code> px at the bottom of the visible
+      range to <code>MAX_WIDTH = 16</code> px at the top. The node they end at is deliberately
+      small — <code>TAB_NODE_R</code> in <code>figure-geometry.js</code>, half the radius the wizard uses for
+      the same body — because the wizard's circle is a drop target and this one is the
+      end of a line, and a big dot eats the width channel.</p>
+      <p><strong>Every edge is a curve, and no two curve alike.</strong> Ranks are handed out across
+      the whole set on screen and each edge bows perpendicular to its chord by its own
+      amount (<code>bowRanks</code>, <code>bowStep</code> and <code>edgePath</code>, all in <code>figure-geometry.js</code>, which
+      the wizard's diagram draws from too). Straight lines between nodes in a column
+      are <em>the same line</em> — three edges drawing one bar — and edges that merely meet at
+      a node arrive as a smear. Separating only the edges whose endpoints match is not
+      enough; it leaves every other edge at the minimum bow. Past about sixteen edges
+      the fan tightens rather than sweeping arcs out of the frame.</p>
+      <h3>The controls above the picture</h3>
+      <table>
+      <thead>
+      <tr>
+        <th>control</th>
+        <th>what it does</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><strong>whole recording</strong></td>
+        <td>averages every edge over the entire session instead of the window at the playhead</td>
+      </tr>
+      <tr>
+        <td><strong>Period band (s)</strong></td>
+        <td>the shortest and longest period each edge is averaged over. <strong>This changes the answer</strong>, not its presentation: it selects which cells enter both the mean and the significance fraction</td>
+      </tr>
+      <tr>
+        <td><strong>Width sensitivity</strong></td>
+        <td>how hard the relative width scale pushes. Presentation only</td>
+      </tr>
+      <tr>
+        <td><strong>one checkbox per pair</strong></td>
+        <td>hides an edge. Fifteen edges is a lot to read at once, and hiding some also re-pivots the width scale, because it pivots on what is visible</td>
+      </tr>
+      </tbody>
+      </table>
       <h3>It needs a chance level to say anything at all</h3>
       <p>Coherence does not sit at zero when there is no relationship — two unrelated
       signals score around 0.25, not 0. So a network of raw coherence values draws
@@ -109,6 +173,17 @@
       omitted entirely rather than reported as 0, because &quot;we did not measure this&quot;
       and &quot;they were still&quot; are different statements.</li>
       </ul>
+      <h2>Clicking an edge: the detail figure</h2>
+      <p>Selecting an edge does two things. It colours that line — the only use of colour
+      in the picture, so &quot;selected&quot; reads as a state rather than as another
+      measurement — and it draws <strong>that pair's cross-wavelet figure underneath the
+      diagram</strong>.</p>
+      <p>The detail figure is of a moment too, and its window follows the playhead. It is
+      drawn once, when the edge is selected, and afterwards only the shaded window is
+      moved: two answers to &quot;which moment am I looking at&quot; on one screen, where the
+      wrong one has a box drawn round it, is worse than one.</p>
+      <p>An edge can be selected whose pair has no cross-wavelet payload loaded in the
+      dashboard — the tab says so in the panel rather than drawing an empty figure.</p>
       <h2>Where the nodes go</h2>
       <p>Two layouts, chosen with <code>layout</code>:</p>
       <ul>
@@ -123,13 +198,31 @@
       <p>The no-code builder draws this diagram in step 4 and asks you to fill it in,
       which is the same decision as writing the config below by hand.</p>
       <ul>
-      <li><strong>Add a person</strong> for each figure you want, and name it. That is a <code>group</code>.</li>
+      <li><strong>Add a person</strong> for each figure you want, and name it. That is a <code>group</code>.
+      One is enough: a network of a single body's own effectors — hands with head,
+      left with right — is a whole network, and the tab centres the lone figure.
+      Be aware that the &quot;above chance in more than 15% of cells&quot; threshold was
+      chosen against between-person data; whether it reads the same way within one
+      body is an open question rather than a settled one.</li>
       <li><strong>Click an empty circle</strong> — head, either hand, torso, hip or foot — and pick a
-      time series from the list. That is one <code>effectors</code> entry.</li>
-      <li><strong>Click two placed nodes</strong> to draw a dashed line between them. That is one
-      <code>include_crosswavelet</code> pair, which is what the tab turns into an edge; without
-      it two nodes are simply two nodes.</li>
-      <li>The <code>×</code> on a node takes it back off, and takes its lines with it.</li>
+      time series from the list. That is one <code>effectors</code> entry, and the node takes
+      the spot's own name as its <code>label</code>: <em>Left hand</em>, <em>Head</em>. Real measure names
+      are long enough that neighbouring nodes overlap into a smear, here and in the
+      dashboard; the full name stays in the node's tooltip. The picker closes on
+      Escape or a click outside it, without placing anything.</li>
+      <li><strong>Drag from one placed node to another</strong> to ask for the coupling between them.
+      A dashed line follows the pointer; releasing on the second node makes the pair.
+      Clicking the two in turn does the same, and draws the same line while you are
+      between clicks. Escape, or releasing on empty space, abandons it.</li>
+      <li>That line is one <code>include_crosswavelet</code> pair, which is what the tab turns into
+      an edge; without it two nodes are simply two nodes. <strong>The same pairs are chips
+      in the cross-wavelet block above, and the two are one list</strong> — either view
+      edits it and both redraw. So a pair can be asked for without ever touching the
+      diagram, and a pair whose measures are not both placed is selected but not
+      drawn (the summary line under the chips says how many are in each state).</li>
+      <li>The <code>×</code> on a node takes it back off. Its lines go with it, because a line
+      needs two placed endpoints — but the pairs stay selected: where a measure sat
+      on a body is not whether to analyse it.</li>
       </ul>
       <p>Choosing the figure layout is not a separate step: placing anything on a body
       means <code>layout: &quot;figure&quot;</code>, because a body diagram that configured a column chart
@@ -232,6 +325,18 @@
       <p>The wizard checks these before it writes a study: a <code>series</code> with no CSV and a
       duplicated <code>series</code> are errors; an unknown <code>part</code> and an undefined <code>group</code> are
       warnings.</p>
+      <h2>Where the drawing lives</h2>
+      <p>The body — its coordinate space, its six places, the aliases for their names, the
+      lines that make a figure, and the fan the edges are bowed along — is
+      <a href="https://github.com/dims-network/dims/blob/v1.4.1/packages/dims-tabs/figure-geometry.js"><code>packages/dims-tabs/figure-geometry.js</code></a>,
+      documented at <a href="figure-geometry.html"><code>reference/figure-geometry.md</code></a>.</p>
+      <p><strong>To move a body part, change it there.</strong> Two things draw that figure and they have
+      to agree to the pixel, because what you arrange in the wizard is what the dashboard
+      draws: this tab reads its own <code>vendor/dims-tabs/</code> copy, and the wizard is served
+      the checkout's at <code>/vendor/figure-geometry.js</code>. A study keeps its vendored copy
+      until <code>dims-case sync</code>, which refreshes both the directory and the <code>index.html</code>
+      that loads it — so a change reaches the wizard at once and a built study when it
+      syncs.</p>
       <h2>The rest of the config</h2>
       <table>
       <thead>
@@ -257,10 +362,10 @@
       </table>
       <p><code>include_network: true</code> means &quot;on, with everything inferred&quot;.</p>
       <p>The full shape, with every constraint, is in
-      <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/contracts/config.schema.json"><code>docs/contracts/config.schema.json</code></a>.</p>
+      <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/contracts/config.schema.json"><code>docs/contracts/config.schema.json</code></a>.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/tabs/network.md"><code>docs/tabs/network.md</code></a>
-        at <code>v1.3.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/tabs/network.md"><code>docs/tabs/network.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

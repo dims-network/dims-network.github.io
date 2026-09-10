@@ -49,8 +49,8 @@
       </ul>
       <h2>What it looks like</h2>
       <p>Both figures below are the payload from
-      <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/analyses/demo/demo_crosswavelet.json"><code>demo_crosswavelet.json</code></a>, which
-      <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/analyses/demo/make_demo_data.py"><code>make_demo_data.py</code></a> produced by running the step over
+      <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/analyses/demo/demo_crosswavelet.json"><code>demo_crosswavelet.json</code></a>, which
+      <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/analyses/demo/make_demo_data.py"><code>make_demo_data.py</code></a> produced by running the step over
       the two synthetic signals from the <a href="analyses.html">overview</a>.</p>
       <div class="figure" id="fig-xwt-power"></div>
 
@@ -182,7 +182,7 @@
         <td><code>mcCount</code></td>
         <td>integer ≥ 0</td>
         <td><strong>100</strong> if <code>include_network</code> is set, otherwise <strong>0</strong></td>
-        <td>surrogate pairs behind the coherence chance level. <code>0</code> skips it, and <code>sig95_wtc</code> is then absent from the payload</td>
+        <td>surrogate pairs behind the coherence chance level. <code>0</code> skips it, and <code>sig95_wtc</code> is then <code>null</code> in the payload</td>
       </tr>
       <tr>
         <td><code>maxPeriod</code></td>
@@ -373,11 +373,19 @@ Z₂(95%) = 3.99852     (published 3.999)
       rises at both ends — above 0.7 at the extremes — where fewer independent cycles
       fit inside the record.</p>
       <h2>The one thing to know before reading a coherence value</h2>
-      <p><strong>Coherence does not sit at zero when there is no relationship.</strong> Two unrelated
-      red-noise signals typically score around 0.25–0.6 depending on the timescale.
-      So a value of 0.5 means nothing on its own, and a picture of raw coherence with
-      no baseline drawn on it is unreadable — it will look like coupling everywhere,
-      because it is coherent everywhere.</p>
+      <p><strong>Coherence does not sit at zero when there is no relationship.</strong> It is a ratio
+      taken over a smoothing neighbourhood, so a handful of random phases still average
+      to something well above zero.</p>
+      <p>How far above is a property of your data, not a constant. Measured on the
+      Karnatak study, two independent signals averaged about <strong>0.25</strong>, and the 95 %
+      level came out near <strong>0.59</strong> — so on that data an edge of 0.27 is
+      indistinguishable from no coupling at all. Treat those two numbers as an
+      illustration of the size of the effect, not as thresholds to reuse: one is a mean
+      and the other a 95th percentile, and both were measured on one dataset.</p>
+      <p>The consequence is general even though the numbers are not. A value of 0.5 means
+      nothing on its own, and a picture of raw coherence with no baseline drawn on it is
+      unreadable — it will look like coupling everywhere, because it is coherent
+      everywhere.</p>
       <p>Every value has to be read against <code>sig95_wtc</code>. Every one.</p>
       <h3>What the method assumes</h3>
       <p>Five assumptions, each of which is a judgement rather than a measurement:</p>
@@ -476,7 +484,7 @@ Z₂(95%) = 3.99852     (published 3.999)
   },
   &quot;data_types&quot;: [&quot;sig_a&quot;, &quot;sig_b&quot;],
   &quot;config&quot;: { &quot;…&quot;: &quot;the step's fixed constants&quot; },
-  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.1.0&quot;, &quot;mc_count&quot;: 200,
+  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.4.1&quot;, &quot;mc_count&quot;: 200,
                   &quot;significance_level&quot;: 0.95, &quot;wct_signif_seed&quot;: 20250906,
                   &quot;max_time_points&quot;: 150, &quot;max_freq_points&quot;: 48 },
   &quot;processing_info&quot;: { &quot;…&quot;: &quot;&quot; },
@@ -554,7 +562,7 @@ Z₂(95%) = 3.99852     (published 3.999)
         <td><code>sig95_wtc</code></td>
         <td>JSON list or <code>null</code></td>
         <td><code>P</code></td>
-        <td>coherence units; absent when <code>mcCount</code> is 0</td>
+        <td>coherence units; <code>null</code> when <code>mcCount</code> is 0</td>
       </tr>
       <tr>
         <td><code>global_power</code>, <code>global_signif</code></td>
@@ -598,7 +606,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       power significance levels used here. The authors' companion page, with the
       original code and the worked NIÑO3 example, is at
       <a href="https://atoc.colorado.edu/research/wavelets/">https://atoc.colorado.edu/research/wavelets/</a>. The constants transcribed from
-      it are in <a href="https://github.com/dims-network/dims/blob/v1.3.0/examples/reference/TORRENCE_COMPO.md"><code>examples/reference/TORRENCE_COMPO.md</code></a>.</li>
+      it are in <a href="https://github.com/dims-network/dims/blob/v1.4.1/examples/reference/TORRENCE_COMPO.md"><code>examples/reference/TORRENCE_COMPO.md</code></a>.</li>
       <li>Torrence, C., &amp; Webster, P. J. (1999). Interdecadal changes in the ENSO monsoon
       system. <em>Journal of Climate</em>, <strong>12</strong>(8), 2679–2690. — the smoothed coherence
       formula.</li>
@@ -609,8 +617,8 @@ Z₂(95%) = 3.99852     (published 3.999)
       — the Monte Carlo coherence null.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/analyses/crosswavelet.md"><code>docs/analyses/crosswavelet.md</code></a>
-        at <code>v1.3.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/analyses/crosswavelet.md"><code>docs/analyses/crosswavelet.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

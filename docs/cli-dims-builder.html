@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>dims-builder · DIMS docs</title>
+<meta name="description" content="Start the no-code wizard." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1><code>dims-builder</code></h1>
+      <p>Starts the no-code wizard and opens a browser at it. There are no subcommands and
+      no flags — everything is decided in the page.</p>
+      <pre><code class="language-sh">pip install -e './dims[builder]'
+dims-builder
+</code></pre>
+      <p>What it needs beyond the base install is the <code>builder</code> extra: <code>flask</code>,
+      <code>imageio-ffmpeg</code> and <code>jsonschema</code>.</p>
+      <h2>Three ways to start it</h2>
+      <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>dims-builder</code></td>
+        <td>the console script. It is always installed; the <code>builder</code> extra is what supplies the Flask it needs to run</td>
+      </tr>
+      <tr>
+        <td><code>python -m dims_builder</code></td>
+        <td>the same thing from a checkout</td>
+      </tr>
+      <tr>
+        <td><code>run.sh</code> / <code>run.command</code> / <code>run.bat</code></td>
+        <td>one-click launchers in <code>apps/builder/</code>. <code>run.sh</code> and <code>run.bat</code> create <code>apps/builder/.venv</code> and <code>pip install -e &quot;../..[builder]&quot;</code> into it, so someone can start from a downloaded folder without knowing what a virtualenv is</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>run.command</code> is the macOS double-clickable; it just executes <code>run.sh</code>.</p>
+      <h2>Environment</h2>
+      <table>
+      <thead>
+      <tr>
+        <th>variable</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>BUILDER_PORT</code></td>
+        <td>the port to serve on. Otherwise it takes <strong>5000</strong> if free, and an OS-assigned free port if not</td>
+      </tr>
+      <tr>
+        <td><code>DIMS_BUILDER_NO_BROWSER</code></td>
+        <td>set it and no browser opens. The end-to-end test sets this — a test run should not take over the screen of whoever is running it</td>
+      </tr>
+      <tr>
+        <td><code>WERKZEUG_RUN_MAIN</code></td>
+        <td>set by Flask's reloader; also suppresses the browser, so a reload does not open a second tab</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>It binds <strong><code>127.0.0.1</code> only</strong> and runs with <code>debug=False</code>, threaded. It is a
+      local single-user tool: there is no authentication, and it is not meant to be
+      exposed to a network.</p>
+      <p>The browser is opened a second after the server starts, and the URL is printed
+      either way, so you can open it yourself if nothing appears.</p>
+      <h2>What it does</h2>
+      <p>Seven steps, ending in a working study directory. See
+      <a href="builder.html">the builder</a> for what each step asks, and
+      <a href="builder-api.html">its HTTP API</a> if you are working on the wizard itself.</p>
+      <p>The wizard delegates the study skeleton to the same <code>dims_case.core</code> that
+      <a href="cli-dims-case.html"><code>dims-case</code></a> uses, so the two produce <strong>the same study</strong> rather
+      than two slightly different ones.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/reference/cli/dims-builder.md"><code>docs/reference/cli/dims-builder.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

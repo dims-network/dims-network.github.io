@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Time series · DIMS docs</title>
+<meta name="description" content="Every measure against time. The one tab that is always present." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Tabs</div>
+      <h1>The time series tab</h1>
+      <p>Every measure plotted against time, one strip each, with the playhead on all of
+      them. This is the base view: it is the only tab whose gate is unconditional, so
+      a dashboard always has at least this one.</p>
+      <ul>
+      <li>Tab id <code>timeseries</code>, label <strong>Time series</strong>, order 10.</li>
+      <li>Gate: <code>() =&gt; true</code>. It cannot be switched off.</li>
+      <li>Draws into <code>plotContainer</code>. It is one of two tabs that name their pane
+      explicitly instead of taking the derived <code>{id}Container</code> — the cross-wavelet tab
+      is the other — because the id predates the tab registry and other code and tests
+      still use it.</li>
+      <li>Reads no analysis output. It plots <code>app.currentData</code>, the CSVs the host has
+      already loaded from <code>assets/timeseries/{videoID}_{dataType}.csv</code>.</li>
+      </ul>
+      <h2>What it draws</h2>
+      <p>One subplot per loaded data type, stacked, sharing a single <strong>Time (s)</strong> axis at
+      the bottom. Each strip carries the measure's name as a label in its top-left
+      corner rather than a legend — the legend is off, because with one trace per strip
+      it would repeat what the label already says.</p>
+      <p>Trace colour is <code>hsl(i × 360 / n, 70%, 50%)</code>, where <code>i</code> is the measure's position
+      in the loaded set and <code>n</code> is how many there are. <strong>The RQA and cross-RQA tabs
+      reuse this formula</strong> so that a measure keeps its colour across tabs; they look the
+      index up by name and fall back to a fixed colour when they cannot find it.</p>
+      <p>The figure is a fixed 800 px tall regardless of how many measures there are, so
+      with many measures each strip gets thin.</p>
+      <p>The figure's title reads <strong>&quot;ROI Synchrony Over Time for Video <code>{videoID}</code>&quot;</strong>. That
+      wording is a leftover from the fNIRS study the tab was first written for and is
+      wrong for a tab that plots any measure at all; it is hardcoded, and the only thing
+      in it that comes from your study is the recording id. Ignore it.</p>
+      <h3>A multi-column CSV becomes one averaged trace</h3>
+      <p>Every column except <code>Time</code> is a value column. If a CSV has more than one, the tab
+      does not draw them separately — it averages them per row and draws a single trace
+      named <code>{dataType} (averaged)</code>.</p>
+      <p>Two things follow from how that average is taken:</p>
+      <ul>
+      <li><strong>Missing values are dropped from the average, not carried.</strong> A row with three
+      columns of which one is null averages the other two.</li>
+      <li><strong>A row where every value is missing becomes <code>0</code>, not a gap.</strong> That is a real
+      zero on the plot, indistinguishable from a measured zero. If your CSV has
+      all-empty rows, split the columns into separate files rather than relying on
+      this.</li>
+      </ul>
+      <p>A CSV with only a <code>Time</code> column produces no trace at all, silently. It still
+      takes a strip and still gets a label.</p>
+      <h2>The playhead</h2>
+      <p>Clicking <strong>a point on a trace</strong> calls the host's <code>handleTimeClick</code> with that
+      point's time, which moves the video, the transcript and every other tab. It is a
+      Plotly point-click, so clicking empty space inside a strip does nothing — aim at
+      the line.</p>
+      <p>When a time is selected, each strip gets a highlight rectangle spanning
+      <code>selectedTime ± windowSize / 2</code>, clamped at 0 on the left. The width comes from
+      the <strong>Window Size</strong> control, read live from the page and defaulting to 5 seconds
+      when it cannot be parsed.</p>
+      <p>This tab has <strong>no <code>onTimeUpdate</code> hook</strong>, unlike every other tab. It does not need
+      one: <code>handleTimeClick</code> calls <code>plotTimeseries</code> directly — it is the first thing
+      that redraws, and it happens before the time bus runs at all. The tab is redrawn by the host rather than by a
+      subscription.</p>
+      <p>Its <code>onActivate</code> re-fires <code>handleTimeClick(app.lastClickedPoint)</code> when a playhead
+      is already set, so switching back to the tab restores the highlight instead of
+      showing an unmarked plot.</p>
+      <h2>What it does not do</h2>
+      <ul>
+      <li><strong>No y-axis titles.</strong> Each strip's y-axis is unlabelled; the measure name is
+      the corner annotation. Units are whatever your CSV was in, and nothing states
+      them.</li>
+      <li><strong>No resampling, smoothing or normalisation.</strong> What is in the CSV is what is
+      drawn — except for the multi-column averaging above. Points are sorted by
+      <code>Time</code> before plotting, so an out-of-order CSV draws correctly rather than
+      wrapping back on itself.</li>
+      <li><strong>No per-measure scaling.</strong> Each strip autoscales independently, so two strips
+      side by side are not comparable by eye without reading the axes.</li>
+      </ul>
+      <h2>Where it lives</h2>
+      <p><a href="https://github.com/dims-network/dims/blob/v1.4.1/packages/dims-tabs/timeseries.js"><code>packages/dims-tabs/timeseries.js</code></a>.
+      It adds one method to the host, <code>plotTimeseries(datasets, selectedTime)</code>, via
+      <code>DIMS.extendHost</code> — which is what lets <code>handleTimeClick</code> call it by name.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/tabs/timeseries.md"><code>docs/tabs/timeseries.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

@@ -37,7 +37,7 @@
       <pre><code class="language-json">{
   &quot;case&quot;: &quot;karnatak&quot;,
   &quot;visibility&quot;: &quot;private&quot;,
-  &quot;dimsCore&quot;: &quot;1.3.1&quot;,
+  &quot;dimsCore&quot;: &quot;1.4.1&quot;,
   &quot;publishable&quot;: [],
   &quot;restricted&quot;: [
     &quot;assets/videos&quot;,
@@ -65,9 +65,9 @@
       <li><strong>Pre-push hook</strong> — the same check across the push range.</li>
       <li><strong>CI</strong> — fails if any <em>tracked</em> file matches a restricted path, and fails if
       <code>&quot;visibility&quot;: &quot;private&quot;</code> while the GitHub repo is public. That last check
-      catches the case nobody plans for: someone flipping visibility months later.
-      Enable the hooks once per clone:</li>
+      catches the case nobody plans for: someone flipping visibility months later.</li>
       </ol>
+      <p>Enable the hooks once per clone:</p>
       <pre><code class="language-sh">git config core.hooksPath .githooks
 </code></pre>
       <p>A <code>.gitignore</code> is not one of these guards. It is a convention, and <code>git add -f</code>
@@ -109,8 +109,8 @@
       <li>A private case runs locally, renders every tab, and leaves <code>git status</code> clean.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.3.0/docs/contracts/data-visibility.md"><code>docs/contracts/data-visibility.md</code></a>
-        at <code>v1.3.0</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/contracts/data-visibility.md"><code>docs/contracts/data-visibility.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

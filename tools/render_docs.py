@@ -252,9 +252,19 @@ def build(dims_root, spec):
     nav = [{"group": g["group"],
             "items": [{"title": i["title"], "href": i["out"]} for i in g["items"]]}
            for g in spec["pages"]]
-    nav[0]["items"].insert(0, {"title": "Overview", "href": "index.html"})
+
+    # The landing page is either a page from the core -- a source mapped to
+    # index.html -- or, when the manifest names none, the card grid built from
+    # the manifest itself. A written index says which reader each page is for,
+    # which a grid generated from titles and descriptions cannot; but a grid is
+    # better than nothing, so the fallback stays.
+    authored_index = any(i["out"] == "index.html"
+                         for g in spec["pages"] for i in g["items"])
+    if not authored_index:
+        nav[0]["items"].insert(0, {"title": "Overview", "href": "index.html"})
     pages["docs.js"] = NAV_JS % {"nav": json.dumps(nav, indent=2)}
-    pages["index.html"] = build_index(spec)
+    if not authored_index:
+        pages["index.html"] = build_index(spec)
     return pages
 
 

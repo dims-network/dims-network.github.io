@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cross-RQA · DIMS docs</title>
+<meta name="description" content="Cross-recurrence between a pair of measures." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Tabs</div>
+      <h1>The cross-RQA tab</h1>
+      <p>The same figure as <a href="tabs-rqa.html">the RQA tab</a>, for a pair of measures instead of one.
+      Where RQA asks when a measure returned to a state it had been in before, this asks
+      when one measure was in a state the <em>other</em> had been in — and how long afterwards.
+      What the numbers mean is on <a href="crqa.html">the analysis page</a>.</p>
+      <ul>
+      <li>Tab id <code>crqa</code>, label <strong>Cross-RQA</strong>, order 40, drawn into <code>crqaContainer</code>.</li>
+      <li>Gate: <code>include_cRQA</code> must be an array with at least one entry.</li>
+      <li>Reads <code>assets/crqa/{videoID}_crqa_data.json</code>, container key <code>crqa_data</code>, one
+      entry per pair, keyed <code>{type1}_vs_{type2}</code>.</li>
+      </ul>
+      <p>Everything about the figure — the four metric strips, the true-square geometry,
+      the four highlight shapes, the click-to-seek rule, the full redraw on every
+      playhead move — is identical to the RQA tab, because both call the same host
+      method. <strong>Read that page for the figure; this one covers only the differences.</strong></p>
+      <h2>The three differences</h2>
+      <p><strong>1. Two measures, two colours.</strong> The top marginal is the first series of the
+      pair, the rotated left marginal is the second — so the square's x-axis is the
+      first measure's time and its y-axis is the second's. The axes are labelled that
+      way. Each series takes its colour from the time series tab where it can be matched
+      by name, and otherwise falls back to a fixed red for the first and blue for the
+      second.</p>
+      <p><strong>2. The diagonal means something.</strong> In a plain recurrence plot the leading
+      diagonal is trivially black — every point matches itself — and the analysis
+      excludes it. Here the two axes are different measures, so a black diagonal is a
+      finding: the two were in the same state at the same time. A black band <em>parallel</em>
+      to the diagonal, offset by some distance, says one led the other by that many
+      seconds.</p>
+      <p><strong>3. A heading per pair.</strong> Above each figure: the two series names joined by a
+      double arrow, then the pair's global recurrence rate as a percentage and its
+      threshold. The figure below it repeats all of that in its own title — see the
+      faults below.</p>
+      <h2>What it does not do</h2>
+      <ul>
+      <li><p><strong>It does not expand a flat list.</strong> <code>include_cRQA</code> must be a list of
+      <code>[type1, type2]</code> pairs. Unlike <code>include_crosswavelet</code>, a flat list of measure
+      names is <em>not</em> expanded into all their combinations: each name is skipped as an
+      invalid entry, the analysis writes no payload, and the config schema shares one
+      definition between the two keys so it will not catch it for you.</p>
+      <p><strong>The tab still appears</strong>, because its gate only asks that <code>include_cRQA</code> is a
+      non-empty array — which a flat list is. So you get the tab, and inside it the
+      message <em>&quot;No cross-RQA output for this recording… run <code>python build_assets.py</code>&quot;</em>,
+      which names the wrong cause: rebuilding will not help until the config is
+      written as pairs. The real signal is in the build output, one
+      <code>Warning: Skipping invalid include_cRQA entry: … Expected [type1, type2].</code> line
+      per name. See <a href="crqa.html">the analysis page</a>.</p>
+      </li>
+      <li><p><strong>It does not name the pair whose payload is broken on the page.</strong> A pair
+      missing <code>visualization.time</code>, <code>.matrix_size</code>, <code>.matrix</code>, <code>.data_x</code> or <code>.data_y</code>
+      shows an error in its own block; the pair key goes to the browser console.</p>
+      </li>
+      </ul>
+      <h2>Two faults to be aware of</h2>
+      <p><strong>The axes appear to be transposed.</strong> The analysis builds the matrix as distances
+      from series 1 to series 2, which makes <strong>rows</strong> series 1 — so on the heatmap the
+      y-axis indexes series 1 and the x-axis indexes series 2. The labels say the
+      opposite, and both marginal traces are attached to the axis for the other measure.
+      Everything is consistently swapped, so the picture is a valid cross-recurrence plot
+      of the pair; but <strong>it is the transpose of what the axis labels claim</strong>, which
+      reverses the direction you would read a lead or lag from. Until this is settled,
+      do not read &quot;which one led&quot; off this tab — take it from the cross-wavelet phase
+      instead. Filed as a defect.</p>
+      <p><strong>The pair heading is invisible in the light theme.</strong> It is drawn with a hardcoded
+      white text colour, and hardcoded grey for the statistics beside it, instead of the
+      theme's. The default theme has a white panel behind it. Little is actually lost —
+      the figure immediately below carries its own title with the same pair names, rate
+      and threshold, in the correct colour — so the symptom is a duplicate heading
+      vanishing rather than information going missing. It is a breach of the rule in
+      <a href="tab.html"><code>contracts/tab.md</code></a> that a tab styles its own DOM with the
+      theme's custom properties. Filed as a defect.</p>
+      <h2>Where it lives</h2>
+      <p><a href="https://github.com/dims-network/dims/blob/v1.4.1/packages/dims-tabs/crqa.js"><code>packages/dims-tabs/crqa.js</code></a>, which adds
+      <code>loadCRQAData</code>, <code>displayCRQAPlots</code>, <code>createCRQAPlot</code> and <code>updateCRQAHighlights</code> to
+      the host.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/tabs/crqa.md"><code>docs/tabs/crqa.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

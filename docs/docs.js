@@ -4,10 +4,10 @@
    the sidebar and the sidebar cannot point at a page that is not built. */
 const DOCS_NAV = [
   {
-    "group": "Getting started",
+    "group": "Start here",
     "items": [
       {
-        "title": "Overview",
+        "title": "Documentation",
         "href": "index.html"
       },
       {
@@ -15,8 +15,8 @@ const DOCS_NAV = [
         "href": "getting-started.html"
       },
       {
-        "title": "Architecture",
-        "href": "architecture.html"
+        "title": "The no-code builder",
+        "href": "builder.html"
       }
     ]
   },
@@ -45,14 +45,38 @@ const DOCS_NAV = [
     "group": "Tabs",
     "items": [
       {
+        "title": "Time series",
+        "href": "tabs-timeseries.html"
+      },
+      {
+        "title": "RQA",
+        "href": "tabs-rqa.html"
+      },
+      {
+        "title": "Cross-RQA",
+        "href": "tabs-crqa.html"
+      },
+      {
+        "title": "Cross-wavelet",
+        "href": "tabs-crosswavelet.html"
+      },
+      {
         "title": "Cross-effector network",
         "href": "tabs-network.html"
+      },
+      {
+        "title": "ELAN annotations",
+        "href": "tabs-elan.html"
       }
     ]
   },
   {
     "group": "Reference",
     "items": [
+      {
+        "title": "config.json",
+        "href": "config.html"
+      },
       {
         "title": "Asset layout",
         "href": "assets.html"
@@ -64,6 +88,22 @@ const DOCS_NAV = [
       {
         "title": "Public and private data",
         "href": "data-visibility.html"
+      },
+      {
+        "title": "dims-analysis",
+        "href": "cli-dims-analysis.html"
+      },
+      {
+        "title": "dims-case",
+        "href": "cli-dims-case.html"
+      },
+      {
+        "title": "dims-builder",
+        "href": "cli-dims-builder.html"
+      },
+      {
+        "title": "Testing",
+        "href": "testing.html"
       }
     ]
   },
@@ -81,6 +121,39 @@ const DOCS_NAV = [
       {
         "title": "A study repository",
         "href": "case.html"
+      },
+      {
+        "title": "window.DIMS",
+        "href": "dims-api.html"
+      },
+      {
+        "title": "The host runtime",
+        "href": "host-runtime.html"
+      },
+      {
+        "title": "figure-geometry.js",
+        "href": "figure-geometry.html"
+      },
+      {
+        "title": "dims_analysis.common",
+        "href": "analysis-common.html"
+      },
+      {
+        "title": "The builder's HTTP API",
+        "href": "builder-api.html"
+      }
+    ]
+  },
+  {
+    "group": "Explanation",
+    "items": [
+      {
+        "title": "Architecture",
+        "href": "architecture.html"
+      },
+      {
+        "title": "Versions, vendoring and the pin",
+        "href": "versioning.html"
       }
     ]
   }

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>dims-analysis · DIMS docs</title>
+<meta name="description" content="Run the analyses, list the steps, record what assets/ should hold." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Reference</div>
+      <h1><code>dims-analysis</code></h1>
+      <p>Run the analyses a study's <code>config.json</code> asks for, list what is installed, or
+      record what a complete set of assets looks like.</p>
+      <pre><code>dims-analysis run      [--config PATH] [--steps IDS] [--output-dir DIR] [--keep-going] [--traceback]
+dims-analysis list
+dims-analysis manifest [--project-dir DIR] [--check] [--deep] [--no-checksums]
+</code></pre>
+      <p>Inside a study you will normally reach it through <code>python build_assets.py</code>, which
+      calls <code>run</code> for the shared steps and then any study-owned steps in <code>opt/</code>.</p>
+      <hr />
+      <h2><code>run</code></h2>
+      <table>
+      <thead>
+      <tr>
+        <th>flag</th>
+        <th>default</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>--config PATH</code></td>
+        <td><code>config.json</code></td>
+        <td>the study's config. <strong>The project directory is taken from this file's location</strong>, not from the working directory</td>
+      </tr>
+      <tr>
+        <td><code>--steps IDS</code></td>
+        <td><code>all</code></td>
+        <td>comma-separated step ids</td>
+      </tr>
+      <tr>
+        <td><code>--output-dir DIR</code></td>
+        <td>—</td>
+        <td>override every step's output directory</td>
+      </tr>
+      <tr>
+        <td><code>--keep-going</code></td>
+        <td>off</td>
+        <td>carry on after a step fails instead of stopping</td>
+      </tr>
+      <tr>
+        <td><code>--traceback</code></td>
+        <td>off</td>
+        <td>print a traceback when a step raises</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>Steps are discovered through the <code>dims.steps</code> entry-point group, not a list in
+      this file — see <a href="step.html"><code>contracts/step.md</code></a>. Each is run only if
+      its own <code>gate(config)</code> says the config enables it, and those the config left off
+      are listed as skipped. <strong>Steps excluded by <code>--steps</code> are not listed at all</strong> — the
+      skipped line reports the config's choices, not yours.</p>
+      <h3>It fails loudly, and that is the point</h3>
+      <p>The runner this replaced emitted an exit-code sentinel that nothing read, so a
+      crashed analysis scrolled past in the log and the build reported success —
+      leaving a dashboard with missing data and no indication anything was wrong. Every
+      exit path here is therefore explicit:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>situation</th>
+        <th>exit</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>everything the config enabled ran and wrote something</td>
+        <td><code>0</code></td>
+      </tr>
+      <tr>
+        <td>no such config file</td>
+        <td><code>2</code></td>
+      </tr>
+      <tr>
+        <td>an unknown step id in <code>--steps</code></td>
+        <td><code>2</code> — and it prints the available ids</td>
+      </tr>
+      <tr>
+        <td>a step you asked for could not be <strong>imported</strong></td>
+        <td><code>1</code></td>
+      </tr>
+      <tr>
+        <td>a step raised</td>
+        <td><code>1</code></td>
+      </tr>
+      <tr>
+        <td><strong>a step ran, was enabled, and wrote nothing</strong></td>
+        <td><code>1</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p><strong>&quot;Could not be imported&quot; is kept separate from &quot;unknown&quot;.</strong> Saying
+      <code>unknown step: crosswavelet</code> when the real cause is a missing <code>pycwt</code> sends you
+      looking for a typo instead of an install.</p>
+      <p><strong>A missing dependency fails the whole run, whatever your config says.</strong> With no
+      <code>--steps</code>, <em>every</em> unimportable step counts as blocking — the config's own gate is
+      never consulted for it. So a study that does not enable cross-wavelet still exits
+      <code>1</code> on a plain <code>dims-analysis run</code> if <code>pycwt</code> is not installed. Narrow the run with
+      <code>--steps</code> to work around it.</p>
+      <p><strong>&quot;Wrote nothing&quot; is the failure that actually happens.</strong> It does not raise: every
+      step catches its own unreadable-input case, prints a warning and returns
+      normally. Before this check existed, the run reported success over an empty output
+      directory and <code>build_assets.py</code> printed &quot;Asset build complete&quot;. The check works by
+      snapshotting the step's output directory before and after and comparing file
+      modification times — so a re-run that rewrites the same filenames still counts as
+      having produced something, and the test does not depend on filesystem timestamp
+      granularity.</p>
+      <p>The message names the directory it expected files in, and points you at the step's
+      own messages above for the reason. The usual cause is missing input.</p>
+      <h3>The summary</h3>
+      <pre><code>ran: rqa, crqa
+skipped (not enabled in config): crosswavelet
+PRODUCED NOTHING: crqa
+FAILED: crosswavelet
+</code></pre>
+      <p><code>PRODUCED NOTHING</code> and <code>FAILED</code> go to stderr; <code>ran</code> and <code>skipped</code> to stdout.</p>
+      <h2><code>list</code></h2>
+      <p>Every registered step and its one-line description, two spaces in, ids padded to a
+      common width:</p>
+      <pre><code>  crosswavelet  Cross-wavelet transform and coherence, with an AR(1) coherence null
+  crqa          Cross-recurrence quantification between pairs of time series
+  rqa           Recurrence quantification analysis of single time series
+</code></pre>
+      <p>Prints <code>no steps registered</code> and exits <code>0</code> when the entry-point group is empty —
+      which, in an installed environment, means the install is broken rather than that
+      there is nothing to run.</p>
+      <p>This output is what CI greps to prove the three shipped steps registered, so its
+      shape is load-bearing.</p>
+      <h2><code>manifest</code></h2>
+      <p>A private study's data lives outside git, so <code>assets/MANIFEST.json</code> is the only
+      thing <strong>in</strong> the repository that says what a complete set of assets looks like.
+      After a rebuild it answers the question a green exit code cannot: did it produce
+      everything?</p>
+      <pre><code class="language-sh">dims-analysis manifest                    # write it
+dims-analysis manifest --no-checksums     # names and sizes only — fast over video
+dims-analysis manifest --check            # compare against disk
+dims-analysis manifest --check --deep     # …verifying checksums too
+</code></pre>
+      <p>Writing reports the file count and which mode it used. Checking reports one line
+      per discrepancy:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>line</th>
+        <th>means</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>missing: &lt;path&gt;</code></td>
+        <td>the manifest expects it and it is not there</td>
+      </tr>
+      <tr>
+        <td><code>differs: &lt;path&gt;</code></td>
+        <td>it is there and does not match</td>
+      </tr>
+      <tr>
+        <td><code>not in the manifest: &lt;path&gt;</code></td>
+        <td>it is there and was not expected</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>missing</code> or <code>differs</code> fail with exit <code>1</code> and the summary <em>&quot;the rebuild is not
+      complete&quot;</em>. <strong>Extra files are not a failure</strong> — a study may hold working files the
+      manifest was never asked about — they are only listed. Checking with no manifest
+      present exits <code>2</code> and tells you to write one.</p>
+      <p>Checksums are recorded on a write unless you pass <code>--no-checksums</code>. Verifying them
+      on a <code>--check</code> is opt-in, with <code>--deep</code>. <strong><code>--deep</code> does nothing on a write</strong> — it
+      is defined as a modifier for <code>--check</code> and the write path never reads it.</p>
+      <h2>See also</h2>
+      <ul>
+      <li><a href="step.html"><code>contracts/step.md</code></a> — writing a step, and how
+      discovery works.</li>
+      <li><a href="analysis-output.html"><code>contracts/analysis-output.md</code></a> — what a
+      step must write.</li>
+      <li><a href="analyses.html">the analyses</a> — what the three shipped steps compute.</li>
+      <li><a href="cli-dims-case.html"><code>dims-case</code></a> — creating the study this runs inside.</li>
+      </ul>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/reference/cli/dims-analysis.md"><code>docs/reference/cli/dims-analysis.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>

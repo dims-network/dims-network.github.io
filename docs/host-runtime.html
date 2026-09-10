@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The host runtime · DIMS docs</title>
+<meta name="description" content="The shared time axis, the tab lifecycle, and the video." />
+<link rel="stylesheet" href="../style.css" />
+<link rel="stylesheet" href="docs.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="../index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../tutorial.html">Tutorial</a>
+      <a href="index.html" class="active">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="docs-side"></aside>
+    <main class="docs-main">
+
+      <div class="crumbs">Extending DIMS</div>
+      <h1>The host runtime</h1>
+      <p>How the video, the time slider and every tab stay on one time axis, and what the
+      host does around them. This is the page for someone writing a tab or debugging why
+      a panel is out of step; the API a tab calls is
+      <a href="dims-api.html"><code>dims-api.md</code></a>, and the rules it must follow are
+      <a href="tab.html"><code>contracts/tab.md</code></a>.</p>
+      <p>There is no framework and no bundler. Two globals do all of it:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>global</th>
+        <th>is</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>window.DIMS</code></td>
+        <td>the registry and the payload helpers — see <a href="dims-api.html"><code>dims-api.md</code></a></td>
+      </tr>
+      <tr>
+        <td><code>window.dimsApp</code></td>
+        <td>the single <code>DIMSApp</code> instance, created on <code>DOMContentLoaded</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p><code>DIMS._appProto</code> points at <code>DIMSApp.prototype</code>, which is how <code>extendHost</code> reaches
+      the class from a tab file that never sees it.</p>
+      <h2>The shared time axis</h2>
+      <p><strong>One function moves everything: <code>handleTimeClick(time)</code>.</strong> Every click handler in
+      every tab calls it, the slider calls it, and nothing else sets the playhead.</p>
+      <p>It does six things, in this order:</p>
+      <ol>
+      <li>Stores <code>time</code> on <code>app.lastClickedPoint</code>.</li>
+      <li>Reads the window width from <code>#windowSize</code>, defaulting to 5 seconds.</li>
+      <li><strong>Calls <code>plotTimeseries</code> directly.</strong></li>
+      <li>Calls <code>updateVideos(time, windowSize)</code>.</li>
+      <li>Calls <code>updateTranscript(time, windowSize)</code>.</li>
+      <li><strong>Calls <code>emitTimeChange(time, windowSize)</code></strong> — the bus.</li>
+      <li>Writes the selected time and window into the page's <code>#status</code> line.</li>
+      </ol>
+      <p>Step 3 is why <a href="tabs-timeseries.html">the time series tab</a> registers no
+      <code>onTimeUpdate</code> hook: it is redrawn by name, before the bus runs at all. It is the
+      one tab the host knows about by name, and it is a leftover rather than a design —
+      every other tab is reached only through step 6.</p>
+      <h3>The bus</h3>
+      <pre><code class="language-js">emitTimeChange(time, windowSize)
+</code></pre>
+      <p>Two audiences, in order:</p>
+      <ol>
+      <li><strong>The visible tab's <code>onTimeUpdate</code></strong>, if it has one. First refusal, because it
+      is the one on screen.</li>
+      <li><strong>Every subscriber registered through <code>onTimeChange(fn)</code></strong>, tab or not.</li>
+      </ol>
+      <p>Each call is wrapped in its own <code>try</code>/<code>catch</code> and logged with the tab's id, so one
+      tab throwing cannot stop the tabs after it or break the bus.</p>
+      <p>This replaced an <code>if</code>/<code>else</code> chain that named every tab. That chain meant adding a
+      tab required editing the host, which was the single biggest obstacle to tabs being
+      separable at all.</p>
+      <h3><code>onTimeChange(fn) → unsubscribe</code></h3>
+      <p>Subscribe to the playhead. Returns a function that removes the subscription;
+      calling it with a non-function returns a no-op unsubscribe rather than throwing.</p>
+      <p><strong>This is the only way for a hidden tab to follow the playhead</strong>, since
+      <code>onTimeUpdate</code> reaches the visible tab alone.</p>
+      <h2>The slider</h2>
+      <p><code>createTimeSlider(minTime, maxTime, onChange)</code> builds a plain
+      <code>&lt;input type=&quot;range&quot;&gt;</code> into <code>#timeSlider</code> with a step of <strong>0.1 s</strong> and a readout
+      underneath reading <code>Time: 12.3s / 240.0s</code>.</p>
+      <p>Its bounds are the minimum and maximum <code>Time</code> across every dataset loaded for the
+      recording — not the video's duration. <strong>A time series shorter than its video
+      therefore produces a slider that cannot reach the end of the recording</strong>, which is
+      one of the ways a duration mismatch shows itself.</p>
+      <p>Its <code>input</code> event calls <code>handleTimeClick</code>, so dragging goes through exactly the
+      same path as clicking a plot.</p>
+      <h2>The video is a sink, never a source</h2>
+      <p><code>updateVideos(clickTime, windowSize)</code> renders two React components into
+      <code>#fullVideoContainer</code> and <code>#segmentVideoContainer</code>. The second is given
+      <code>startTime = max(0, t - windowSize/2)</code> and <code>endTime = t + windowSize/2</code>;
+      <code>video-component.js</code> seeks to <code>startTime</code> once metadata has loaded, and on reaching
+      <code>endTime</code> it <strong>pauses and rewinds</strong> to <code>startTime</code> — it does not loop on playing.</p>
+      <p><strong>Nothing wires the video's own <code>timeupdate</code> back into the bus.</strong> Playing the
+      video does not move the playhead, and the other tabs do not follow it. Time flows
+      one way: from a click or the slider, out to the video. If you expected scrubbing
+      the video to drive the dashboard, it does not, and that is deliberate rather than
+      missing.</p>
+      <p>Should the React render fail, the <strong>full</strong> video falls back to a plain <code>&lt;video controls&gt;</code> element with the same source. The segment video has no such fallback —
+      its failure is logged and its container is left empty.</p>
+      <h3>Choosing the file</h3>
+      <p><code>buildVideoSrc()</code> resolves <code>videoSrcTemplate</code>, replacing <code>{videoID}</code> and
+      <code>{persp}</code>. With no template configured the result is exactly
+      <code>assets/videos/{videoID}.mp4</code>.</p>
+      <p>With a template and no perspective chosen, it picks the first angle that exists
+      <strong>for that recording</strong> — <code>videoPerspectives[videoID]</code> — before falling back to the
+      first entry in <code>perspectives</code>. Not every session has every angle, because
+      recordings fail.</p>
+      <p>If neither resolves an angle, control falls through to
+      <code>fallbackVideoSrcTemplate</code> — so <strong>the configured <code>videoSrcTemplate</code> is dropped
+      entirely</strong> rather than being filled with an empty <code>{persp}</code>. That is usually what
+      you want and is worth knowing when a video silently resolves to the wrong path.</p>
+      <h2>Tab lifecycle</h2>
+      <ul>
+      <li><strong><code>setupTabs()</code></strong> filters <code>DIMS._tabs</code> by each tab's <code>gate(config)</code>, sorts by
+      <code>order</code> (a missing or null <code>order</code> sorts as <strong>100</strong>), and creates one
+      <code>.plot-pane</code> per tab with a minimum height of 800 px. A gate that throws hides
+      only its own tab.<ul>
+      <li>The slider and the tab bar are wrapped in a single <code>#stickyBar</code> so they pin to
+      the top together while scrolling.</li>
+      <li><strong>With only one tab the bar is hidden entirely</strong>, on the grounds that a single
+      tab is no choice.</li>
+      </ul>
+      </li>
+      <li><strong><code>paneIdFor(tab)</code></strong> returns the tab's own <code>containerId</code> when it sets one, and
+      otherwise <code>{id}Container</code>. Two built-ins set it explicitly to keep ids that other
+      code already depends on: <code>plotContainer</code> and <code>crossWaveletContainer</code>.</li>
+      <li><strong><code>switchTab(name)</code></strong> calls the previous tab's <code>onDeactivate</code>, then this tab's
+      <code>onActivate</code> <strong>once</strong> — guarded by an internal <code>_activated</code> flag — and
+      <code>onUpdate</code> on every later switch, then resizes the figures in the new pane.</li>
+      <li><strong><code>loadVideoData(videoID)</code></strong> clears every <code>_activated</code> flag, calls
+      <code>onVideoChange</code> on every tab <strong>the gate let through</strong> (not on tabs the config
+      excluded), reloads the CSVs and transcript,
+      resets the payload caches, rebuilds the slider, and re-enters the visible tab.</li>
+      </ul>
+      <h3>What a video switch clears, and what it does not</h3>
+      <p><code>_resetTabCaches()</code> nulls <code>rqaData</code>, <code>crossWaveletData</code>, <code>crqaData</code> and
+      <code>elanData</code>. <strong><code>elanSelectedTiers</code> is deliberately not in it</strong>, and a comment there
+      explains why: which tiers someone asked to see is a choice they made, not data
+      fetched from a payload, so a re-render for a theme change must not discard it.</p>
+      <p><strong>That intent is not achieved.</strong> <code>loadVideoData</code> clears <code>elanSelectedTiers</code>
+      unconditionally, a couple of lines after calling <code>_resetTabCaches</code>, and a theme
+      change reaches it — <code>applyTheme</code> calls <code>rerenderAll</code>, which calls <code>loadVideoData</code>
+      for the <em>same</em> recording. So the selection is lost on a theme switch, exactly as
+      the comment says it must not be. The unit test that covers this asserts
+      synchronously immediately after <code>rerenderAll()</code>, before the <code>await</code> inside
+      <code>loadVideoData</code> resolves, so it passes without exercising the behaviour. Filed as
+      a defect; documented from the user's side on
+      <a href="tabs-elan.html">the ELAN tab page</a>.</p>
+      <h2>Figures in hidden panes</h2>
+      <p>Two functions exist for one Plotly behaviour: <strong>a figure drawn while its pane was
+      <code>display:none</code> has no width to measure, so it keeps whatever size it had and never
+      notices the pane reappearing.</strong> The symptom is a plot that comes back the wrong
+      size and stays wrong until something forces a relayout — which is why dragging the
+      slider used to &quot;repair&quot; it. The redraw was the fix, not the slider.</p>
+      <ul>
+      <li><strong><code>resizePlotsIn(root)</code></strong> resizes every Plotly figure under <code>root</code>, on the next
+      animation frame because <code>display:block</code> has only just been set and there is no
+      layout yet this frame. It checks <strong>the root itself</strong> as well as its descendants:
+      <code>querySelectorAll</code> walks descendants only, and the time series tab draws straight
+      into <code>#plotContainer</code>, which <em>is</em> its pane — the first version of this shipped
+      with that hole and fixed every tab except the one people noticed. Figures that
+      have been removed, or never finished drawing, are skipped rather than failing a
+      tab switch.</li>
+      <li><strong><code>watchViewportSize()</code></strong> resizes the visible pane 150 ms after the window stops
+      changing size. Debounced because a relayout is not cheap and a drag fires
+      continuously.</li>
+      </ul>
+      <h2>Themes</h2>
+      <p>Two themes, <code>aurora</code> and <code>midnight</code>, chosen from <code>#themeSelect</code> and remembered in
+      <code>localStorage</code> under <code>dims-theme</code>. <code>readTheme()</code> reads the concrete values out of
+      the CSS custom properties on <code>:root</code>, so the palette is defined in
+      <code>css/theme.css</code> and not in JavaScript.</p>
+      <p>A theme change swaps the logo and calls <code>rerenderAll()</code>, which resets the payload
+      caches and re-enters the current tab — which is why a tab must build its colours
+      at draw time through <code>DIMS.theme()</code> rather than capturing them once.</p>
+      <h2>Boot</h2>
+      <p>On <code>DOMContentLoaded</code>, before constructing anything, the host checks two lists and
+      <strong>stops</strong> if either is short — logging to the console <em>and</em> raising a browser
+      <code>alert</code> that names exactly what is missing, rather than throwing somewhere later
+      where the cause is unrecoverable:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>checked</th>
+        <th>must exist</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>DOM ids</td>
+        <td><code>status</code>, <code>videoSelect</code>, <code>windowSize</code>, <code>plotContainer</code>, <code>fullVideoContainer</code>, <code>segmentVideoContainer</code></td>
+      </tr>
+      <tr>
+        <td>globals</td>
+        <td><code>React</code>, <code>ReactDOM</code>, <code>Plotly</code>, <code>Papa</code> (PapaParse), <code>TimeRangeVideo</code></td>
+      </tr>
+      </tbody>
+      </table>
+      <p>If you are staring at an alert listing a missing dependency, the cause is almost
+      always script order or a CDN that did not load — see the order below.</p>
+      <p>Script order in a built study is the configuration, and it is set by the scaffold's
+      <code>index.html</code>: <code>video-component.js</code>, then <code>dims-core.js</code>, then
+      <code>figure-geometry.js</code> — <strong>which must precede <code>network.js</code></strong> — then the tab files,
+      then the study's own tabs between the <code>study-owned tabs</code> markers.</p>
+      <h2>Where it lives</h2>
+      <p><a href="https://github.com/dims-network/dims/blob/v1.4.1/packages/dims-core/dims-core.js"><code>packages/dims-core/dims-core.js</code></a> and
+      <a href="https://github.com/dims-network/dims/blob/v1.4.1/packages/dims-core/video-component.js"><code>video-component.js</code></a> beside it.
+      Both are vendored into every study as <code>vendor/dims-core/</code>.</p>
+      <p class="source-note">Generated from
+        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/reference/host-runtime.md"><code>docs/reference/host-runtime.md</code></a>
+        at <code>v1.4.1</code>. Edit it there, not here.</p>
+
+      <footer>
+        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script src="docs.js"></script>
+</body>
+</html>
