@@ -1,6 +1,6 @@
 {
   "repo": "https://github.com/dims-network/dims",
-  "ref": "v1.4.2",
+  "ref": "v1.4.3",
   "_comment": "Bump ref, re-render with tools/render_docs.py --dims <checkout>, then commit. render_docs.py --check clones this ref from GitHub, so a ref without these files fails the build. docs/index.md is mapped to index.html and replaces the generated card grid; remove that entry and build_index() takes over again.",
   "pages": [
     {
@@ -46,7 +46,7 @@
         {
           "source": "docs/analyses/crosswavelet.md",
           "out": "crosswavelet.html",
-          "title": "Cross-wavelet & coherence",
+          "title": "Cross-wavelet analysis",
           "description": "Shared timescales, lead and lag, and the four significance levels \u2014 including which one actually tests coupling.",
           "assets": [
             "docs/analyses/demo/analyses-plots.js",
@@ -118,7 +118,7 @@
           "source": "docs/tabs/network.md",
           "out": "tabs-network.html",
           "title": "Cross-effector network",
-          "description": "Who is coupled with whom, following the playhead: what an edge's thickness, dashes and fading each mean, and how to say which time series is which node."
+          "description": "Who is coupled with whom, following the playhead: what an edge's thickness and dashes each mean, which of the two measures it is showing, and how to say which time series is which node."
         },
         {
           "source": "docs/tabs/elan.md",

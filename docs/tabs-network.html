@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Cross-effector network · DIMS docs</title>
-<meta name="description" content="Who is coupled with whom, following the playhead: what an edge&#x27;s thickness, dashes and fading each mean, and how to say which time series is which node." />
+<meta name="description" content="Who is coupled with whom, following the playhead: what an edge&#x27;s thickness and dashes each mean, which of the two measures it is showing, and how to say which time series is which node." />
 <link rel="stylesheet" href="../style.css" />
 <link rel="stylesheet" href="docs.css" />
 </head>
@@ -29,10 +29,14 @@
     <main class="docs-main">
 
       <div class="crumbs">Tabs</div>
-      <h1>The cross-effector network</h1>
+      <h1 id="the-cross-effector-network">The cross-effector network</h1>
       <p>One picture of who is coupled with whom, following the playhead. Each <strong>node</strong> is
-      a measure; each <strong>edge</strong> is the wavelet coherence between two measures over the
+      a measure; each <strong>edge</strong> is how strongly two measures went together over the
       window around the current moment. Move the playhead and the picture changes.</p>
+      <p><strong>An edge answers one of two questions, and you choose which.</strong> <em>Coherence</em> asks
+      whether the two held a steady phase relationship. <em>Shared power</em> asks whether
+      both were moving at all at that timescale. They are different questions and they
+      disagree in the case that matters most — see <a href="#the-two-modes">the two modes</a>.</p>
       <p>It is a view of the cross-wavelet analysis, not a separate one. Everything it
       draws comes from <code>assets/crosswavelet/{video}_crosswavelet_data.json</code>, so an
       edge exists only where <a href="crosswavelet.html"><code>include_crosswavelet</code></a> asked
@@ -40,18 +44,22 @@
       so</strong> — the two nodes are still drawn, with nothing between them.</p>
       <ul>
       <li>Tab id <code>network</code>, gated by <code>include_network</code>.</li>
-      <li>Needs the cross-wavelet analysis, and needs its coherence chance level.</li>
+      <li>Needs the cross-wavelet analysis. Coherence mode needs its coherence chance
+      level; shared power mode does not.</li>
+      <li>Needs <code>figure-geometry.js</code>, which draws the body and the fan of edges. Without
+      it the tab reports that rather than drawing — <code>dims-case sync</code> writes the
+      script tag for you.</li>
       <li>Reads nothing else: no raw signal, no config beyond <code>include_network</code> — except
-      the raw series for the co-activity figure below, and the <strong>Window Size</strong>
-      control, seeded from <code>defaultWindowSize</code>, for how wide &quot;the moment&quot; is.</li>
+      the <strong>Window Size</strong> control, seeded from <code>defaultWindowSize</code>, for how wide
+      &quot;the moment&quot; is.</li>
       </ul>
       <p>The window is the playhead ± half of the <strong>Window Size</strong> control, which starts
       at <code>defaultWindowSize</code> (5 s unless the study says otherwise) and follows the
-      control from then on, and a <strong>whole recording</strong> toggle above the picture
-      switches to averaging over everything, for when you want the study rather than
-      the moment.</p>
-      <h2>Reading an edge</h2>
-      <p>Five things are drawn on one line, and they answer different questions.</p>
+      control from then on. A <strong>whole recording</strong> button above the picture appears once
+      you have picked a moment and takes you back to averaging over everything, for
+      when you want the study rather than the moment.</p>
+      <h2 id="reading-an-edge">Reading an edge</h2>
+      <p>Four things are drawn on one line, and they answer different questions.</p>
       <table>
       <thead>
       <tr>
@@ -62,15 +70,11 @@
       <tbody>
       <tr>
         <td><strong>thickness</strong></td>
-        <td>mean coherence over the window and the period band — but <em>relative to the other visible edges</em>, not absolute</td>
+        <td>the mode's measure over the window and the period band — but <em>relative to the other visible edges</em>, not absolute</td>
       </tr>
       <tr>
         <td><strong>solid or dashed</strong></td>
-        <td>solid where the coherence is above chance in more than 15 % of tested cells; dashed where it is not</td>
-      </tr>
-      <tr>
-        <td><strong>fading</strong></td>
-        <td>how much of the window both measures were actually moving for</td>
+        <td>solid where the measure beats its 95 % level in at least 15 % of tested cells; dashed where it does not. That share is a control</td>
       </tr>
       <tr>
         <td><strong>colour</strong></td>
@@ -93,21 +97,55 @@
       is what the tooltip is for. It also means the same edge can look different after
       you hide another one. The &quot;width sensitivity&quot; slider controls how hard the scale
       pushes.</p>
-      <p><strong>Dashed means the measurement said nothing.</strong> An edge is called real when more
-      than 15 % of its tested cells beat the 95 % chance level (<code>REAL = 0.15</code> in
-      <code>network.js</code>). Not 5 % plus a whisker: the fraction is itself an estimate, and a
-      threshold sitting on the chance level turns half of the at-chance edges solid.</p>
-      <p>There is a third verdict. An edge whose payload carries no chance level at all is
-      <strong>untestable</strong> — drawn, but its tooltip says the value cannot be tested and names
-      the fix (<code>analysis.crosswavelet.mcCount</code>, then rebuild). The tab counts them and
-      says how many, rather than letting an untested picture pass for a tested one.</p>
-      <p><strong>Every edge's numbers are in its tooltip</strong>: the pair, the mean coherence, the
-      period band it was averaged over, the share of tested cells above chance and how
-      many cells that was, and what independence would have given (about 5 %).</p>
+      <p><strong>Dashed means the measurement said nothing.</strong> An edge is called real when at
+      least 15 % of its tested cells beat the 95 % level, and drawn as a dashed
+      hairline when it is not. That share is the <strong>Solid above (share of cells)</strong>
+      control, and it is worth understanding rather than accepting.</p>
+      <h3 id="solid-above-what-the-number-is">Solid above: what the number is</h3>
+      <p><strong>It is a share of cells, not a level.</strong> The level is fixed at 95 % and comes
+      from the analysis. What this control sets is <em>how many of the cells that were
+      tested</em> have to beat that level before the tab is willing to call the edge real.</p>
+      <p>A cell counts as <strong>tested</strong> when it survives four filters: its period is inside
+      the <strong>Period band</strong>, its column is inside the window at the playhead, it lies
+      outside the cone of influence, and its period has a usable 95 % level at all. So
+      &quot;tested cells&quot; is smaller than &quot;cells in the window&quot;, and both controls above
+      change it — narrowing the band changes the denominator as well as the numerator.</p>
+      <p><strong>Why not 5 %.</strong> Under the null, 5 % of cells beat a 95 % level by construction —
+      that is what the level means, and the tooltip says so beside every edge. Setting
+      the control there would make the test &quot;did this edge behave at least as well as
+      noise&quot;, and because the fraction is itself an estimate that scatters around 5 %,
+      roughly half of the genuinely at-chance edges would come out solid. 0.15 is three
+      times chance, chosen to sit clear of that scatter.</p>
+      <p><strong>Why it is remembered per mode.</strong> The share of cells above a <em>sampled</em> coherence
+      chance level and the share above an <em>analytic</em> red-noise power level are
+      different distributions. One number would judge one of them by the other's
+      yardstick, so each mode keeps its own, seeded from <code>include_network.threshold</code>
+      and remembered as you switch back and forth.</p>
+      <p><strong>What the ends do.</strong> At <strong>0</strong> every testable edge is solid — the test becomes
+      &quot;was even one cell measured&quot;. At <strong>1</strong> nothing is solid unless <em>every</em> tested cell
+      beat its level. Neither end changes a single measured value: this control sets a
+      verdict, not an answer, and the number in the tooltip is the same either way.</p>
+      <p><strong>It is not presentation only.</strong> The width scale pivots on the mean of the
+      <em>visible, above-chance</em> edges, so moving this control changes which edges are in
+      that pool and therefore re-scales every solid edge on screen. It sits between the
+      two presentation controls and behaves like neither.</p>
+      <p><strong>It cannot rescue an untestable edge.</strong> An edge whose payload carries no usable
+      level has no fraction to compare, so no threshold reaches it — see below.</p>
+      <h3 id="the-third-verdict">The third verdict</h3>
+      <p>An edge whose payload carries no level at all is <strong>untestable</strong> — drawn, but its
+      tooltip says the value cannot be tested and names the fix, and when every edge is
+      in that state the tab says so above the picture rather than letting an untested
+      picture pass for a tested one. In coherence mode the fix is
+      <code>analysis.crosswavelet.mcCount</code> and a rebuild; in shared power mode it is not,
+      because that level is computed rather than sampled.</p>
+      <p><strong>Every edge's numbers are in its tooltip</strong>: the pair, the mode's value, the
+      period band it was averaged over, the share of tested cells that beat the level
+      and how many cells that was, what independence would have given (about 5 %), and
+      the other mode's value for comparison.</p>
       <p>The widths themselves run from <code>MIN_WIDTH = 1.5</code> px at the bottom of the visible
       range to <code>MAX_WIDTH = 16</code> px at the top. The node they end at is deliberately
-      small — <code>TAB_NODE_R</code> in <code>figure-geometry.js</code>, half the radius the wizard uses for
-      the same body — because the wizard's circle is a drop target and this one is the
+      small — <code>TAB_NODE_R</code> in <code>figure-geometry.js</code>, under half the radius the wizard
+      uses for the same body — because the wizard's circle is a drop target and this one is the
       end of a line, and a big dot eats the width channel.</p>
       <p><strong>Every edge is a curve, and no two curve alike.</strong> Ranks are handed out across
       the whole set on screen and each edge bows perpendicular to its chord by its own
@@ -117,7 +155,7 @@
       a node arrive as a smear. Separating only the edges whose endpoints match is not
       enough; it leaves every other edge at the minimum bow. Past about sixteen edges
       the fan tightens rather than sweeping arcs out of the frame.</p>
-      <h3>The controls above the picture</h3>
+      <h3 id="the-controls-above-the-picture">The controls above the picture</h3>
       <table>
       <thead>
       <tr>
@@ -128,7 +166,15 @@
       <tbody>
       <tr>
         <td><strong>whole recording</strong></td>
-        <td>averages every edge over the entire session instead of the window at the playhead</td>
+        <td>a button, shown only once you have picked a moment, that clears the playhead and averages every edge over the entire session</td>
+      </tr>
+      <tr>
+        <td><strong>Edges show</strong></td>
+        <td>coherence or shared power. <strong>This changes the question</strong>, not its presentation</td>
+      </tr>
+      <tr>
+        <td><strong>Solid above (share of cells)</strong></td>
+        <td>the share of <em>tested cells</em> that has to beat the 95 % level before an edge is drawn solid. Remembered separately for each mode, and it re-pivots the width scale — see <a href="#solid-above-what-the-number-is">above</a></td>
       </tr>
       <tr>
         <td><strong>Period band (s)</strong></td>
@@ -144,37 +190,74 @@
       </tr>
       </tbody>
       </table>
-      <h3>It needs a chance level to say anything at all</h3>
+      <h3 id="coherence-needs-a-chance-level-to-say-anything-at-all">Coherence needs a chance level to say anything at all</h3>
       <p>Coherence does not sit at zero when there is no relationship — two unrelated
       signals score around 0.25, not 0. So a network of raw coherence values draws
       at-chance noise as findings and looks entirely convincing doing it.</p>
       <p>Switching the network on therefore switches on the Monte Carlo null at 100
-      surrogates, because the network is the only thing that reads it. Without it
-      every edge is <code>untestable</code> and the tab says so rather than guessing. The null,
-      and what it assumes, is documented under
+      surrogates, because coherence mode is the only thing that reads it. Without it
+      every edge is <code>untestable</code> in that mode and the tab says so rather than guessing.
+      The null, and what it assumes, is documented under
       <a href="crosswavelet.html">cross-wavelet</a>.</p>
-      <h2>Co-activity: the faded edges</h2>
-      <p>Coherence is amplitude-normalised by design. A tiny shared tremor counts exactly
-      as much as a large shared movement — which is right for &quot;is the timing related&quot;
-      and a liability for &quot;are these two moving together&quot;, especially when both
-      measures are tracked from the same video and their jitter has shared sources.</p>
-      <p>So every edge also reports <strong>the share of the window in which both measures were
-      active</strong>, where a measure counts as active above 10 % of its own 95th percentile.
-      The 95th rather than the maximum, so one tracking glitch does not set the scale
-      for a whole recording.</p>
-      <p>Three things to know about that number:</p>
-      <ul>
-      <li><strong>It assumes near-zero means &quot;not moving&quot;</strong> — a speed, or another magnitude.
-      On a position channel, or anything centred on zero, it is meaningless. This is
-      the one thing to check before trusting it.</li>
-      <li><strong>It fades the edge.</strong> Below a quarter of the window, the edge is drawn faint
-      and the tooltip says <em>computed mostly from stillness; treat with care</em>. It
-      never changes a coherence value, but it does change the picture.</li>
-      <li><strong>Nothing is not zero.</strong> When the raw series are not loaded the figure is
-      omitted entirely rather than reported as 0, because &quot;we did not measure this&quot;
-      and &quot;they were still&quot; are different statements.</li>
-      </ul>
-      <h2>Clicking an edge: the detail figure</h2>
+      <p>Shared power mode is not affected: its level is computed from the two series' own
+      red-noise backgrounds rather than sampled, so it is in the payload either way.</p>
+      <h2 id="the-two-modes">The two modes</h2>
+      <p><strong>Coherence</strong> asks whether two measures held a steady phase relationship. It is
+      amplitude-normalised by design, so a tiny shared tremor scores exactly as high as
+      a large shared movement — a thick coherence edge can be two nearly-still measures
+      whose jitter has a shared source, which is the common case when both are tracked
+      from one video. No period band separates that: the band selects which timescales
+      enter the mean, and every cell in it is equally amplitude-blind.</p>
+      <p><strong>Shared power</strong> is what does separate it. The cross-wavelet transform is
+      <code>W₁·conj(W₂)</code>, so its magnitude is exactly <code>|W₁||W₂|</code> — the product of the two
+      amplitude envelopes, and nothing to do with phase. Each cell is divided by
+      <code>signif_xwt</code>, its own period's red-noise level, and it is those ratios that are
+      averaged — a mean of ratios, not a ratio of means. That matters because the level
+      varies by orders of magnitude across periods, so dividing once at the end would
+      let the longest periods in the band decide the answer. The result is
+      dimensionless, comparable between pairs, and significant exactly where it
+      exceeds 1.</p>
+      <p>A period whose level is missing or non-positive has no defined ratio, so in
+      shared power mode those cells leave the average as well as the test. In
+      coherence mode they leave only the test — a coherence value is still a value
+      without a threshold to judge it against.</p>
+      <p><strong>So a thick power edge means both measures were busy — not that they were
+      coupled.</strong> Two people waving vigorously and independently make a fat edge. The
+      diagnosis is the pair of readings, which is why <strong>the tooltip carries both
+      numbers in either mode</strong>:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>coherence</th>
+        <th>shared power</th>
+        <th>reading</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>high</td>
+        <td>high</td>
+        <td>a real shared rhythm, with something behind it</td>
+      </tr>
+      <tr>
+        <td>high</td>
+        <td>low</td>
+        <td>phase-locked stillness — the case to distrust</td>
+      </tr>
+      <tr>
+        <td>low</td>
+        <td>high</td>
+        <td>both active, unrelated</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>Width in power mode ranks the edges on a log-like scale rather than reading out
+      the ratio, because the ratio is unbounded and a linear scale would clip every
+      edge above its level to the same width. The ratio itself is in the tooltip.</p>
+      <p><strong>Shared power needs no Monte Carlo null.</strong> Its level is analytic, so it is in
+      every payload — a study built without <code>mcCount</code> can still be read this way, and
+      the tab says so rather than showing an untestable picture in both modes.</p>
+      <h2 id="clicking-an-edge-the-detail-figure">Clicking an edge: the detail figure</h2>
       <p>Selecting an edge does two things. It colours that line — the only use of colour
       in the picture, so &quot;selected&quot; reads as a state rather than as another
       measurement — and it draws <strong>that pair's cross-wavelet figure underneath the
@@ -183,9 +266,10 @@
       drawn once, when the edge is selected, and afterwards only the shaded window is
       moved: two answers to &quot;which moment am I looking at&quot; on one screen, where the
       wrong one has a box drawn round it, is worse than one.</p>
-      <p>An edge can be selected whose pair has no cross-wavelet payload loaded in the
-      dashboard — the tab says so in the panel rather than drawing an empty figure.</p>
-      <h2>Where the nodes go</h2>
+      <p>The figure is the cross-wavelet tab's, borrowed. In a dashboard built without
+      that tab there is nothing to borrow, and the panel says so rather than drawing an
+      empty figure.</p>
+      <h2 id="where-the-nodes-go">Where the nodes go</h2>
       <p>Two layouts, chosen with <code>layout</code>:</p>
       <ul>
       <li><strong><code>columns</code></strong> (the default) — one column per group, members spread down it.</li>
@@ -195,16 +279,16 @@
       </ul>
       <p>Neither layout is force-directed, deliberately: a force layout moves nodes
       between frames, and this picture is read by comparing one moment with another.</p>
-      <h2>Building it in the wizard</h2>
+      <h2 id="building-it-in-the-wizard">Building it in the wizard</h2>
       <p>The no-code builder draws this diagram in step 4 and asks you to fill it in,
       which is the same decision as writing the config below by hand.</p>
       <ul>
       <li><strong>Add a person</strong> for each figure you want, and name it. That is a <code>group</code>.
       One is enough: a network of a single body's own effectors — hands with head,
       left with right — is a whole network, and the tab centres the lone figure.
-      Be aware that the &quot;above chance in more than 15% of cells&quot; threshold was
-      chosen against between-person data; whether it reads the same way within one
-      body is an open question rather than a settled one.</li>
+      Be aware that the <strong>default</strong> 15 % share was chosen against between-person
+      data; whether it reads the same way within one body is an open question rather
+      than a settled one, and the &quot;solid above&quot; control is there to move it.</li>
       <li><strong>Click an empty circle</strong> — head, either hand, torso, hip or foot — and pick a
       time series from the list. That is one <code>effectors</code> entry, and the node takes
       the spot's own name as its <code>label</code>: <em>Left hand</em>, <em>Head</em>. Real measure names
@@ -236,7 +320,7 @@
       Pressing Next writes it out in the explicit form. The two render identically;
       that is asserted by a test, because a migration that quietly moved a node would
       be worse than no migration.</p>
-      <h2>Saying which series is which node</h2>
+      <h2 id="saying-which-series-is-which-node">Saying which series is which node</h2>
       <p>By default the tab infers everything about a node from its name — the group from
       a regular expression, the label by deleting that expression, the body part from a
       token found somewhere inside what is left. That works when a study encodes person,
@@ -303,16 +387,17 @@
       </table>
       <p>When <code>effectors</code> is given, a group needs no <code>match</code> — it is referenced by label.
       When it is absent, nothing changes: the inference above is exactly what it was.</p>
-      <p><strong><code>series</code> must stay a real data type name</strong>, not a display name. The tab looks
-      the raw series up by that name to compute the co-activity figure above; a label
-      here would cost every edge that line, silently. That is what <code>label</code> is for.</p>
+      <p><strong><code>series</code> must stay a real data type name</strong>, not a display name. A node is
+      matched to its cross-wavelet pairs by that name, so a label here resolves against
+      no pair: the node is drawn with no edges, and the measure you meant turns up
+      again in the trailing <code>Other</code> group. That is what <code>label</code> is for.</p>
       <p><strong><code>x</code> and <code>y</code> are fractions, not pixels.</strong> The chart's own dimensions are private
       constants of the tab that have been retuned before, and a config written in raw
       units would drift the day one of them moves. In the <code>figure</code> layout, omitting
       <code>x</code> keeps the node on its own figure's centre line — which is the only way to say
       &quot;on this person, lower down&quot;, because an explicit <code>x</code> is absolute and does not
       follow a figure when a third group is added.</p>
-      <h3>What happens when a declaration and the data disagree</h3>
+      <h3 id="what-happens-when-a-declaration-and-the-data-disagree">What happens when a declaration and the data disagree</h3>
       <p>Both directions are drawn rather than silently resolved, because both are
       questions only the study can answer:</p>
       <ul>
@@ -326,10 +411,10 @@
       <p>The wizard checks these before it writes a study: a <code>series</code> with no CSV and a
       duplicated <code>series</code> are errors; an unknown <code>part</code> and an undefined <code>group</code> are
       warnings.</p>
-      <h2>Where the drawing lives</h2>
+      <h2 id="where-the-drawing-lives">Where the drawing lives</h2>
       <p>The body — its coordinate space, its six places, the aliases for their names, the
       lines that make a figure, and the fan the edges are bowed along — is
-      <a href="https://github.com/dims-network/dims/blob/v1.4.2/packages/dims-tabs/figure-geometry.js"><code>packages/dims-tabs/figure-geometry.js</code></a>,
+      <a href="https://github.com/dims-network/dims/blob/v1.4.3/packages/dims-tabs/figure-geometry.js"><code>packages/dims-tabs/figure-geometry.js</code></a>,
       documented at <a href="figure-geometry.html"><code>reference/figure-geometry.md</code></a>.</p>
       <p><strong>To move a body part, change it there.</strong> Two things draw that figure and they have
       to agree to the pixel, because what you arrange in the wizard is what the dashboard
@@ -338,7 +423,7 @@
       until <code>dims-case sync</code>, which refreshes both the directory and the <code>index.html</code>
       that loads it — so a change reaches the wizard at once and a built study when it
       syncs.</p>
-      <h2>The rest of the config</h2>
+      <h2 id="the-rest-of-the-config">The rest of the config</h2>
       <table>
       <thead>
       <tr>
@@ -356,6 +441,14 @@
         <td>period band in seconds, <code>[low, high]</code>, to average each edge over. <strong>This changes the answer</strong>, not its presentation — it selects which periods enter both the mean and the significance fraction</td>
       </tr>
       <tr>
+        <td><code>mode</code></td>
+        <td>which measure the edges start on: <code>coherence</code> (the default) or <code>power</code>. The control above the picture switches it; this is only where it opens</td>
+      </tr>
+      <tr>
+        <td><code>threshold</code></td>
+        <td>the share of tested cells that has to beat the 95 % level before an edge is solid, as <code>{&quot;coherence&quot;: 0.15, &quot;power&quot;: 0.15}</code>. Either key may be omitted</td>
+      </tr>
+      <tr>
         <td><code>layout</code></td>
         <td><code>columns</code> or <code>figure</code></td>
       </tr>
@@ -363,10 +456,10 @@
       </table>
       <p><code>include_network: true</code> means &quot;on, with everything inferred&quot;.</p>
       <p>The full shape, with every constraint, is in
-      <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/contracts/config.schema.json"><code>docs/contracts/config.schema.json</code></a>.</p>
+      <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/contracts/config.schema.json"><code>docs/contracts/config.schema.json</code></a>.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/tabs/network.md"><code>docs/tabs/network.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/tabs/network.md"><code>docs/tabs/network.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Extending DIMS</div>
-      <h1>Contract: a dashboard tab</h1>
+      <h1 id="contract-a-dashboard-tab">Contract: a dashboard tab</h1>
       <p>A tab is one JavaScript file. It registers itself. The host never lists tabs,
       and adding one must not require editing any other file.</p>
       <p>Tabs live in one of two places:</p>
@@ -47,7 +47,7 @@
       <p>Built-in tabs use this same API — timeseries, RQA, cross-RQA, cross-wavelet and
       ELAN are not special. That is deliberate: if this contract breaks, ELAN breaks
       in the same commit, so it cannot rot unnoticed.</p>
-      <h2>The shape</h2>
+      <h2 id="the-shape">The shape</h2>
       <pre><code class="language-js">(function () {
   'use strict';
 
@@ -55,6 +55,11 @@
     id:    'trajectory',               // also names the pane: #trajectoryContainer
     label: 'Trajectories',             // the button text
     order: 50,                         // sort order; built-ins use 10..50
+    status: 'Click a point to seek.',  // optional: the one-line hint shown
+                                       // above the panes while your tab is
+                                       // visible. The host writes it on every
+                                       // switch, so it survives return visits
+                                       // and cannot leak to another tab.
 
     // Shown only when this returns true. Read config, nothing else.
     gate(config) {
@@ -81,7 +86,13 @@
 })();
 </code></pre>
       <p>Only <code>id</code>, <code>label</code> and <code>onActivate</code> are required.</p>
-      <h2>What you may use from <code>app</code></h2>
+      <p><strong>The status line is the host's, not yours.</strong> It is one element shared by every
+      tab. Declare <code>status</code> and the host shows it whenever your tab is the visible one;
+      call <code>app.showTabStatus()</code> to return to it after your own transient message, such
+      as one shown while loading. Writing <code>app.showStatus(...)</code> directly is for those
+      transient messages only — anything you leave there is what the reader sees on
+      whatever tab they open next.</p>
+      <h2 id="what-you-may-use-from-app">What you may use from <code>app</code></h2>
       <table>
       <thead>
       <tr>
@@ -119,7 +130,7 @@
       <p>Treat anything else on <code>app</code> as private. If you need something that is not here,
       that is a request to extend this contract — say so in an issue rather than
       reaching into internals.</p>
-      <h2>Rules</h2>
+      <h2 id="rules">Rules</h2>
       <ol>
       <li><p><strong>Load after <code>dims-core.js</code>, before <code>DOMContentLoaded</code>.</strong> The host defines
       the registry; your file registers into it. Registering after the app has
@@ -151,7 +162,7 @@
       explanation into your container. Never throw out of a hook.</p>
       </li>
       </ol>
-      <h2>Acceptance</h2>
+      <h2 id="acceptance">Acceptance</h2>
       <ul>
       <li>Your tab appears when <code>gate()</code> passes and is absent when it does not.</li>
       <li>Deleting your file removes the tab and breaks nothing else.</li>
@@ -159,8 +170,8 @@
       <li>Moving the playhead updates it while it is the visible tab.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/contracts/tab.md"><code>docs/contracts/tab.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

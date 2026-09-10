@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Reference</div>
-      <h1><code>dims-analysis</code></h1>
+      <h1 id="dims-analysis"><code>dims-analysis</code></h1>
       <p>Run the analyses a study's <code>config.json</code> asks for, list what is installed, or
       record what a complete set of assets looks like.</p>
       <pre><code>dims-analysis run      [--config PATH] [--steps IDS] [--output-dir DIR] [--keep-going] [--traceback]
@@ -39,7 +39,7 @@ dims-analysis manifest [--project-dir DIR] [--check] [--deep] [--no-checksums]
       <p>Inside a study you will normally reach it through <code>python build_assets.py</code>, which
       calls <code>run</code> for the shared steps and then any study-owned steps in <code>opt/</code>.</p>
       <hr />
-      <h2><code>run</code></h2>
+      <h2 id="run"><code>run</code></h2>
       <table>
       <thead>
       <tr>
@@ -81,7 +81,7 @@ dims-analysis manifest [--project-dir DIR] [--check] [--deep] [--no-checksums]
       its own <code>gate(config)</code> says the config enables it, and those the config left off
       are listed as skipped. <strong>Steps excluded by <code>--steps</code> are not listed at all</strong> — the
       skipped line reports the config's choices, not yours.</p>
-      <h3>It fails loudly, and that is the point</h3>
+      <h3 id="it-fails-loudly-and-that-is-the-point">It fails loudly, and that is the point</h3>
       <p>The runner this replaced emitted an exit-code sentinel that nothing read, so a
       crashed analysis scrolled past in the log and the build reported success —
       leaving a dashboard with missing data and no indication anything was wrong. Every
@@ -138,14 +138,14 @@ dims-analysis manifest [--project-dir DIR] [--check] [--deep] [--no-checksums]
       granularity.</p>
       <p>The message names the directory it expected files in, and points you at the step's
       own messages above for the reason. The usual cause is missing input.</p>
-      <h3>The summary</h3>
+      <h3 id="the-summary">The summary</h3>
       <pre><code>ran: rqa, crqa
 skipped (not enabled in config): crosswavelet
 PRODUCED NOTHING: crqa
 FAILED: crosswavelet
 </code></pre>
       <p><code>PRODUCED NOTHING</code> and <code>FAILED</code> go to stderr; <code>ran</code> and <code>skipped</code> to stdout.</p>
-      <h2><code>list</code></h2>
+      <h2 id="list"><code>list</code></h2>
       <p>Every registered step and its one-line description, two spaces in, ids padded to a
       common width:</p>
       <pre><code>  crosswavelet  Cross-wavelet transform and coherence, with an AR(1) coherence null
@@ -157,7 +157,7 @@ FAILED: crosswavelet
       there is nothing to run.</p>
       <p>This output is what CI greps to prove the three shipped steps registered, so its
       shape is load-bearing.</p>
-      <h2><code>manifest</code></h2>
+      <h2 id="manifest"><code>manifest</code></h2>
       <p>A private study's data lives outside git, so <code>assets/MANIFEST.json</code> is the only
       thing <strong>in</strong> the repository that says what a complete set of assets looks like.
       After a rebuild it answers the question a green exit code cannot: did it produce
@@ -198,7 +198,7 @@ dims-analysis manifest --check --deep     # …verifying checksums too
       <p>Checksums are recorded on a write unless you pass <code>--no-checksums</code>. Verifying them
       on a <code>--check</code> is opt-in, with <code>--deep</code>. <strong><code>--deep</code> does nothing on a write</strong> — it
       is defined as a modifier for <code>--check</code> and the write path never reads it.</p>
-      <h2>See also</h2>
+      <h2 id="see-also">See also</h2>
       <ul>
       <li><a href="step.html"><code>contracts/step.md</code></a> — writing a step, and how
       discovery works.</li>
@@ -208,8 +208,8 @@ dims-analysis manifest --check --deep     # …verifying checksums too
       <li><a href="cli-dims-case.html"><code>dims-case</code></a> — creating the study this runs inside.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/reference/cli/dims-analysis.md"><code>docs/reference/cli/dims-analysis.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/reference/cli/dims-analysis.md"><code>docs/reference/cli/dims-analysis.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

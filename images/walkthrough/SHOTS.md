@@ -28,9 +28,9 @@ convenience.
 | `opt-rqa-tab.png` | The recurrence tab for dyad01 rtpjSync — the plot plus the metrics panel beside it. |
 | `opt-crqa-tab.png` | The Cross-RQA tab for dyad01, the two partners' right hands, with the structure sitting off the diagonal. |
 | `opt-cw-step4.png` | Step 4 with cross-wavelet switched on and two hand pairs selected in its chip row. |
-| `opt-cw-tab.png` | The cross-wavelet tab for dyad01, one of the hand-speed pairs, with the significance contours visible. |
+| `opt-cw-tab.png` | The cross-wavelet tab for dyad01, both hand-speed pairs, with the significance contours and the white phase arrows visible. Include the (i) beside the heading. |
 | `opt-network-step4.png` | The network diagram with two figures (Left partner, Right partner), each partner's two hands placed on them, and the two lines drawn between them. |
-| `opt-network-tab.png` | The network tab for dyad01 with the playhead on a synchrony peak; if you take a second, dyad02 at the same tab, where the two right hands are joined by a dashed line. |
+| `opt-network-tab.png` | The network tab for dyad01 with the playhead on a synchrony peak, so the caption reads a window rather than the whole recording. Include the controls row — **Edges show** and **Solid above** are the two a reader needs to see — and the legend under the figure. |
 
 Once a shot exists, check the caption under it in `tutorial.html` still
 describes what you actually captured — several captions name specific times and

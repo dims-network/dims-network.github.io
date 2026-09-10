@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Tabs</div>
-      <h1>The cross-RQA tab</h1>
+      <h1 id="the-cross-rqa-tab">The cross-RQA tab</h1>
       <p>The same figure as <a href="tabs-rqa.html">the RQA tab</a>, for a pair of measures instead of one.
       Where RQA asks when a measure returned to a state it had been in before, this asks
       when one measure was in a state the <em>other</em> had been in — and how long afterwards.
@@ -44,7 +44,7 @@
       the four highlight shapes, the click-to-seek rule, the full redraw on every
       playhead move — is identical to the RQA tab, because both call the same host
       method. <strong>Read that page for the figure; this one covers only the differences.</strong></p>
-      <h2>The three differences</h2>
+      <h2 id="the-three-differences">The three differences</h2>
       <p><strong>1. Two measures, two colours.</strong> The top marginal is the first series of the
       pair, the rotated left marginal is the second — so the square's x-axis is the
       first measure's time and its y-axis is the second's. The axes are labelled that
@@ -61,7 +61,7 @@
       double arrow, then the pair's global recurrence rate as a percentage and its
       threshold. The figure below it repeats all of that in its own title — see the
       faults below.</p>
-      <h2>What it does not do</h2>
+      <h2 id="what-it-does-not-do">What it does not do</h2>
       <ul>
       <li><p><strong>It does not expand a flat list.</strong> <code>include_cRQA</code> must be a list of
       <code>[type1, type2]</code> pairs. Unlike <code>include_crosswavelet</code>, a flat list of measure
@@ -81,7 +81,7 @@
       shows an error in its own block; the pair key goes to the browser console.</p>
       </li>
       </ul>
-      <h2>Reading a lag off this tab</h2>
+      <h2 id="reading-a-lag-off-this-tab">Reading a lag off this tab</h2>
       <p>The band's <strong>offset from the diagonal is the lag</strong>, and its <strong>side tells you which
       measure led</strong>. Both axes are time, x is the first-named series and y the second, so
       a band above the diagonal means the second series repeated the first's states later.</p>
@@ -91,13 +91,13 @@
       wrong measure. The tab now transposes on read, which changes nothing in any stored
       payload: a study built before the fix renders correctly without being rebuilt.</p>
       <p>If you took a lead/lag reading from this tab before v1.4.2, reverse it.</p>
-      <h2>Where it lives</h2>
-      <p><a href="https://github.com/dims-network/dims/blob/v1.4.2/packages/dims-tabs/crqa.js"><code>packages/dims-tabs/crqa.js</code></a>, which adds
+      <h2 id="where-it-lives">Where it lives</h2>
+      <p><a href="https://github.com/dims-network/dims/blob/v1.4.3/packages/dims-tabs/crqa.js"><code>packages/dims-tabs/crqa.js</code></a>, which adds
       <code>loadCRQAData</code>, <code>displayCRQAPlots</code>, <code>createCRQAPlot</code> and <code>updateCRQAHighlights</code> to
       the host.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/tabs/crqa.md"><code>docs/tabs/crqa.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/tabs/crqa.md"><code>docs/tabs/crqa.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cross-wavelet &amp; coherence · DIMS docs</title>
+<title>Cross-wavelet analysis · DIMS docs</title>
 <meta name="description" content="Shared timescales, lead and lag, and the four significance levels — including which one actually tests coupling." />
 <link rel="stylesheet" href="../style.css" />
 <link rel="stylesheet" href="docs.css" />
@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Analyses</div>
-      <h1>Cross-wavelet and wavelet coherence</h1>
+      <h1 id="cross-wavelet-analysis">Cross-wavelet analysis</h1>
       <p>Two people move. Do they move <em>together</em>? The question hides a second one —
       together at what timescale? A pair can share a slow sway and share nothing at
       all in their fast adjustments, and a single correlation coefficient will average
@@ -48,10 +48,10 @@
       <li>Built on <a href="https://github.com/regeirk/pycwt">pycwt</a>, pinned at <code>0.5.0b0</code>, with
       the significance levels re-derived in-house from Torrence &amp; Compo (1998).</li>
       </ul>
-      <h2>What it looks like</h2>
+      <h2 id="what-it-looks-like">What it looks like</h2>
       <p>Both figures below are the payload from
-      <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/analyses/demo/demo_crosswavelet.json"><code>demo_crosswavelet.json</code></a>, which
-      <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/analyses/demo/make_demo_data.py"><code>make_demo_data.py</code></a> produced by running the step over
+      <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/analyses/demo/demo_crosswavelet.json"><code>demo_crosswavelet.json</code></a>, which
+      <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/analyses/demo/make_demo_data.py"><code>make_demo_data.py</code></a> produced by running the step over
       the two synthetic signals from the <a href="analyses.html">overview</a>.</p>
       <div class="figure" id="fig-xwt-power"></div>
 
@@ -62,9 +62,9 @@
       signals oscillate there at 1.20 s and 1.45 s — nearly the same energy at nearly
       the same time, with a relationship that drifts. The 4-second band is the reverse:
       modest power, coherence close to 1 for the whole record, and phase arrows that
-      all lean the same way.</p>
+      all point the same way.</p>
       <p>That is the entire argument for computing both.</p>
-      <h2>Preparing the signals</h2>
+      <h2 id="preparing-the-signals">Preparing the signals</h2>
       <p>Before anything is transformed, each series is cleaned and each pair is put on
       one clock.</p>
       <ol>
@@ -87,7 +87,7 @@
       replace the cone of influence, which is about the same problem from the other
       side.</li>
       </ol>
-      <h2>The transform</h2>
+      <h2 id="the-transform">The transform</h2>
       <p>The mother wavelet is <strong>Morlet with ω₀ = 6</strong>:</p>
       <pre><code>ψ₀(η) = π^(−1/4) · e^(iω₀η) · e^(−η²/2)
 </code></pre>
@@ -128,7 +128,7 @@
       </table>
       <p>The transform itself is <code>pycwt.cwt</code>, which pads the series to the next power of
       two internally and removes the padding afterwards.</p>
-      <h3>Cross-wavelet power and phase</h3>
+      <h3 id="cross-wavelet-power-and-phase">Cross-wavelet power and phase</h3>
       <p>With <code>W^X</code> and <code>W^Y</code> the transforms of the two prepared signals, the
       cross-wavelet transform is</p>
       <pre><code>W^XY(s, t) = W^X(s, t) · conj(W^Y(s, t))
@@ -144,7 +144,7 @@
       period <em>T</em> corresponds to a delay of <code>φT / 2π</code> seconds. In the figure above, the
       4 s band sits at roughly 1.1 rad, which is the 0.7 s delay the signals were
       built with.</p>
-      <h3>Coherence</h3>
+      <h3 id="coherence">Coherence</h3>
       <p>Coherence is the cross-spectrum normalised by the two auto-spectra, each
       smoothed first in time and in scale (Torrence &amp; Webster 1999):</p>
       <pre><code>              | S( s⁻¹ · W^XY ) |²
@@ -167,8 +167,8 @@
       because a coherence above 1 means the arithmetic went wrong, not that the
       coupling was unusually good.</li>
       </ul>
-      <h2>Parameters</h2>
-      <h3>Set in the study's <code>config.json</code>, under <code>analysis.crosswavelet</code></h3>
+      <h2 id="parameters">Parameters</h2>
+      <h3 id="set-in-the-studys-configjson-under-analysiscrosswavelet">Set in the study's <code>config.json</code>, under <code>analysis.crosswavelet</code></h3>
       <table>
       <thead>
       <tr>
@@ -219,11 +219,13 @@
       </table>
       <p>Two notes on <code>mcCount</code>. <strong>300 is the number to publish with</strong>, and it is what
       the schema recommends, but it is not what you get by default — the default is
-      100 when the network tab is enabled and 0 otherwise, because the network is the
-      only thing that reads the null. And it is the expensive part of a rebuild: cost
+      100 when the network tab is enabled and 0 otherwise, because the network's
+      coherence mode is the only thing that reads the grid — the cross-wavelet title
+      reads two numbers derived from it in every study, which is why that line reports
+      the level as not computed rather than going quiet. And it is the expensive part of a rebuild: cost
       follows pairs × recordings × scale count, not minutes of video, and 300
       surrogates over a twelve-recording study is measured in hours.</p>
-      <h3>Fixed in the step</h3>
+      <h3 id="fixed-in-the-step">Fixed in the step</h3>
       <p>Changing any of these means editing <code>steps/crosswavelet.py</code>. They are listed
       because a method section has to state them, not because they are options.</p>
       <table>
@@ -282,7 +284,7 @@
       noise generator calls a NumPy function removed in NumPy 2 when the coefficient
       reaches 0, and because the estimate stops being meaningful as it approaches a
       random walk.</p>
-      <h2>Four significance levels, and which one answers your question</h2>
+      <h2 id="four-significance-levels-and-which-one-answers-your-question">Four significance levels, and which one answers your question</h2>
       <p>This is the part to get right. The payload carries four different levels, all
       of them arrays of plausible shape, and using the wrong one produces a picture
       rather than an error.</p>
@@ -322,9 +324,56 @@
       </tr>
       </tbody>
       </table>
+      <p>Where each one lives, and what it draws:</p>
+      <table>
+      <thead>
+      <tr>
+        <th>field</th>
+        <th>in the payload</th>
+        <th>drawn as</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td><code>signif_xwt</code></td>
+        <td><code>visualization</code></td>
+        <td>the heatmap's contour, the gate on the phase arrows, and the network tab's <strong>shared power</strong> mode</td>
+      </tr>
+      <tr>
+        <td><code>global_signif</code></td>
+        <td><code>statistics</code> (and, at the stored resolution, <code>visualization</code>)</td>
+        <td>the dashed level beside the global spectrum, panel C</td>
+      </tr>
+      <tr>
+        <td><code>scale_avg_signif</code></td>
+        <td><code>statistics</code> only</td>
+        <td>the flat dashed level on the band-averaged series, panel D</td>
+      </tr>
+      <tr>
+        <td><code>sig95_wtc</code></td>
+        <td><code>visualization</code></td>
+        <td>the network tab's <strong>coherence</strong> mode, and the cross-wavelet title's chance-level line</td>
+      </tr>
+      </tbody>
+      </table>
+      <p><strong>Three are computed and one is sampled.</strong> <code>signif_xwt</code>, <code>global_signif</code> and
+      <code>scale_avg_signif</code> come out of Torrence &amp; Compo's formulae for a red-noise
+      background: they cost nothing and are in every payload. <code>sig95_wtc</code> is a Monte
+      Carlo null — <code>mcCount</code> pairs of surrogate series — so it costs the time it costs
+      and is <code>null</code> in a study that did not ask for one. That difference is why the
+      network tab's shared power mode works in a study built with <code>mcCount: 0</code> while
+      its coherence mode cannot, and why the two report different fixes when an edge
+      cannot be tested.</p>
       <p><strong><code>signif_xwt</code> is not a test of coupling.</strong> Two people moving vigorously at the
       same time have joint energy whether or not their movements are related. If the
       question is whether they are coordinated, the field is <code>sig95_wtc</code>.</p>
+      <p><strong>A level can be absent, and absent is not zero.</strong> <code>sig95_wtc</code> is <code>null</code> when no
+      null was computed, and individual scales are <code>null</code> where the scale lies entirely
+      inside the cone of influence. <code>signif_xwt</code> can reduce to a null or non-positive
+      value on a scale, and <code>scale_avg_signif</code> is <code>0</code> when the band selected no scale
+      at all. Every reader in the dashboard drops those cells rather than treating the
+      level as passed or failed — a scale with no level contributes no contour, no
+      arrow, and no cell to a network edge's average.</p>
       <p>Because the levels are per scale and the grids are period × time, the
       comparison is one index deep:</p>
       <pre><code class="language-js">const above = coherence[j][t] &gt; sig95_wtc[j];       // j indexes period
@@ -333,7 +382,7 @@ const strong = power[j][t] / signif_xwt[j] &gt; 1;     // the ratio the plot con
       <p><code>sig95_xwt</code> is deliberately <strong>not</strong> stored. It would be <code>power / signif_xwt</code>,
       and a payload that carries a quotient of two fields it already carries is a
       payload with two ways to be inconsistent.</p>
-      <h3>Where the power levels come from</h3>
+      <h3 id="where-the-power-levels-come-from">Where the power levels come from</h3>
       <p>All three power levels are computed in <code>common/tc98.py</code> from Torrence &amp; Compo
       (1998) rather than taken from a chi-square. The cross-wavelet spectrum is the
       <strong>square root of a product of two chi-squares</strong> (eq. 30), not a chi-square
@@ -356,7 +405,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       <li><strong>Scale-averaged</strong> (<code>scale_avg_signif</code>), eqs. 25–28, with eq. 30's <code>Z_ν</code> in
       place of chi-square.</li>
       </ul>
-      <h3>Where the coherence level comes from</h3>
+      <h3 id="where-the-coherence-level-comes-from">Where the coherence level comes from</h3>
       <p>For coherence no closed form is available, so the level is estimated by
       simulation, following Grinsted, Moore &amp; Jevrejeva (2004):</p>
       <ol>
@@ -373,7 +422,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       <p>The level is not flat. It sits around 0.58–0.60 through the middle of a band and
       rises at both ends — above 0.7 at the extremes — where fewer independent cycles
       fit inside the record.</p>
-      <h2>The one thing to know before reading a coherence value</h2>
+      <h2 id="the-one-thing-to-know-before-reading-a-coherence-value">The one thing to know before reading a coherence value</h2>
       <p><strong>Coherence does not sit at zero when there is no relationship.</strong> It is a ratio
       taken over a smoothing neighbourhood, so a handful of random phases still average
       to something well above zero.</p>
@@ -388,7 +437,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       unreadable — it will look like coupling everywhere, because it is coherent
       everywhere.</p>
       <p>Every value has to be read against <code>sig95_wtc</code>. Every one.</p>
-      <h3>What the method assumes</h3>
+      <h3 id="what-the-method-assumes">What the method assumes</h3>
       <p>Five assumptions, each of which is a judgement rather than a measurement:</p>
       <ol>
       <li><strong>The surrogate count.</strong> 300 pairs is the number to publish with. Estimating
@@ -412,7 +461,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       preserve each signal's amplitude envelope and randomise only the timing.
       That has not been built.</li>
       </ol>
-      <h2>The cone of influence is a different thing</h2>
+      <h2 id="the-cone-of-influence-is-a-different-thing">The cone of influence is a different thing</h2>
       <p>The cone of influence marks where a wavelet coefficient is contaminated by the
       edges of the record — the transform has run off the end of the data. It is about
       <strong>which cells exist</strong>, and applies to power and coherence alike.</p>
@@ -429,7 +478,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       period axis puts the boundary 3 % out — small, and in the direction that
       flatters the result.</li>
       </ul>
-      <h2>Three defects worth checking older output for</h2>
+      <h2 id="three-defects-worth-checking-older-output-for">Three defects worth checking older output for</h2>
       <p>All three were found in this project's own analyses, all are fixed, and any of
       them can be present in output produced elsewhere by similar code.</p>
       <p><strong>Discarding phase before it can cancel.</strong> Smoothing the <em>magnitude</em> of the
@@ -448,7 +497,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       <p>A quick check on any existing output: the share of cells at exactly 1.0, and the
       correlation between coherence and log power. Both should be near zero.
       <code>dims_checks.coherence</code> in the notebooks package runs exactly these.</p>
-      <h2>Reading a result</h2>
+      <h2 id="reading-a-result">Reading a result</h2>
       <ul>
       <li>Compare <code>statistics.wtc_signif_fraction</code> with <strong>0.05</strong>, not with zero.</li>
       <li><strong>&quot;Not detectable&quot; is not &quot;absent&quot;.</strong> A null result is a statement about one
@@ -460,12 +509,12 @@ Z₂(95%) = 3.99852     (published 3.999)
       One body is one motor system, and it is the strongest coupling most recordings
       contain.</li>
       </ul>
-      <h3>Two more views the payload gives you for free</h3>
+      <h3 id="two-more-views-the-payload-gives-you-for-free">Two more views the payload gives you for free</h3>
       <div class="figure" id="fig-xwt-global"></div>
 
       <div class="figure" id="fig-xwt-scaleavg"></div>
 
-      <h2>What it writes</h2>
+      <h2 id="what-it-writes">What it writes</h2>
       <p>One entry per pair under <code>crosswavelet_pairs</code>, keyed <code>&quot;{type1}_vs_{type2}&quot;</code>:</p>
       <pre><code class="language-jsonc">{
   &quot;video_id&quot;: &quot;demo&quot;,
@@ -485,14 +534,14 @@ Z₂(95%) = 3.99852     (published 3.999)
   },
   &quot;data_types&quot;: [&quot;sig_a&quot;, &quot;sig_b&quot;],
   &quot;config&quot;: { &quot;…&quot;: &quot;the step's fixed constants&quot; },
-  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.4.2&quot;, &quot;mc_count&quot;: 200,
+  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.4.3&quot;, &quot;mc_count&quot;: 200,
                   &quot;significance_level&quot;: 0.95, &quot;wct_signif_seed&quot;: 20250906,
                   &quot;max_time_points&quot;: 150, &quot;max_freq_points&quot;: 48 },
   &quot;processing_info&quot;: { &quot;…&quot;: &quot;&quot; },
   &quot;precision&quot;: { &quot;significant_figures&quot;: 6 }
 }
 </code></pre>
-      <h3><code>visualization</code> — the grids</h3>
+      <h3 id="visualization-the-grids"><code>visualization</code> — the grids</h3>
       <p><code>P</code> is the number of periods and <code>T</code> the number of time points after reduction.
       Every 2-D field is <strong>period × time</strong>, in that order.</p>
       <table>
@@ -585,20 +634,20 @@ Z₂(95%) = 3.99852     (published 3.999)
       </tr>
       </tbody>
       </table>
-      <h3><code>statistics</code> — the summary numbers</h3>
+      <h3 id="statistics-the-summary-numbers"><code>statistics</code> — the summary numbers</h3>
       <p><code>wtc_signif_fraction</code> is the one to read: the share of finite, outside-the-cone
       cells whose coherence exceeds <code>sig95_wtc</code>, against a 0.05 baseline. Also here:
       <code>max_coherence</code>, <code>mean_coherence</code>, <code>high_coherence_fraction</code> (share above 0.8),
       <code>mean_phase_by_freq</code> (a <strong>circular</strong> mean, <code>arg(mean(e^{iφ}))</code>, because the
       arithmetic mean of two angles either side of ±π is meaningless),
       <code>scale_avg_power_mean</code> and <code>scale_avg_signif</code>.</p>
-      <h3>Two things in the payload that are less informative than they look</h3>
+      <h3 id="two-things-in-the-payload-that-are-less-informative-than-they-look">Two things in the payload that are less informative than they look</h3>
       <p><code>processing_info.visualization_resolution</code> and the top-level <code>config</code> block
       report the step's <strong>module constants</strong>, not what this study asked for. The
       settings actually used are in <code>provenance</code>. If you want to know the grid this
       payload was reduced to, read <code>provenance.max_time_points</code> — or the shape of
       <code>visualization.power</code>, which cannot be wrong.</p>
-      <h2>References</h2>
+      <h2 id="references">References</h2>
       <ul>
       <li>Torrence, C., &amp; Compo, G. P. (1998). A practical guide to wavelet analysis.
       <em>Bulletin of the American Meteorological Society</em>, <strong>79</strong>(1), 61–78.
@@ -607,7 +656,7 @@ Z₂(95%) = 3.99852     (published 3.999)
       power significance levels used here. The authors' companion page, with the
       original code and the worked NIÑO3 example, is at
       <a href="https://atoc.colorado.edu/research/wavelets/">https://atoc.colorado.edu/research/wavelets/</a>. The constants transcribed from
-      it are in <a href="https://github.com/dims-network/dims/blob/v1.4.2/examples/reference/TORRENCE_COMPO.md"><code>examples/reference/TORRENCE_COMPO.md</code></a>.</li>
+      it are in <a href="https://github.com/dims-network/dims/blob/v1.4.3/examples/reference/TORRENCE_COMPO.md"><code>examples/reference/TORRENCE_COMPO.md</code></a>.</li>
       <li>Torrence, C., &amp; Webster, P. J. (1999). Interdecadal changes in the ENSO monsoon
       system. <em>Journal of Climate</em>, <strong>12</strong>(8), 2679–2690. — the smoothed coherence
       formula.</li>
@@ -618,8 +667,8 @@ Z₂(95%) = 3.99852     (published 3.999)
       — the Monte Carlo coherence null.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/analyses/crosswavelet.md"><code>docs/analyses/crosswavelet.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/analyses/crosswavelet.md"><code>docs/analyses/crosswavelet.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

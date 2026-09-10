@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Explanation</div>
-      <h1>How DIMS fits together</h1>
+      <h1 id="how-dims-fits-together">How DIMS fits together</h1>
       <p>DIMS is one repository holding a browser frontend and a Python analysis package,
       released together, and vendored into each study that uses them. <strong>How that
       versioning works — the pin, the vendoring, how a fix reaches a study — is
@@ -37,7 +37,7 @@
       way it is.</p>
       <p>For how the running dashboard works — the time axis, the tab lifecycle, the
       video — see <a href="host-runtime.html">the host runtime</a>.</p>
-      <h2>Why a monorepo</h2>
+      <h2 id="why-a-monorepo">Why a monorepo</h2>
       <p>Because the alternative was tried and failed measurably. The code lived in five
       repositories that were supposed to stay in step by hand. They did not: three
       disjoint git lineages, four different copies of the frontend ranging from 2136
@@ -48,7 +48,7 @@
       cross-spectrum, so the field looked plausible and tracked signal power; only a
       numerical check could find it, and there was no shared place to put one.</p>
       <p>Propagation is now a version bump, not a merge.</p>
-      <h2>Why no build step</h2>
+      <h2 id="why-no-build-step">Why no build step</h2>
       <p>A dashboard has to open from a plain file server, years later, on a machine
       nobody has maintained. Plain <code>&lt;script&gt;</code> tags and CSS custom properties survive
       that; a bundler and a <code>node_modules</code> tree do not. This constrains the design and
@@ -60,7 +60,7 @@
       closed, &quot;opens from a plain file server&quot; means one with a network behind it.
       This is the only place that caveat is stated in full; the pages that depend on
       it link here.</p>
-      <h2>Why everything self-registers</h2>
+      <h2 id="why-everything-self-registers">Why everything self-registers</h2>
       <p>Adding a tab or an analysis must not require editing a file that already works.
       The runner this replaced hardcoded a list of three functions, so adding one
       analysis meant edits in four separate files; the builder carried its own parallel
@@ -68,7 +68,7 @@
       could never be shared.</p>
       <p>Built-in tabs use the same registry as third-party ones, so the extension point
       cannot quietly rot: break it, and ELAN breaks with it.</p>
-      <h2>The layers</h2>
+      <h2 id="the-layers">The layers</h2>
       <table>
       <thead>
       <tr>
@@ -99,8 +99,8 @@
       with a time column in seconds. That is why integrating an outside toolbox is a
       unit conversion rather than a merge.</p>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/architecture.md"><code>docs/architecture.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/architecture.md"><code>docs/architecture.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

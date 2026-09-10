@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Reference</div>
-      <h1><code>dims-case</code></h1>
+      <h1 id="dims-case"><code>dims-case</code></h1>
       <p>Create a study, or refresh the core it has vendored. Four subcommands, each with
       one job:</p>
       <pre><code>dims-case new   &lt;name&gt; --visibility public|private [--dir PATH]
@@ -39,7 +39,7 @@ dims-case check &lt;path&gt; [--release]
 </code></pre>
       <p><code>sync</code> is what the version-bump bot runs. <code>check</code> is what a study's CI runs. The
       work itself lives in <code>dims_case.core</code>, so this command and
-      <a href="https://github.com/dims-network/dims/blob/v1.4.2/apps/builder/README.md">the no-code builder</a> produce the same study rather than
+      <a href="https://github.com/dims-network/dims/blob/v1.4.3/apps/builder/README.md">the no-code builder</a> produce the same study rather than
       two slightly different ones.</p>
       <blockquote>
       <p><code>tools/dims-case</code> in the core checkout is a small shim kept for anyone with that
@@ -47,7 +47,7 @@ dims-case check &lt;path&gt; [--release]
       <code>main()</code>. <strong>The command is <code>dims-case</code></strong>, installed as a console script.</p>
       </blockquote>
       <hr />
-      <h2><code>new</code> — start an empty study</h2>
+      <h2 id="new-start-an-empty-study"><code>new</code> — start an empty study</h2>
       <pre><code class="language-sh">dims-case new my-study --visibility public     # creates ./case-my-study
 </code></pre>
       <table>
@@ -87,7 +87,7 @@ dims-case check &lt;path&gt; [--release]
       <p>A private study is told its two remaining steps, because neither can be done for
       it: enabling the hooks in the clone, and creating <code>data.local.json</code> from the
       example.</p>
-      <h2><code>adopt</code> — convert a study you already have</h2>
+      <h2 id="adopt-convert-a-study-you-already-have"><code>adopt</code> — convert a study you already have</h2>
       <pre><code class="language-sh">dims-case adopt ./old-dashboard --name ortho --visibility private
 </code></pre>
       <p>Requires the path to be a directory containing a <code>config.json</code>; it exits with
@@ -103,7 +103,7 @@ dims-case check &lt;path&gt; [--release]
       if declared private.</p>
       <p>An existing <code>dims-case.json</code> has its <strong><code>publishable</code> list preserved</strong>; everything
       else in the file is rewritten.</p>
-      <h3>It sorts out your <code>opt/</code> directory for you</h3>
+      <h3 id="it-sorts-out-your-opt-directory-for-you">It sorts out your <code>opt/</code> directory for you</h3>
       <p>If the study has an <code>opt/</code> directory, <code>adopt</code> reports what is in it in two groups,
       because the right action differs:</p>
       <ul>
@@ -116,8 +116,8 @@ dims-case check &lt;path&gt; [--release]
       <code>opt/</code> is reported in neither group and passes unmentioned.</li>
       </ul>
       <p>It only reports. It deletes nothing.</p>
-      <h2><code>sync</code> — take a new core</h2>
-      <pre><code class="language-sh">dims-case sync ./case-my-study --version v1.4.2
+      <h2 id="sync-take-a-new-core"><code>sync</code> — take a new core</h2>
+      <pre><code class="language-sh">dims-case sync ./case-my-study --version v1.4.3
 </code></pre>
       <p>With no <code>--version</code>, the version is read from the core checkout with
       <code>git describe --tags --abbrev=0</code>.</p>
@@ -127,17 +127,17 @@ dims-case check &lt;path&gt; [--release]
       look. A study that kept whatever CI it was created with is how five repositories
       ended up with five drifted copies; and a fix to a privacy hook has to reach
       studies that already exist, which a bump is the only route for.</p>
-      <p>It prints the transition (<code>my-study: 1.4.1 -&gt; 1.4.2</code>) and then any notes about
+      <p>It prints the transition (<code>my-study: 1.4.2 -&gt; 1.4.3</code>) and then any notes about
       shadowed tabs or stale assets — <strong>at bump time, which is when the owner is
       deciding what to do about it</strong>, rather than at check time when they have moved on.</p>
-      <h2><code>check</code> — verify the pin</h2>
+      <h2 id="check-verify-the-pin"><code>check</code> — verify the pin</h2>
       <pre><code class="language-sh">dims-case check .              # offline, against the study's own record
 dims-case check . --release    # against this core checkout
 </code></pre>
       <p>Exits <code>1</code> and prints <code>::error::</code> lines — the GitHub Actions annotation format —
       when the vendored core does not match, or when the study's committed analysis
       outputs are from a payload version the pinned core no longer reads.</p>
-      <h3>The two modes are not the same check, and only one catches a fork</h3>
+      <h3 id="the-two-modes-are-not-the-same-check-and-only-one-catches-a-fork">The two modes are not the same check, and only one catches a fork</h3>
       <table>
       <thead>
       <tr>
@@ -165,7 +165,7 @@ dims-case check . --release    # against this core checkout
       <p>CI runs the release's own copy of the command, so <code>--release</code> means <em>the version
       this study pins</em>, and it is a comparison a fork cannot pass. <strong>The offline mode
       alone is not evidence that a study is running unmodified core code.</strong></p>
-      <h3>Warnings, which do not fail the check</h3>
+      <h3 id="warnings-which-do-not-fail-the-check">Warnings, which do not fail the check</h3>
       <ul>
       <li><strong>A shadowed tab</strong> — the study owns a tab file whose <code>id</code> is now a built-in, so
       it registers nothing. The dashboard still works; the study is just carrying a
@@ -175,11 +175,11 @@ dims-case check . --release    # against this core checkout
       <code>git config core.hooksPath .githooks</code>, and forgetting is silent — which is the
       one thing a guard may not be. CI still stops data, but only after a push.</li>
       </ul>
-      <p>On success it says which comparison passed: <code>vendored core matches core 1.4.2</code> —
+      <p>On success it says which comparison passed: <code>vendored core matches core 1.4.3</code> —
       the recorded <code>dimsCore</code>, which is stored without the leading <code>v</code> — or
       <code>vendored core matches the recorded pin</code>.</p>
       <hr />
-      <h2><code>dims-case.json</code></h2>
+      <h2 id="dims-casejson"><code>dims-case.json</code></h2>
       <table>
       <thead>
       <tr>
@@ -218,7 +218,7 @@ dims-case check . --release    # against this core checkout
       </tr>
       </tbody>
       </table>
-      <h2>The three tiers of file ownership</h2>
+      <h2 id="the-three-tiers-of-file-ownership">The three tiers of file ownership</h2>
       <p><code>sync</code> has to know what it may overwrite. Three answers:</p>
       <table>
       <thead>
@@ -246,7 +246,7 @@ dims-case check . --release    # against this core checkout
       </tr>
       </tbody>
       </table>
-      <h2>See also</h2>
+      <h2 id="see-also">See also</h2>
       <ul>
       <li><a href="case.html"><code>contracts/case.md</code></a> — the shape of a case repository.</li>
       <li><a href="data-visibility.html"><code>contracts/data-visibility.md</code></a> — what
@@ -254,8 +254,8 @@ dims-case check . --release    # against this core checkout
       <li><a href="cli-dims-analysis.html"><code>dims-analysis</code></a> — running the analyses inside a study.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/reference/cli/dims-case.md"><code>docs/reference/cli/dims-case.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/reference/cli/dims-case.md"><code>docs/reference/cli/dims-case.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

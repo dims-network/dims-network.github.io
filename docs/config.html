@@ -29,17 +29,17 @@
     <main class="docs-main">
 
       <div class="crumbs">Reference</div>
-      <h1><code>config.json</code> — every key</h1>
+      <h1 id="configjson-every-key"><code>config.json</code> — every key</h1>
       <p>The study's own file. It says which recordings exist, which measures they have,
       which analyses to run and which tabs to show. Everything else in a study is
       derived from it.</p>
       <p>The machine-readable shape, with every constraint, is
-      <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/contracts/config.schema.json"><code>contracts/config.schema.json</code></a> — the wizard
+      <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/contracts/config.schema.json"><code>contracts/config.schema.json</code></a> — the wizard
       validates against it before writing. This page is the prose version, and adds the
       one thing a schema cannot say: <strong>who reads each key</strong>.</p>
       <p>Two keys are required: <code>videoIDs</code> and <code>dataTypes</code>. Unknown keys are allowed, so a
       study-owned tab can keep its own settings here.</p>
-      <h2>Recordings and measures</h2>
+      <h2 id="recordings-and-measures">Recordings and measures</h2>
       <table>
       <thead>
       <tr>
@@ -63,7 +63,7 @@
       </table>
       <p>These two drive the recording picker and every file path the dashboard builds. A
       measure named here with no CSV behind it is the most common cause of an empty tab.</p>
-      <h2>Switching analyses and tabs on</h2>
+      <h2 id="switching-analyses-and-tabs-on">Switching analyses and tabs on</h2>
       <p>Each <code>include_*</code> key does double duty: the analysis reads it to decide what to
       compute, and the tab reads it to decide whether to appear. <strong>They are not always
       the same test</strong>, which is the subtlety worth knowing.</p>
@@ -111,7 +111,7 @@
       </table>
       <p><code>include_elan</code> and <code>include_network</code> have no analysis behind them: ELAN reads your
       <code>.eaf</code> directly, and the network is a view of the cross-wavelet output.</p>
-      <h3>Pair lists, and the trap in them</h3>
+      <h3 id="pair-lists-and-the-trap-in-them">Pair lists, and the trap in them</h3>
       <p>Both <code>include_cRQA</code> and <code>include_crosswavelet</code> are declared with the same schema
       definition, which accepts two forms:</p>
       <pre><code class="language-jsonc">&quot;include_crosswavelet&quot;: [[&quot;a&quot;,&quot;b&quot;], [&quot;a&quot;,&quot;c&quot;]]   // explicit pairs — prefer this
@@ -128,7 +128,7 @@
       <p>The definition uses <code>anyOf</code> rather than <code>oneOf</code> on purpose: an empty list is
       valid under both branches, and <code>oneOf</code> would reject it.</p>
       </blockquote>
-      <h2>The window</h2>
+      <h2 id="the-window">The window</h2>
       <table>
       <thead>
       <tr>
@@ -147,7 +147,7 @@
       </table>
       <p>It seeds the <strong>Window Size</strong> control, which the viewer can then change; the
       network tab also uses it as the starting half-width for &quot;the moment&quot;.</p>
-      <h2>Presentation</h2>
+      <h2 id="presentation">Presentation</h2>
       <table>
       <thead>
       <tr>
@@ -169,7 +169,7 @@
       </tr>
       </tbody>
       </table>
-      <h2>Several camera angles</h2>
+      <h2 id="several-camera-angles">Several camera angles</h2>
       <p>Read by the host, not by any tab.</p>
       <table>
       <thead>
@@ -205,7 +205,7 @@
       <p>With a template and no angle chosen, the host takes the first angle listed for
       <em>that recording</em> before falling back to the first in <code>perspectives</code> — because not
       every session has every angle.</p>
-      <h2><code>analysis</code> — per-step tuning</h2>
+      <h2 id="analysis-per-step-tuning"><code>analysis</code> — per-step tuning</h2>
       <pre><code class="language-jsonc">&quot;analysis&quot;: { &quot;crosswavelet&quot;: { &quot;mcCount&quot;: 300 }, &quot;rqa&quot;: { &quot;window&quot;: 30 } }
 </code></pre>
       <p>Keyed by step id. <strong>This is where a study changes a parameter</strong> — never in a
@@ -281,16 +281,17 @@
       </tr>
       </tbody>
       </table>
-      <h3><code>mcCount</code> decides hours</h3>
+      <h3 id="mccount-decides-hours"><code>mcCount</code> decides hours</h3>
       <p><code>300</code> is the publication setting and costs roughly <strong>2.8 hours</strong> on a
       twelve-recording study. <code>0</code> skips the null entirely.</p>
       <p>The default is neither: <strong><code>100</code> when <code>include_network</code> is set, and <code>0</code> otherwise</strong>,
-      because the network is the only thing that reads the null. The analysis prints
-      which way it went and why.</p>
+      because the network's coherence mode is the only thing that reads the grid. The
+      analysis prints which way it went and why. The network's shared power mode reads
+      an analytic level instead, so it works either way.</p>
       <p>Without a null, coherence cannot be interpreted — unrelated signals do not score
       0 — so the cross-wavelet tab says the chance level was not computed rather than
       letting the number look tested.</p>
-      <h2><code>include_network</code></h2>
+      <h2 id="include-network"><code>include_network</code></h2>
       <p>Either <code>true</code> — meaning &quot;on, with everything inferred&quot; — or an object:</p>
       <table>
       <thead>
@@ -313,6 +314,14 @@
         <td>period band <code>[low, high]</code> in seconds to average each edge over. <strong>This changes the answer</strong>, not its presentation</td>
       </tr>
       <tr>
+        <td><code>mode</code></td>
+        <td><code>coherence</code> (default) or <code>power</code> — which measure the edges start on</td>
+      </tr>
+      <tr>
+        <td><code>threshold</code></td>
+        <td><code>{&quot;coherence&quot;: 0.15, &quot;power&quot;: 0.15}</code>, the share of tested cells that must beat the 95 % level for a solid edge</td>
+      </tr>
+      <tr>
         <td><code>layout</code></td>
         <td><code>columns</code> (default) or <code>figure</code></td>
       </tr>
@@ -321,7 +330,7 @@
       <p><code>part</code> is one of <code>head</code>, <code>nose</code>, <code>lefthand</code>, <code>righthand</code>, <code>hand</code>, <code>torso</code>, <code>hip</code>,
       <code>foot</code>. The full account, including what happens when a declaration and the data
       disagree, is on <a href="tabs-network.html">the network tab page</a>.</p>
-      <h2>Keys owned by tabs that are not built in</h2>
+      <h2 id="keys-owned-by-tabs-that-are-not-built-in">Keys owned by tabs that are not built in</h2>
       <p>The schema lists these so a study using them validates; <strong>nothing in the shipped
       dashboard reads them.</strong></p>
       <table>
@@ -342,7 +351,7 @@
       </tr>
       </tbody>
       </table>
-      <h2>See also</h2>
+      <h2 id="see-also">See also</h2>
       <ul>
       <li><a href="assets.html"><code>contracts/assets.md</code></a> — where each file must sit.</li>
       <li><a href="case.html"><code>contracts/case.md</code></a> — <code>dims-case.json</code>, which is a
@@ -350,8 +359,8 @@
       <li><a href="analyses.html">the analyses</a> — what the tuning actually changes.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/reference/config.md"><code>docs/reference/config.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/reference/config.md"><code>docs/reference/config.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

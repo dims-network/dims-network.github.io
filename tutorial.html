@@ -481,9 +481,10 @@
         <span class="what">One picture of what is coupled with what, following the playhead.</span>
       </summary>
       <div class="more-body">
-        <p><b>Read the cross-wavelet section first.</b> The network's edges <i>are</i>
-          cross-wavelet coherence, so switching the network on switches cross-wavelet on
-          too, and inherits its cost.</p>
+        <p><b>Read the cross-wavelet section first.</b> The network's edges come straight
+          out of the cross-wavelet analysis — either its coherence or its shared power,
+          whichever you pick in the tab — so switching the network on switches
+          cross-wavelet on too, and inherits its cost.</p>
         <p>The diagram in step 4 is the one screen that looks unusual. <b>Add a person</b>
           for each figure, <b>click an empty circle</b> on a body to put a measurement
           there, then <b>drag from one placed circle to another</b> to ask for the
@@ -498,12 +499,16 @@
                alt="The cross-effector network diagram with two human figures and measures on their hands." />
           <figcaption>Two people, their hands, and the lines you want measured.</figcaption>
         </figure>
-        <p>In the dashboard the picture moves with the playhead. A thick solid line is a
-          coupling that beats chance; a <b>dashed</b> line means the measurement said
-          nothing, which is a result and not a failure. A faded line means both measures
-          were mostly still, so there was little to measure. Thickness is relative to the
-          other visible lines — the picture answers “which of these is strongest here”,
-          and the tooltip gives the number.</p>
+        <p>In the dashboard the picture moves with the playhead. A thick solid line beats
+          the 95 % level in enough of the window to be worth reading; a <b>dashed</b>
+          line means the measurement said nothing, which is a result and not a failure.
+          Thickness is relative to the other visible lines — the picture answers
+          “which of these is strongest here”, and the tooltip gives the number.</p>
+        <p><b>Two questions, one picture.</b> <i>Coherence</i> asks whether two measures
+          held a steady phase relationship and ignores how much either of them moved;
+          <i>shared power</i> asks whether both were moving at that timescale. Read them
+          against each other: thick in coherence and thin in power is a coupling computed
+          out of stillness, which is the reading to distrust.</p>
         <div class="callout warn"><b>It won't sort your dyads for you.</b> On the example
           study, both dyads come out with a solid line between the partners' <i>left</i>
           hands — 27% of tested cells above chance in dyad01, 27% in dyad02. People take
