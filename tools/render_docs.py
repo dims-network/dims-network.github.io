@@ -49,6 +49,7 @@ PAGE = """<!DOCTYPE html>
     <div class="nav-links">
       <a href="../index.html">Home</a>
       <a href="../tutorial.html">Tutorial</a>
+      <a href="../setup.html">Set up</a>
       <a href="index.html" class="active">Docs</a>
       <a href="https://github.com/dims-network">GitHub ↗</a>
     </div>
