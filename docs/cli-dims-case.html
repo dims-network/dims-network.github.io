@@ -39,7 +39,7 @@ dims-case check &lt;path&gt; [--release]
 </code></pre>
       <p><code>sync</code> is what the version-bump bot runs. <code>check</code> is what a study's CI runs. The
       work itself lives in <code>dims_case.core</code>, so this command and
-      <a href="https://github.com/dims-network/dims/blob/v1.4.1/apps/builder/README.md">the no-code builder</a> produce the same study rather than
+      <a href="https://github.com/dims-network/dims/blob/v1.4.2/apps/builder/README.md">the no-code builder</a> produce the same study rather than
       two slightly different ones.</p>
       <blockquote>
       <p><code>tools/dims-case</code> in the core checkout is a small shim kept for anyone with that
@@ -117,7 +117,7 @@ dims-case check &lt;path&gt; [--release]
       </ul>
       <p>It only reports. It deletes nothing.</p>
       <h2><code>sync</code> — take a new core</h2>
-      <pre><code class="language-sh">dims-case sync ./case-my-study --version v1.4.1
+      <pre><code class="language-sh">dims-case sync ./case-my-study --version v1.4.2
 </code></pre>
       <p>With no <code>--version</code>, the version is read from the core checkout with
       <code>git describe --tags --abbrev=0</code>.</p>
@@ -127,7 +127,7 @@ dims-case check &lt;path&gt; [--release]
       look. A study that kept whatever CI it was created with is how five repositories
       ended up with five drifted copies; and a fix to a privacy hook has to reach
       studies that already exist, which a bump is the only route for.</p>
-      <p>It prints the transition (<code>my-study: 1.4.0 -&gt; 1.4.1</code>) and then any notes about
+      <p>It prints the transition (<code>my-study: 1.4.1 -&gt; 1.4.2</code>) and then any notes about
       shadowed tabs or stale assets — <strong>at bump time, which is when the owner is
       deciding what to do about it</strong>, rather than at check time when they have moved on.</p>
       <h2><code>check</code> — verify the pin</h2>
@@ -175,7 +175,7 @@ dims-case check . --release    # against this core checkout
       <code>git config core.hooksPath .githooks</code>, and forgetting is silent — which is the
       one thing a guard may not be. CI still stops data, but only after a push.</li>
       </ul>
-      <p>On success it says which comparison passed: <code>vendored core matches core 1.4.1</code> —
+      <p>On success it says which comparison passed: <code>vendored core matches core 1.4.2</code> —
       the recorded <code>dimsCore</code>, which is stored without the leading <code>v</code> — or
       <code>vendored core matches the recorded pin</code>.</p>
       <hr />
@@ -254,8 +254,8 @@ dims-case check . --release    # against this core checkout
       <li><a href="cli-dims-analysis.html"><code>dims-analysis</code></a> — running the analyses inside a study.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.1/docs/reference/cli/dims-case.md"><code>docs/reference/cli/dims-case.md</code></a>
-        at <code>v1.4.1</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/reference/cli/dims-case.md"><code>docs/reference/cli/dims-case.md</code></a>
+        at <code>v1.4.2</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

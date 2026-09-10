@@ -1,6 +1,6 @@
 {
   "repo": "https://github.com/dims-network/dims",
-  "ref": "v1.4.1",
+  "ref": "v1.4.2",
   "_comment": "Bump ref, re-render with tools/render_docs.py --dims <checkout>, then commit. render_docs.py --check clones this ref from GitHub, so a ref without these files fails the build. docs/index.md is mapped to index.html and replaces the generated card grid; remove that entry and build_index() takes over again.",
   "pages": [
     {
