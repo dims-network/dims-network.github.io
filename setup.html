@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Set up DIMS · DIMS-network</title>
+<meta name="description" content="Set up a DIMS study from a terminal: what to install, the file layout the dashboard reads, config.json, and running the analyses — without the no-code builder." />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="index.html">DIMS-network</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="tutorial.html">Tutorial</a>
+      <a href="setup.html" class="active">Set up</a>
+      <a href="docs/index.html">Docs</a>
+      <a href="https://github.com/dims-network">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Set up</div>
+    <h1>A study, from the terminal</h1>
+    <p class="lede">What DIMS needs on disk, what it needs in <code>config.json</code>,
+      and which commands turn the two into a dashboard. No builder — if you would rather
+      click through a wizard, the <a href="tutorial.html">tutorial</a> does that and
+      writes the same study.</p>
+    <div class="callout"><b>The shape of it.</b> A <i>study</i> is a small repository:
+      your recordings under <code>assets/</code>, one <code>config.json</code> describing
+      them, and a pinned copy of the dashboard code under <code>vendor/</code>. The
+      dashboard is static — it reads JSON that the analyses wrote, so nothing runs at
+      view time.</div>
+  </header>
+
+  <section>
+    <h2>What you need</h2>
+    <div class="mini">
+      <div><h4>Python 3.10–3.12</h4><p>3.13 works for everything except motion capture
+        from video: <code>mediapipe</code> ships no wheel for it yet.</p></div>
+      <div><h4>git</h4><p>DIMS is installed from a checkout, and a study is a repository.</p></div>
+      <div><h4>A text editor</h4><p><code>config.json</code> is the only file you write by
+        hand.</p></div>
+      <div><h4>ffmpeg — optional</h4><p>Only if you want the builder's video trimming.
+        The analyses and the dashboard do not need it.</p></div>
+    </div>
+    <p><b>DIMS is not on PyPI.</b> <code>dims</code> is taken by an unrelated project and
+      <code>dims-network</code> is unpublished, so it installs from a checkout:</p>
+    <pre class="code">git clone https://github.com/dims-network/dims
+pip install -e ./dims</pre>
+    <p>That gives you two commands: <code>dims-case</code>, which creates and maintains a
+      study, and <code>dims-analysis</code>, which runs the analyses.</p>
+  </section>
+
+  <section>
+    <h2>1 · Create the study</h2>
+    <div class="path manual">
+      <pre class="code">dims-case new my-study --visibility public   <span class="c"># -> ./case-my-study</span>
+cd case-my-study</pre>
+      <p>It takes a <b>name</b>, not a path; <code>--dir</code> puts it somewhere
+        specific. To turn a directory you already have into a study, use
+        <code>dims-case adopt</code>, which never overwrites what is there.</p>
+      <div class="callout warn"><b>Do not copy the scaffold directory by hand.</b> It has
+        no <code>vendor/</code>, so the page loads eight script tags that 404 and you get
+        a blank screen with nothing worth reading in the console.
+        <code>dims-case new</code> is the command that produces something that runs.</div>
+      <div class="callout"><b><code>--visibility</code> is the question to answer honestly,
+        once.</b> Choose <code>private</code> if the data identifies anyone — video of
+        faces, named transcripts — and the study is created with a pre-commit hook, a
+        pre-push hook and a CI check that refuse to let data into git. A private study
+        gets no Pages workflow at all, by construction. Going public later is a gated
+        transition, not a setting:
+        <a href="docs/data-visibility.html">data visibility</a>.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · The file layout</h2>
+    <div class="path manual">
+      <p class="sub">There is no index. The name <i>is</i> the interface, so a misnamed
+        file is an invisible file.</p>
+      <div class="tree"><span class="p">assets/videos/</span>{videoID}.mp4
+<span class="p">assets/timeseries/</span>{videoID}_{dataType}.csv     <span class="v"># one measure per file</span>
+<span class="p">assets/transcripts/</span>{videoID}_transcript.json  <span class="v"># optional</span>
+<span class="p">assets/elan/</span>{videoID}.eaf                  <span class="v"># optional</span></div>
+      <table class="spec">
+        <tr><th>File</th><th>Required of it</th></tr>
+        <tr><td>Video</td>
+            <td>One <code>.mp4</code> per session, named for its <code>videoID</code>.
+              H.264 in an MP4 container plays everywhere and seeks properly.</td></tr>
+        <tr><td>Time series</td>
+            <td>CSV with a time column plus <b>one</b> measurement column. The time column
+              is matched case-insensitively and normalised to <code>Time</code>; it is in
+              <b>seconds</b>, ascending — not milliseconds, not frames. Only the first
+              non-time column is read. <code>NaN</code> rows are dropped, not
+              interpolated.</td></tr>
+        <tr><td>Transcript</td>
+            <td><code>{ "segments": [ {start, end, speaker, text} ] }</code>, times in
+              seconds.</td></tr>
+        <tr><td>ELAN</td>
+            <td>An <code>.eaf</code> as ELAN saves it: <code>TIME_SLOT</code> elements
+              carrying <code>TIME_VALUE</code> in milliseconds, converted on the way in,
+              and tiers containing <code>ALIGNABLE_ANNOTATION</code>. <b>Only time-aligned
+              annotations are read</b> — a <code>REF_ANNOTATION</code>, which points at a
+              parent annotation rather than at the timeline, is skipped, and a file with
+              no aligned annotations at all is an error rather than an empty tab.</td></tr>
+      </table>
+      <div class="callout warn"><b>The video and the measurements have to line up
+        already.</b> The dashboard maps a series' <code>Time</code> straight onto the
+        video clock, and <b>there is no alignment tool outside the builder</b> — trimming
+        a video and padding a series are things the wizard does in its step 3. By hand,
+        a session whose camera rolled twelve seconds before its recording started is
+        yours to fix before the files go into <code>assets/</code>: trim the video, or
+        shift and pad the CSV. A mismatch is not an error, it is dead space — video with
+        no data under it, or a signal that stops early.</div>
+      <div class="callout warn"><b>Neither <code>videoID</code> nor <code>dataType</code>
+        may contain an underscore</b> beyond the one separating them — the name is split
+        on it. <code>dyad01_headSpeed.csv</code> is fine;
+        <code>dyad_01_head_speed.csv</code> is not.</div>
+      <p>Converting from a tool that writes milliseconds — several EnvisionBox modules
+        among them — is a division and a rename, nothing more. The full rules are in
+        <a href="docs/assets.html">the asset layout contract</a>.</p>
+
+      <details class="more">
+        <summary><b>Data that cannot go in the repository</b>
+          <span class="cost">private studies</span>
+          <span class="what">Keep <code>assets/</code> empty and point at where the recordings really live.</span>
+        </summary>
+        <div class="more-body">
+          <pre class="code">cp data.local.json.example data.local.json</pre>
+          <pre class="code">{ <span class="k">"assetsRoot"</span>: "/Volumes/Data/my-study/assets" }</pre>
+          <p><code>serve.py</code> and every analysis resolve through that file, so
+            everything runs against the real data with an empty tracked
+            <code>assets/</code>. Nothing has to be copied into the repository — and on a
+            private study, copying it in is exactly what the guards exist to prevent.</p>
+          <p>Once the assets are right, <code>python build_assets.py --write-manifest</code>
+            writes <code>assets/MANIFEST.json</code> — names, sizes and checksums, never
+            content. On a private study it is the only thing in the repository that says
+            what a complete set of assets is. Commit it.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <h2>3 · <code>config.json</code></h2>
+    <div class="path manual">
+      <p class="sub">Two keys are required. Everything else switches something on.</p>
+      <pre class="code">{
+  <span class="k">"videoIDs"</span>: ["dyad01", "dyad02"],
+  <span class="k">"dataTypes"</span>: {
+    "dyad01": ["leftHandSpeed", "rightHandSpeed", "sync"],
+    "dyad02": ["leftHandSpeed", "rightHandSpeed"]
+  },
+
+  <span class="k">"include_elan"</span>: true,
+  <span class="k">"defaultWindowSize"</span>: 5,
+  <span class="k">"title"</span>: "My study",
+  <span class="k">"subtitle"</span>: "",
+  <span class="k">"authors"</span>: "Your name(s)",
+  <span class="k">"contacts"</span>: "you@example.org"
+}</pre>
+      <p><code>videoIDs</code> and <code>dataTypes</code> describe what is in
+        <code>assets/</code>, and a config that disagrees with the folder produces a tab
+        that draws nothing. <code>dataTypes</code> is an object keyed by session, not a
+        flat list: two sessions rarely carry exactly the same measures, and this is what
+        the time-series tab reads to know what to offer.</p>
+      <div class="callout"><b>The distinction worth reading twice.</b> An
+        <i>analysis</i> key names <b>what to analyse</b> — a list. A <i>tab</i> key is a
+        <b>switch</b> — a boolean. Writing <code>"include_RQA": true</code> is refused,
+        with a message saying what to write instead. Key names are matched
+        case-insensitively, so <code>include_crqa</code> and <code>include_cRQA</code> are
+        the same key.</div>
+      <p>The full schema, with every constraint, is
+        <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/config.schema.json"><code>config.schema.json</code></a>.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>4 · Build, and look</h2>
+    <div class="path manual">
+      <pre class="code">python build_assets.py --check   <span class="c"># what would run, and what is missing</span>
+python build_assets.py           <span class="c"># actually run it</span>
+python serve.py                  <span class="c"># http://localhost:8000</span></pre>
+      <p><code>--check</code> installs nothing and computes nothing. It reports which
+        recordings it can see, which analyses are switched on, and which time series it
+        could not find — the fastest way to discover that a file is misnamed.</p>
+      <p><code>serve.py</code> is a static server that also resolves
+        <code>data.local.json</code> and supports Range requests, which video seeking
+        needs. Opening <code>index.html</code> from the filesystem will not work: the
+        browser blocks the fetches.</p>
+      <p>Each analysis writes one JSON per session, reduced to a few hundred points so a
+        page can draw it. Nothing is computed at view time.</p>
+      <div class="tree"><span class="p">assets/rqa/</span>{videoID}_rqa_data.json
+<span class="p">assets/crqa/</span>{videoID}_crqa_data.json
+<span class="p">assets/crosswavelet/</span>{videoID}_crosswavelet_data.json
+<span class="p">assets/crosswavelet/</span>{videoID}_crosswavelet_full.json  <span class="v"># full resolution, for your own analysis</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5 · The analyses</h2>
+    <p class="lede" style="margin-bottom:18px">Each is a key in <code>config.json</code>
+      and a tab in the dashboard. Add the key, re-run <code>build_assets.py</code>, and
+      the tab appears. Read them in this order: the network is a view of cross-wavelet,
+      so it comes last.</p>
+
+    <details class="more">
+      <summary><b>Recurrence — <code>include_RQA</code></b>
+        <span class="cost">seconds per measure</span>
+        <span class="what">Where one signal returns to a state it was in before.</span>
+      </summary>
+      <div class="more-body">
+        <pre class="code"><span class="k">"include_RQA"</span>: ["leftHandSpeed", "sync"]</pre>
+        <p>A list of data types — <b>which</b> ones to analyse, not <code>true</code>.
+          Writes <code>assets/rqa/{videoID}_rqa_data.json</code> per session, containing
+          the windowed metrics at full resolution plus a reduced picture for the browser.
+          The recurrence matrix itself is not stored at any resolution: it is quadratic in
+          the length of the recording, and what a reader continues from is the prepared
+          signal and the threshold, from which the matrix is one <code>cdist</code> away.</p>
+        <p>The window, step and target recurrence rate are tunable under
+          <code>"analysis": {"rqa": {…}}</code>. Determinism and laminarity depend on the
+          target rate, so studies compared with each other must use the same value.</p>
+      </div>
+    </details>
+
+    <details class="more">
+      <summary><b>Cross-recurrence — <code>include_cRQA</code></b>
+        <span class="cost">seconds per pair</span>
+        <span class="what">Where two signals repeat each other, and with what delay.</span>
+      </summary>
+      <div class="more-body">
+        <pre class="code"><span class="k">"include_cRQA"</span>: [["leftHandSpeed", "rightHandSpeed"]]</pre>
+        <p>A list of <b>pairs</b>, each <code>["a", "b"]</code>. A flat list of data types
+          is also accepted and expanded to every combination — supported for studies
+          written before pairs existed, but be deliberate: <i>n</i> measures make
+          <i>n(n−1)/2</i> pairs. Writes
+          <code>assets/crqa/{videoID}_crqa_data.json</code>.</p>
+      </div>
+    </details>
+
+    <details class="more">
+      <summary><b>Cross-wavelet — <code>include_crosswavelet</code></b>
+        <span class="cost">minutes per pair with a chance level</span>
+        <span class="what">Which timescales two signals share, and which one leads.</span>
+      </summary>
+      <div class="more-body">
+        <pre class="code"><span class="k">"include_crosswavelet"</span>: [["leftHandSpeed", "rightHandSpeed"]],
+<span class="k">"analysis"</span>: { "crosswavelet": { <span class="k">"mcCount"</span>: 100 } }</pre>
+        <p>Same pair shape as cross-recurrence. <code>mcCount</code> is the number of
+          Monte Carlo surrogates behind the coherence chance level: <b>0 skips it</b>,
+          and only the network reads it. It is the slow part of the whole pipeline —
+          measured on a two-session study with two pairs, 100 surrogates took
+          <b>9 min 29 s</b> against <b>1 min 42 s</b> at 20.</p>
+        <div class="callout"><b>The null is cached</b> in
+          <code>~/.cache/dims/wct_significance</code>, keyed on everything that changes it
+          — series length, wavelet parameters, surrogate count. Re-running the same pairs
+          is close to instant, which means a fast run is not evidence that the analysis
+          was cheap. <code>DIMS_WCT_CACHE_DIR</code> moves the cache;
+          <code>DIMS_WCT_CACHE=0</code> disables it.</div>
+        <p>Two files land per session: the reduced payload the browser draws, and
+          <code>_full.json</code> in the same schema at the resolution it was computed at.
+          <b>Continue your own analysis from <code>_full.json</code></b>.</p>
+      </div>
+    </details>
+
+    <details class="more">
+      <summary><b>The cross-effector network — <code>include_network</code></b>
+        <span class="cost">needs cross-wavelet</span>
+        <span class="what">One picture of what is coupled with what, following the playhead.</span>
+      </summary>
+      <div class="more-body">
+        <p>A view of the cross-wavelet analysis, not a separate one: every edge comes from
+          <code>assets/crosswavelet/{videoID}_crosswavelet_data.json</code>, so <b>an edge
+          exists only where <code>include_crosswavelet</code> asked for that pair</b> — and
+          a pair you did not ask for is a missing edge with nothing saying so. Switching
+          the network on also switches the chance level on at 100 surrogates, because
+          without one no edge can be told from coincidence: two unrelated signals score
+          about 0.25, not 0.</p>
+        <pre class="code"><span class="k">"include_network"</span>: {
+  <span class="k">"groups"</span>: [{ "label": "Left partner" }, { "label": "Right partner" }],
+  <span class="k">"effectors"</span>: [
+    { "series": "leftHandSpeed",  "group": "Left partner",  "label": "Left hand",  "part": "lefthand" },
+    { "series": "rightHandSpeed", "group": "Right partner", "label": "Right hand", "part": "righthand" }
+  ],
+  <span class="k">"layout"</span>: "figure",
+  <span class="k">"band"</span>: [0.0, 12.0]
+}</pre>
+        <p><code>series</code> must be a real data type — the tab looks the raw signal up
+          by it to compute each edge's co-activity, and a display name there costs every
+          edge that line. <code>label</code> is what gets drawn. <code>part</code> is where
+          on the figure it sits: <code>head</code>, <code>lefthand</code>,
+          <code>righthand</code>, <code>torso</code>, <code>hip</code>, <code>foot</code>.
+          <code>band</code> is the period band each edge is averaged over, in seconds —
+          it changes the answer, not just the picture.</p>
+        <p><code>"include_network": true</code> means “on, with everything inferred”, which
+          works when your measure names encode person and body part
+          (<code>teacher_righthandspeed</code>) and lands everything in one column when
+          they do not. The full contract is
+          <a href="docs/tabs-network.html">the network tab</a>.</p>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>Keeping up, and publishing</h2>
+    <div class="path manual">
+      <pre class="code">dims-case sync .    <span class="c"># refresh the vendored core to the newest release</span>
+dims-case check .   <span class="c"># verify nothing under vendor/ was edited</span></pre>
+      <p>A bot opens the sync as a pull request every Monday. <b>Never edit anything under
+        <code>vendor/</code></b>: CI rebuilds it from the release tag and compares, so a
+        hand edit is a red build rather than a silent fork. Fix it in the core and bump
+        the pin.</p>
+      <p>A public study carries the Pages workflow it was created with — push to
+        <code>main</code> and it is live. Any static host works, as long as it serves
+        <b>Range requests</b>, or video seeking will not. A private study has no Pages
+        workflow at all.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Not covered here</h2>
+    <div class="path manual">
+      <table class="spec">
+        <tr><th>Feature</th><th>Where it is</th></tr>
+        <tr><td><b>Multi-perspective video</b> — several camera angles per session, with a
+              selector in the dashboard</td>
+            <td>Configured with <code>perspectives</code>, <code>videoPerspectives</code>,
+              <code>videoSrcTemplate</code> and <code>fallbackVideoSrcTemplate</code>.
+              Out of scope for this page; the shapes are in
+              <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/config.schema.json"><code>config.schema.json</code></a>.</td></tr>
+        <tr><td><b>Study-owned analyses</b> — an analysis only your study runs</td>
+            <td>An <code>opt/step_*.py</code> plus its requirements, discovered and run
+              after the shared ones. See <a href="docs/step.html">the step contract</a>.</td></tr>
+        <tr><td><b>Trajectory and DTW tabs</b></td>
+            <td><code>include_trajectory</code> and <code>include_dtw</code>; the latter is
+              beta. In the schema.</td></tr>
+      </table>
+      <p><a class="cta" href="https://github.com/dims-network/dims">Open the DIMS core →</a></p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a></div>
+  </footer>
+
+</div>
+
+</body>
+</html>

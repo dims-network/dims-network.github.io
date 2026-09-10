@@ -149,3 +149,47 @@ pre.code .k{color:#79c0ff}     /* keyword/path */
 .path.manual .cta:hover{background:var(--py2)}
 
 @media(max-width:560px){h1{font-size:1.9rem}.path{padding:18px 16px 6px}}
+
+/* ---- walkthrough page ---- */
+.shot{margin:14px 0 18px;padding:0}
+.shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;
+  background:var(--panel2)}
+.shot figcaption{color:var(--dim);font-size:.82rem;margin:8px 2px 0}
+.shot .ph{border:2px dashed var(--line);border-radius:10px;background:var(--panel2);
+  padding:26px 22px;text-align:center;color:var(--muted)}
+.shot .ph .f{display:block;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color:var(--web2);margin-bottom:6px}
+.shot .ph .w{display:block;font-size:.9rem;max-width:520px;margin:0 auto}
+.shot .ph .n{display:block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:10px;font-weight:700}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0}
+.mini > div{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--panel)}
+.mini h4{margin:0 0 4px;font-size:.95rem}
+.mini p{margin:0;color:var(--muted);font-size:.88rem}
+table.spec{border-collapse:collapse;width:100%;margin:12px 0;font-size:.9rem}
+table.spec th,table.spec td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;
+  vertical-align:top;color:var(--muted)}
+table.spec th{color:var(--text);font-weight:700;font-size:.82rem;text-transform:uppercase;
+  letter-spacing:.06em}
+table.spec td:first-child{color:var(--text);white-space:nowrap}
+
+/* ---- expandable sections ---- */
+/* The page teaches one short path and folds everything else away. Native
+   <details>, so it works without JavaScript and the browser still loads the
+   images inside — which is what keeps the screenshot placeholders honest. */
+details.more{border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  margin:0 0 14px;overflow:hidden}
+details.more[open]{border-color:#c3cbd4;box-shadow:0 2px 10px rgba(31,35,40,.05)}
+details.more > summary{list-style:none;cursor:pointer;padding:16px 20px;
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+details.more > summary::-webkit-details-marker{display:none}
+details.more > summary::before{content:"›";color:var(--web);font-weight:700;font-size:1.15rem;
+  line-height:1;transform:translateY(1px);transition:transform .15s}
+details.more[open] > summary::before{transform:rotate(90deg) translateX(1px)}
+details.more > summary:hover{background:var(--panel2)}
+details.more > summary b{font-size:1.05rem}
+details.more > summary .cost{color:var(--dim);font-size:.85rem;margin-left:auto}
+details.more > summary .what{color:var(--muted);font-size:.92rem;flex-basis:100%;
+  padding-left:24px;margin-top:-2px}
+.more-body{padding:2px 20px 18px;border-top:1px solid var(--line)}
+.more-body > :first-child{margin-top:14px}

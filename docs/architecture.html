@@ -29,18 +29,34 @@
 
       <div class="crumbs">Getting started</div>
       <h1>How DIMS fits together</h1>
-      <pre><code>                dims-network/dims          all the code, released as vX.Y.Z
-                       │
-        ┌──────────────┴──────────────┐
-  vendor/ , pinned            dims-analysis, installed
-  what the browser loads      what rebuilds the assets
-  (bot PR; CI rebuilds it     (pip install -e ./dims —
-   from the release tag)       not on PyPI yet)
-        │                              │
-   ┌────┴─────┬──────────────┐         └── used by every study, and by the builder
-case-demo  case-ortho  case-karnatak
- (public)   (public)     (PRIVATE — data lives outside the repository)
-</code></pre>
+      <div class="diagram arch-diagram">
+        <ul class="arch-tree">
+          <li>
+            <div class="arch-node arch-root">dims-network/dims</div>
+            <ul>
+              <li>
+                <div class="arch-node arch-web">vendor/, pinned</div>
+                <ul>
+                  <li><div class="arch-node arch-leaf">case-demo<span class="badge app">public</span></div></li>
+                  <li><div class="arch-node arch-leaf">case-ortho<span class="badge app">public</span></div></li>
+                  <li><div class="arch-node arch-leaf">case-karnatak<span class="badge private">private</span></div></li>
+                </ul>
+              </li>
+              <li>
+                <div class="arch-node arch-py">dims-analysis, installed</div>
+                <ul>
+                  <li><div class="arch-node arch-leaf arch-note">every study, and the builder</div></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <p class="fig-note"><strong>dims-network/dims</strong> is released as <code>vX.Y.Z</code>.
+      <strong>vendor/, pinned</strong> is what the browser loads — a bot PR, rebuilt by CI from the
+      release tag. <strong>dims-analysis, installed</strong> is what rebuilds the assets
+      (<code>pip install -e ./dims</code>, not on PyPI yet), and is used by every study and by the
+      builder. <strong>case-karnatak</strong> is private: its data lives outside the repository.</p>
       <p>Both halves move together and carry the same version number. A study's
       <code>dims-case.json</code> names it once: it is the tag CI fetches to verify <code>vendor/</code>,
       and it is the version of <code>dims-analysis</code> that produced the study's assets.</p>
