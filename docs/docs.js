@@ -28,7 +28,7 @@ const DOCS_NAV = [
         "href": "analyses.html"
       },
       {
-        "title": "Cross-wavelet & coherence",
+        "title": "Cross-wavelet analysis",
         "href": "crosswavelet.html"
       },
       {

@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Extending DIMS</div>
-      <h1><code>dims_analysis.common</code> — the shared machinery</h1>
+      <h1 id="dims-analysiscommon-the-shared-machinery"><code>dims_analysis.common</code> — the shared machinery</h1>
       <p>Fourteen modules that the analysis steps share. Nothing here is an analysis; it is
       the plumbing every step needs, factored out so that a rule exists <strong>once</strong>.</p>
       <p>This is contributor reference. If you are writing a step, read
@@ -40,8 +40,8 @@
       name from outside the package.</p>
       </blockquote>
       <hr />
-      <h2>Payload encoding and precision</h2>
-      <h3><code>arrays</code> — the two wire encodings</h3>
+      <h2 id="payload-encoding-and-precision">Payload encoding and precision</h2>
+      <h3 id="arrays-the-two-wire-encodings"><code>arrays</code> — the two wire encodings</h3>
       <p><code>PAYLOAD_VERSION = 2</code>, <code>BITMAP = &quot;bitmap-b64&quot;</code>, <code>FLOAT32 = &quot;f32-b64&quot;</code>.</p>
       <p><code>pack_bitmap(matrix)</code> / <code>unpack_bitmap(obj)</code> — one bit per cell, rows byte-aligned.
       <code>pack_f32</code> / <code>unpack_f32</code> — little-endian float32, NaN preserved.
@@ -49,7 +49,7 @@
       <code>nan_to_none(values)</code> — for the plain-list fields, since JSON has no NaN.</p>
       <p>The browser's half of this contract is
       <a href="dims-api.html"><code>DIMS.decodeArray</code></a>.</p>
-      <h3><code>payload</code> — significant figures, and saying what produced a file</h3>
+      <h3 id="payload-significant-figures-and-saying-what-produced-a-file"><code>payload</code> — significant figures, and saying what produced a file</h3>
       <p><code>PAYLOAD_SIGNIFICANT_FIGURES = 6</code>.</p>
       <p><code>round_significant(x)</code> and <code>round_payload(obj)</code> round to <strong>significant figures, not
       decimal places</strong> — a coherence of <code>0.0000123</code> and a power of <code>12345.6</code> cannot share
@@ -60,34 +60,34 @@
       real cases drove this: a study computed partly at 100 surrogates and partly at 300
       was silently inconsistent, and a recurrence analysis that <em>reached</em> 33.7 % against
       a 7 % target looked identical to one that was <em>asked for</em> 33.7 %.</p>
-      <h3><code>results</code> — merging rather than clobbering</h3>
+      <h3 id="results-merging-rather-than-clobbering"><code>results</code> — merging rather than clobbering</h3>
       <p><code>VERSION_KEY</code>, <code>UnversionedPayload</code>, <code>check_version</code>, <code>same_version</code>,
       <code>merge_payload</code>, <code>read_existing</code>, <code>compare_entries</code>, <code>write_payload(path, payload, compact=True)</code>.</p>
       <p>Re-running one pair must not delete the other pairs already in the file, and a
       payload from a different format version must not be merged into one that is not.</p>
       <hr />
-      <h2>Reading input</h2>
-      <h3><code>series</code> — loading a time series, with the failures named</h3>
+      <h2 id="reading-input">Reading input</h2>
+      <h3 id="series-loading-a-time-series-with-the-failures-named"><code>series</code> — loading a time series, with the failures named</h3>
       <p><code>TIME = &quot;Time&quot;</code>, <code>SeriesError</code>.</p>
       <p><code>time_column(df)</code> finds the time column case-insensitively.
       <code>load(path, min_points=0, value_column=None, min_variance=None)</code> raises
       <code>SeriesError</code> with a sentence saying what is wrong.
       <code>load_or_none(...)</code> is the same for the steps that want to warn and continue.
       <code>normalise(values)</code> is the z-normalisation the recurrence analyses run on.</p>
-      <h3><code>assets</code> — where a private study's data actually is</h3>
+      <h3 id="assets-where-a-private-studys-data-actually-is"><code>assets</code> — where a private study's data actually is</h3>
       <p><code>MARKER = 'data.local.json'</code>.</p>
       <p><code>assets_root(project_dir)</code>, <code>resolve(path, project_dir, root)</code>, <code>describe(...)</code>.
       A private study keeps recordings outside the repository; this is the one place
       that knows how to follow the pointer. See
       <a href="data-visibility.html"><code>contracts/data-visibility.md</code></a>.</p>
-      <h3><code>config</code> — reading the <code>include_*</code> keys</h3>
+      <h3 id="config-reading-the-include-keys"><code>config</code> — reading the <code>include_*</code> keys</h3>
       <p><code>ConfigError</code>, <code>gate_value</code>, <code>enabled(config, key)</code>,
       <code>as_list(config, key, what)</code>, <code>tuning(config, step_id)</code>,
       <code>tuned_number(config, step_id, key, default)</code>.</p>
       <p>Three keys use three different conventions — a list of measures, a list of pairs,
       a boolean — so the reading of them lives here rather than being re-guessed per
       step. <code>as_list</code> raises with an example of the right shape rather than a type error.</p>
-      <h3><code>limits</code> — refusing what will not fit</h3>
+      <h3 id="limits-refusing-what-will-not-fit"><code>limits</code> — refusing what will not fit</h3>
       <p><code>MIN_POINTS = 10</code>, <code>MIN_VARIANCE = 0.0</code>, <code>MAX_MATRIX_BYTES = 2 GiB</code>,
       <code>InputTooLarge</code>.</p>
       <p><code>matrix_bytes(n)</code>, <code>max_points(budget)</code>, <code>check_length(n, what, budget)</code>.</p>
@@ -95,8 +95,8 @@
       which puts the ceiling near <strong>16,000 points</strong>. Being told that before the
       allocation is better than an <code>OOM</code> twenty minutes in.</p>
       <hr />
-      <h2>Recurrence</h2>
-      <h3><code>recurrence</code> — one definition of every recurrence quantity</h3>
+      <h2 id="recurrence">Recurrence</h2>
+      <h3 id="recurrence-one-definition-of-every-recurrence-quantity"><code>recurrence</code> — one definition of every recurrence quantity</h3>
       <p><code>RATE_TOLERANCE = 0.01</code>.</p>
       <table>
       <thead>
@@ -134,7 +134,7 @@
       series, so there is no line of identity and nothing to exclude. Getting that wrong
       shifts every number. One flag, one implementation, both steps.</p>
       <p><code>L_MAX</code> is returned in <strong>seconds</strong> — the longest run multiplied by <code>dt</code>.</p>
-      <h3><code>reduce</code> — making a picture small without lying about it</h3>
+      <h3 id="reduce-making-a-picture-small-without-lying-about-it"><code>reduce</code> — making a picture small without lying about it</h3>
       <p><code>factor_for(n_points, max_points)</code> — <strong>rounds up</strong>, so the result never exceeds the
       cap.
       <code>block_mean</code>, <code>block_mode</code>, <code>block_binary</code>, <code>rate_of(m)</code>.</p>
@@ -145,7 +145,7 @@
       <p><code>rate_of</code> is a plain mean and <strong>includes</strong> the line of identity, unlike
       <code>recurrence.recurrence_rate</code> — the two numbers in a payload are close but not
       identical, and they are not measuring quite the same thing.</p>
-      <h3><code>window</code> — sliding windows that fit the recording</h3>
+      <h3 id="window-sliding-windows-that-fit-the-recording"><code>window</code> — sliding windows that fit the recording</h3>
       <p><code>MIN_WINDOWS = 20</code>, <code>MIN_WINDOW_POINTS = 2</code>, <code>WindowPlan</code>, <code>plan(n, dt, window_sec, step_sec, min_windows)</code>.</p>
       <p>A long window over a short recording gives a handful of windows and no time
       course, so <code>plan</code> shortens what it must — and the two limits are separate:</p>
@@ -164,15 +164,15 @@
       the substitution — and DET and LAM depend on the window length, so an adjusted
       analysis is not comparable with an unadjusted one.</p>
       <hr />
-      <h2>Wavelet</h2>
-      <h3><code>coherence</code> — smoothing, delegated deliberately</h3>
+      <h2 id="wavelet">Wavelet</h2>
+      <h3 id="coherence-smoothing-delegated-deliberately"><code>coherence</code> — smoothing, delegated deliberately</h3>
       <p><code>smoothed_spectra(W1, W2, scales, dt, dj, mother_wavelet)</code>,
       <code>coherence_from_spectra(S1, S2, S12)</code>, <code>coherence(...)</code>.</p>
       <p>The smoothing operator is pycwt's, validated, rather than a local
       reimplementation. That is not incidental: a hand-rolled smoother that failed to
       cancel phase is exactly the defect that shipped once and was found by a notebook
       rather than a crash.</p>
-      <h3><code>tc98</code> — Torrence &amp; Compo (1998), transcribed</h3>
+      <h3 id="tc98-torrence-compo-1998-transcribed"><code>tc98</code> — Torrence &amp; Compo (1998), transcribed</h3>
       <p><code>DEFAULT_LEVEL = 0.95</code>, <code>Z1_95_PUBLISHED = 2.182</code>, <code>Z2_95_PUBLISHED = 3.999</code>,
       <code>MAX_DIRECT_NU = 60.0</code>.</p>
       <p><code>cross_wavelet_pdf</code>, <code>survival</code>, <code>survival_by_quadrature</code>, <code>cross_wavelet_z(nu, level)</code>, <code>ar1_background(alpha, period, dt)</code>, <code>local_significance</code>,
@@ -186,8 +186,8 @@
       distinction between the four significance levels — and which question each answers
       — is on <a href="crosswavelet.html">the cross-wavelet page</a>.</p>
       <hr />
-      <h2>Step plumbing</h2>
-      <h3><code>step_io</code> — the parts of a step that are always the same</h3>
+      <h2 id="step-plumbing">Step plumbing</h2>
+      <h3 id="step-io-the-parts-of-a-step-that-are-always-the-same"><code>step_io</code> — the parts of a step that are always the same</h3>
       <p><code>parse_args(prog, description, default_output_dir, argv)</code>,
       <code>tuning(config, step_id, window_sec, step_sec, target_recurrence_default)</code>,
       <code>resolve_io(input_dir, output_dir, project_dir)</code>,
@@ -196,19 +196,19 @@
       <p><code>parse_args</code> defaults <code>--window</code> and <code>--step</code> to <code>None</code> rather than to a number,
       <strong>deliberately</strong>: <code>None</code> means &quot;the config decides&quot;, and a default here would
       silently win over the study's own <code>analysis</code> block.</p>
-      <h3><code>manifest</code> — what a complete <code>assets/</code> looks like</h3>
+      <h3 id="manifest-what-a-complete-assets-looks-like"><code>manifest</code> — what a complete <code>assets/</code> looks like</h3>
       <p><code>NAME = 'MANIFEST.json'</code>, <code>scan</code>, <code>path_for</code>, <code>load</code>, <code>write(project_dir, deep=True)</code>, <code>compare(project_dir, deep=False)</code> → <code>(missing, changed, extra)</code>.</p>
       <p>Driven by <a href="cli-dims-analysis.html#manifest"><code>dims-analysis manifest</code></a>. Skips
       <code>MANIFEST.json</code> itself, <code>.gitkeep</code> and <code>.DS_Store</code>; hashes in 1 MiB chunks.</p>
-      <h2>See also</h2>
+      <h2 id="see-also">See also</h2>
       <ul>
       <li><a href="step.html"><code>contracts/step.md</code></a> — writing a step.</li>
       <li><a href="analysis-output.html"><code>contracts/analysis-output.md</code></a> — the rules
       these modules exist to enforce, each with the measurement behind it.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/reference/analysis-common.md"><code>docs/reference/analysis-common.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/reference/analysis-common.md"><code>docs/reference/analysis-common.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Explanation</div>
-      <h1>Versions, vendoring and the pin</h1>
+      <h1 id="versions-vendoring-and-the-pin">Versions, vendoring and the pin</h1>
       <p>How one fix reaches every study, and why a study can be archived and still make
       sense years later. This is the explanation; the commands are on
       <a href="cli-dims-case.html">the <code>dims-case</code> reference</a>.</p>
@@ -45,7 +45,7 @@
 case-demo  case-ortho  case-karnatak
  (public)   (public)     (PRIVATE — data lives outside the repository)
 </code></pre>
-      <h2>One version number, both halves</h2>
+      <h2 id="one-version-number-both-halves">One version number, both halves</h2>
       <p>A study depends on the core twice, in two different ways: <strong>the browser loads a
       copy</strong> of <code>dims-core</code> and <code>dims-tabs</code> from its own <code>vendor/</code> directory, and <strong>the
       analyses are installed</strong> as a Python package that rebuilds its assets.</p>
@@ -63,7 +63,7 @@ case-demo  case-ortho  case-karnatak
       <p>That is the whole reason for lockstep versioning. A study whose frontend and
       analyses came from different releases can display a payload it half understands,
       which is worse than refusing it.</p>
-      <h2>How a fix travels</h2>
+      <h2 id="how-a-fix-travels">How a fix travels</h2>
       <ol>
       <li>It is made <strong>once</strong>, in the monorepo.</li>
       <li>A release is tagged.</li>
@@ -78,7 +78,7 @@ case-demo  case-ortho  case-karnatak
       </ol>
       <p><strong>Propagation is a version bump, not a merge.</strong> Nothing is ever copied between
       studies.</p>
-      <h2>Why the check rebuilds instead of comparing records</h2>
+      <h2 id="why-the-check-rebuilds-instead-of-comparing-records">Why the check rebuilds instead of comparing records</h2>
       <p>A study records a hash of what its <code>vendor/</code> should be. Comparing against that
       record catches a hand-edited file — but <strong>a <code>vendor/</code> copied from a modified core
       agrees with its own record perfectly.</strong> Both sides of that comparison came from
@@ -91,7 +91,7 @@ case-demo  case-ortho  case-karnatak
       <p>This is why case repositories do not drift: editing vendored code by hand is a
       red X, not a silent fork.</p>
       <p><strong>Never edit <code>vendor/</code>.</strong> Fix it in the monorepo and bump the pin.</p>
-      <h2>What a study owns, and what the core keeps rewriting</h2>
+      <h2 id="what-a-study-owns-and-what-the-core-keeps-rewriting">What a study owns, and what the core keeps rewriting</h2>
       <p><code>sync</code> has to know what it may overwrite, and the answer is three tiers — the
       full table is in <a href="cli-dims-case.html#the-three-tiers-of-file-ownership">the <code>dims-case</code> reference</a>.
       In short: <code>vendor/</code>, <code>index.html</code>, the workflows, the private hooks and <code>serve.py</code>
@@ -102,7 +102,7 @@ case-demo  case-ortho  case-karnatak
       <strong>never a copied analysis script.</strong> Keeping a fork of a step is exactly what the
       monorepo exists to make unnecessary, and it puts the study outside the guarantee
       above.</p>
-      <h2>Archiving</h2>
+      <h2 id="archiving">Archiving</h2>
       <p>Because the analysis code that produced a study's results is inside the study, at
       the version that produced them, a case repository can be archived as it stands and
       still be read. That is the point of vendoring a copy rather than depending on a
@@ -111,15 +111,15 @@ case-demo  case-ortho  case-karnatak
       <code>index.html</code> loads five libraries from a CDN, so one opened without a network shows
       an empty page. That caveat and the issue tracking it are on
       <a href="architecture.html#why-no-build-step"><code>architecture.md</code></a>.</p>
-      <h2>See also</h2>
+      <h2 id="see-also">See also</h2>
       <ul>
       <li><a href="case.html"><code>contracts/case.md</code></a> — the shape of a case repository.</li>
       <li><a href="architecture.html"><code>architecture.md</code></a> — why the code is arranged this way.</li>
       <li><a href="cli-dims-case.html"><code>reference/cli/dims-case.md</code></a> — the commands.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/versioning.md"><code>docs/versioning.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/versioning.md"><code>docs/versioning.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

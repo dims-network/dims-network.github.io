@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Analyses</div>
-      <h1>Recurrence quantification (RQA)</h1>
+      <h1 id="recurrence-quantification-rqa">Recurrence quantification (RQA)</h1>
       <p>A recurrence plot asks one question of one signal, for every pair of moments in
       it: <em>were these two moments in nearly the same state?</em> Mark the cell black if
       they were, white if they were not, and the resulting picture makes structure
@@ -46,7 +46,7 @@
       </ul>
       <div class="figure" id="fig-rqa-plot"></div>
 
-      <h2>This implementation uses no time-delay embedding</h2>
+      <h2 id="this-implementation-uses-no-time-delay-embedding">This implementation uses no time-delay embedding</h2>
       <p>Textbook RQA reconstructs a phase space from a scalar signal first, using
       Takens' method: each point becomes a vector of <em>m</em> samples spaced <em>τ</em> apart, and
       distances are taken between those vectors. <strong>DIMS does not do this.</strong> The whole
@@ -77,7 +77,7 @@ distance_matrix = cdist(ts_reshaped, ts_reshaped, metric='euclidean')
       <p>If your question genuinely needs an embedded phase space, the honest route is a
       study-owned step — see <a href="step.html">writing an analysis</a> — rather than
       reading these numbers as though they were embedded.</p>
-      <h2>The threshold is a recurrence rate, not a radius</h2>
+      <h2 id="the-threshold-is-a-recurrence-rate-not-a-radius">The threshold is a recurrence rate, not a radius</h2>
       <p>The other choice that defines a recurrence plot is ε, the distance below which
       two moments count as &quot;the same&quot;. Most implementations take a fixed radius. DIMS
       takes a <strong>fixed recurrence rate</strong>: ε is the percentile of the distance matrix
@@ -112,7 +112,7 @@ recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
       finding — are counted here.</p>
       <div class="figure" id="fig-rqa-compare"></div>
 
-      <h2>The measures</h2>
+      <h2 id="the-measures">The measures</h2>
       <p>All four come from <code>common/recurrence.py</code>, computed over each window. The
       minimum line length is <strong>fixed at 2</strong> — a &quot;line&quot; of one point is a point.</p>
       <p>With <code>R</code> the binary matrix, <code>n</code> its side, and <code>ℓ</code> the length of a run:</p>
@@ -158,13 +158,13 @@ recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
       four decimal places on a pure sine.</p>
       <p><code>L_MAX</code> is in <strong>seconds</strong>, not samples. Multiplying by Δt is what makes it
       comparable between a 50 Hz and a 100 Hz recording of the same movement.</p>
-      <h3>What is not computed</h3>
+      <h3 id="what-is-not-computed">What is not computed</h3>
       <p>L (mean diagonal line length), ENTR (Shannon entropy of the line-length
       histogram), TT (trapping time), V_MAX, DIV, RATIO, TREND and the recurrence-time
       measures are <strong>not</strong> in the payload. The line-length histograms that would
       produce them are built and then reduced to a sum and a maximum. If you need one
       of them, the matrix is two lines away from being back in memory — see below.</p>
-      <h2>Windows</h2>
+      <h2 id="windows">Windows</h2>
       <p>The four measures are shares of the structure inside one window, and every one
       of them moves with how long that window is. So the window is a parameter of the
       result in the same way the recurrence rate is, and the same rule applies: what
@@ -176,7 +176,7 @@ recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
       <code>window</code> block then carries a <code>warning</code> saying so in a sentence.</p>
       <div class="figure" id="fig-rqa-metrics"></div>
 
-      <h2>Parameters</h2>
+      <h2 id="parameters">Parameters</h2>
       <p>Under <code>analysis.rqa</code> in the study's <code>config.json</code>:</p>
       <table>
       <thead>
@@ -213,7 +213,7 @@ recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
       <p>Fixed in the step: minimum line length 2, no Theiler window, Euclidean distance,
       z-score normalisation, 20 windows minimum before a window is shortened, and 500
       points as the cap on the drawn matrix.</p>
-      <h3>Bounds</h3>
+      <h3 id="bounds">Bounds</h3>
       <ul>
       <li>Fewer than <strong>10 usable samples</strong>, or a signal whose standard deviation is 0,
       and the data type is skipped with a message. The variance guard exists
@@ -225,7 +225,7 @@ recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
       a half minutes of recording. Downsample, or window the input, rather than
       raising the budget.</li>
       </ul>
-      <h2>What it writes</h2>
+      <h2 id="what-it-writes">What it writes</h2>
       <p>One entry per data type under <code>rqa_data</code>:</p>
       <pre><code class="language-jsonc">{
   &quot;video_id&quot;: &quot;demo&quot;,
@@ -257,7 +257,7 @@ recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
       }
     }
   },
-  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.4.2&quot;, &quot;target_recurrence&quot;: 0.07,
+  &quot;provenance&quot;: { &quot;core_version&quot;: &quot;1.4.3&quot;, &quot;target_recurrence&quot;: 0.07,
                   &quot;max_points_drawn&quot;: 500 },
   &quot;precision&quot;: { &quot;significant_figures&quot;: 6 }
 }
@@ -333,7 +333,7 @@ recurrence_matrix = (distance_matrix &lt;= threshold).astype(np.uint8)
       about <code>1/n</code> above <code>recurrence_rate</code>. They are there to be compared with each
       other, to show the drawn picture kept the density of the real one, not with the
       recurrence rate.</p>
-      <h3>The matrix is never stored at full resolution</h3>
+      <h3 id="the-matrix-is-never-stored-at-full-resolution">The matrix is never stored at full resolution</h3>
       <p>It is quadratic: 600 samples is a 300×300 drawn bitmap, 16,000 samples would be
       a 32 MB one. What is stored instead is everything needed to rebuild it exactly:</p>
       <pre><code class="language-python">import numpy as np, json
@@ -347,7 +347,7 @@ R = (cdist(signal.reshape(-1, 1), signal.reshape(-1, 1)) &lt;= entry[&quot;thres
       <p>That is also the route to any measure this step does not compute:
       <code>common.recurrence.line_lengths(R, &quot;diagonal&quot;, 2, self_paired=True)</code> hands you
       the histogram that ENTR and mean-L need.</p>
-      <h2>Further reading</h2>
+      <h2 id="further-reading">Further reading</h2>
       <ul>
       <li><a href="https://www.recurrence-plot.tk/"><strong>recurrence-plot.tk</strong></a> — the standard
       reference site for recurrence plots and RQA: the measures, what the visual
@@ -360,8 +360,8 @@ R = (cdist(signal.reshape(-1, 1), signal.reshape(-1, 1)) &lt;= entry[&quot;thres
       <li><a href="crqa.html">Cross-recurrence</a> applies the same machinery to a pair of signals.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/analyses/rqa.md"><code>docs/analyses/rqa.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/analyses/rqa.md"><code>docs/analyses/rqa.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

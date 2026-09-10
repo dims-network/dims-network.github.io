@@ -29,7 +29,7 @@
     <main class="docs-main">
 
       <div class="crumbs">Extending DIMS</div>
-      <h1>Contract: a case repository</h1>
+      <h1 id="contract-a-case-repository">Contract: a case repository</h1>
       <p>A <em>case</em> is one study. It holds its configuration, its data, and a pinned copy
       of the core.</p>
       <p>It holds <strong>no dashboard code</strong>. If you are editing a tab, an analysis or the
@@ -67,7 +67,7 @@
       <code>dims-case.json</code>); the moment a study edits one, it keeps it and <code>sync</code> says so.
       Karnatak's <code>build_assets.py</code> drives motion capture, and losing that to a version
       bump would not be a bump.</p>
-      <h2>The pin</h2>
+      <h2 id="the-pin">The pin</h2>
       <p><code>dims-case.json</code> names a core version. A bot opens a pull request when a newer
       core is released; the PR changes the version and refreshes <code>vendor/</code>. CI then
       checks that <code>vendor/</code> matches that release exactly.</p>
@@ -84,7 +84,7 @@
       caveat, and the issue tracking it, are on
       <a href="architecture.html#why-no-build-step"><code>architecture.md</code></a>.</p>
       <p><strong>Never edit <code>vendor/</code>.</strong> Fix it in the monorepo and bump the pin.</p>
-      <h2>Creating one</h2>
+      <h2 id="creating-one">Creating one</h2>
       <pre><code class="language-sh">dims-case new ortho --visibility public                  # -&gt; ./case-ortho
 dims-case new ortho --visibility public --dir path/to/it # somewhere else
 dims-case adopt path/ --name ortho --visibility public   # an existing one
@@ -98,7 +98,7 @@ dims-case adopt path/ --name ortho --visibility public   # an existing one
       commit and push hooks, and the privacy workflow. The assets manifest is written
       by the study when its assets are right, with <code>build_assets.py --write-manifest</code>;
       it is not something creation can invent.</p>
-      <h2>Acceptance</h2>
+      <h2 id="acceptance">Acceptance</h2>
       <ul>
       <li><code>python serve.py</code> renders every tab the config enables.</li>
       <li><code>python build_assets.py --check</code> names this study's inputs and the analyses
@@ -110,8 +110,8 @@ dims-case adopt path/ --name ortho --visibility public   # an existing one
       the push hook independently.</li>
       </ul>
       <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.2/docs/contracts/case.md"><code>docs/contracts/case.md</code></a>
-        at <code>v1.4.2</code>. Edit it there, not here.</p>
+        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/contracts/case.md"><code>docs/contracts/case.md</code></a>
+        at <code>v1.4.3</code>. Edit it there, not here.</p>
 
       <footer>
         DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>

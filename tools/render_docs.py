@@ -122,17 +122,48 @@ def link_rewrites(spec):
     return out
 
 
+def slugify(rendered):
+    """A GitHub-compatible anchor for a heading.
+
+    The core's markdown is read on GitHub as well as here, and a writer linking
+    to `#the-two-modes` is following GitHub's rule. Match it: drop the tags,
+    lowercase, keep word characters and hyphens, and turn runs of anything else
+    into single hyphens.
+    """
+    text = re.sub(r"<[^>]+>", "", rendered)
+    text = html.unescape(text).strip().lower()
+    text = re.sub(r"[^\w\s-]", "", text, flags=re.UNICODE)
+    return re.sub(r"[\s_]+", "-", text).strip("-")
+
+
 def render_markdown(text, rewrites, repo_url, ref, source):
     import mistune
 
     renderer = mistune.HTMLRenderer(escape=False)
     original_link = renderer.link
+    original_heading = renderer.heading
 
     def link(text_, url, title=None):
         url = resolve_link(url, rewrites, repo_url, ref, source)
         return original_link(text_, url, title)
 
+    # Headings carry an id, so an in-page link resolves here as it does on
+    # GitHub. Without one every `[...](#section)` in the core's markdown is a
+    # link that silently goes nowhere once rendered.
+    seen = {}
+
+    def heading(text_, level, **attrs):
+        slug = slugify(text_)
+        if slug:
+            n = seen.get(slug, 0)
+            seen[slug] = n + 1
+            if n:
+                slug = f"{slug}-{n}"
+            return f'<h{level} id="{slug}">{text_}</h{level}>\n'
+        return original_heading(text_, level, **attrs)
+
     renderer.link = link
+    renderer.heading = heading
     convert = mistune.create_markdown(renderer=renderer,
                                       plugins=["table", "strikethrough", "url"])
     return convert(text)

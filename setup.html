@@ -259,7 +259,8 @@ python serve.py                  <span class="c"># http://localhost:8000</span><
 <span class="k">"analysis"</span>: { "crosswavelet": { <span class="k">"mcCount"</span>: 100 } }</pre>
         <p>Same pair shape as cross-recurrence. <code>mcCount</code> is the number of
           Monte Carlo surrogates behind the coherence chance level: <b>0 skips it</b>,
-          and only the network reads it. It is the slow part of the whole pipeline —
+          and only the network's coherence mode reads it — its shared power mode
+          uses a computed level and needs no surrogates. It is the slow part of the whole pipeline —
           measured on a two-session study with two pairs, 100 surrogates took
           <b>9 min 29 s</b> against <b>1 min 42 s</b> at 20.</p>
         <div class="callout"><b>The null is cached</b> in
@@ -285,8 +286,9 @@ python serve.py                  <span class="c"># http://localhost:8000</span><
           exists only where <code>include_crosswavelet</code> asked for that pair</b> — and
           a pair you did not ask for is a missing edge with nothing saying so. Switching
           the network on also switches the chance level on at 100 surrogates, because
-          without one no edge can be told from coincidence: two unrelated signals score
-          about 0.25, not 0.</p>
+          without one a <i>coherence</i> edge cannot be told from coincidence: two
+          unrelated signals score about 0.25, not 0. The tab's shared power mode needs
+          no such null, so it still works in a study built with <code>mcCount: 0</code>.</p>
         <pre class="code"><span class="k">"include_network"</span>: {
   <span class="k">"groups"</span>: [{ "label": "Left partner" }, { "label": "Right partner" }],
   <span class="k">"effectors"</span>: [
@@ -294,11 +296,13 @@ python serve.py                  <span class="c"># http://localhost:8000</span><
     { "series": "rightHandSpeed", "group": "Right partner", "label": "Right hand", "part": "righthand" }
   ],
   <span class="k">"layout"</span>: "figure",
-  <span class="k">"band"</span>: [0.0, 12.0]
+  <span class="k">"band"</span>: [0.0, 12.0],
+  <span class="k">"mode"</span>: "coherence",
+  <span class="k">"threshold"</span>: { "coherence": 0.15, "power": 0.15 }
 }</pre>
-        <p><code>series</code> must be a real data type — the tab looks the raw signal up
-          by it to compute each edge's co-activity, and a display name there costs every
-          edge that line. <code>label</code> is what gets drawn. <code>part</code> is where
+        <p><code>series</code> must be a real data type — a node is matched to its
+          cross-wavelet pairs by that name, so a display name there leaves the node with
+          no edges at all. <code>label</code> is what gets drawn. <code>part</code> is where
           on the figure it sits: <code>head</code>, <code>lefthand</code>,
           <code>righthand</code>, <code>torso</code>, <code>hip</code>, <code>foot</code>.
           <code>band</code> is the period band each edge is averaged over, in seconds —
