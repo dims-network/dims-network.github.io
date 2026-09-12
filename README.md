@@ -22,7 +22,7 @@ pip install -e './dims[builder]'
 dims-builder
 ```
 
-The [tutorial](https://dims-network.github.io/tutorial.html) walks through it,
+The [tutorial](https://dims-network.github.io/dims/latest/tutorial/) walks through it,
 with and without the wizard.
 
 ## What is in this repository
@@ -30,7 +30,7 @@ with and without the wizard.
 | | |
 |---|---|
 | `index.html` | the landing page |
-| `tutorial.html` | build your own dashboard — with the wizard, or by hand |
+| `tutorial.html` | a redirect: the tutorial is published with the code, per release |
 | `docs/` | **generated.** The reference, rendered from the markdown in the core |
 | `tools/` | the renderer, and the list of pages it builds |
 

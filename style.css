@@ -1,11 +1,9 @@
 /* DIMS-network — light, simplistic shared styles */
-:root{
-  --bg:#ffffff; --panel:#ffffff; --panel2:#f6f8fa; --line:#d9dee3;
-  --text:#1f2328; --muted:#59636e; --dim:#8c959f;
-  --web:#0d9488; --web2:#0f766e;   /* static JS family (teal) */
-  --py:#7c3aed;  --py2:#6d28d9;     /* python family (purple) */
-  --accent:#0969da; --amber:#9a6700;
-}
+
+/* The palette is defined in the core, beside the documentation and the figures
+   that read it, and vendored here by tools/sync_tokens.py at the pinned
+   release. @import must come before every rule, so it stays at the top. */
+@import url("vendor/tokens.css");
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
@@ -89,41 +87,12 @@ canvas{width:100%;height:auto;display:block;border-radius:10px}
 
 footer{padding:28px 0 56px;color:var(--dim);font-size:.85rem;border-top:1px solid var(--line);margin-top:20px}
 
-/* ---- tutorial page ---- */
-/* path toggle (segmented control) */
-.toggle-group{display:inline-flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;
-  background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px}
-.toggle-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;
-  border-radius:999px;padding:8px 18px;color:var(--muted);font-weight:600;font-size:.95rem;
-  background:transparent;cursor:pointer;font-family:inherit}
-.toggle-btn:hover{color:var(--text)}
-.toggle-btn.active{background:var(--panel);color:var(--text);border-color:var(--line);
-  box-shadow:0 1px 4px rgba(31,35,40,.08)}
-.toggle-btn .tag{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-
-/* direct download link */
-.dl{display:inline-block;background:var(--web);color:#fff;font-weight:700;border-radius:8px;
-  padding:9px 16px;font-size:.95rem}
-.dl:hover{background:var(--web2);text-decoration:none}
-
+/* ---- setup page ---- */
 .path{border:1px solid var(--line);border-radius:14px;padding:24px 24px 8px;margin:0 0 22px;background:var(--panel)}
 .path.builder{border-top:3px solid var(--web)}
 .path.manual{border-top:3px solid var(--py)}
 .path > h3{font-size:1.35rem;margin-bottom:2px}
 .path .sub{color:var(--muted);margin:0 0 4px}
-
-ol.steps{counter-reset:step;list-style:none;padding:0;margin:18px 0 6px}
-ol.steps > li{position:relative;padding:0 0 18px 44px;border-left:2px solid var(--line);margin-left:14px}
-ol.steps > li:last-child{border-left-color:transparent;padding-bottom:4px}
-ol.steps > li::before{counter-increment:step;content:counter(step);
-  position:absolute;left:-15px;top:-2px;width:28px;height:28px;border-radius:50%;
-  background:var(--panel);border:2px solid var(--web);color:var(--web2);
-  font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center}
-.path.manual ol.steps > li::before{border-color:var(--py);color:var(--py2)}
-ol.steps > li h4{margin:0 0 4px;font-size:1rem}
-ol.steps > li p{margin:0 0 8px;color:var(--muted)}
-ol.steps > li ul{margin:0 0 8px;padding-left:20px;color:var(--muted)}
-ol.steps > li ul li{margin:2px 0}
 
 pre.code{background:#0d1117;color:#e6edf3;border-radius:10px;padding:14px 16px;overflow:auto;
   font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:8px 0}
@@ -150,18 +119,6 @@ pre.code .k{color:#79c0ff}     /* keyword/path */
 
 @media(max-width:560px){h1{font-size:1.9rem}.path{padding:18px 16px 6px}}
 
-/* ---- walkthrough page ---- */
-.shot{margin:14px 0 18px;padding:0}
-.shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;
-  background:var(--panel2)}
-.shot figcaption{color:var(--dim);font-size:.82rem;margin:8px 2px 0}
-.shot .ph{border:2px dashed var(--line);border-radius:10px;background:var(--panel2);
-  padding:26px 22px;text-align:center;color:var(--muted)}
-.shot .ph .f{display:block;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  color:var(--web2);margin-bottom:6px}
-.shot .ph .w{display:block;font-size:.9rem;max-width:520px;margin:0 auto}
-.shot .ph .n{display:block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--dim);margin-bottom:10px;font-weight:700}
 .mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0}
 .mini > div{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--panel)}
 .mini h4{margin:0 0 4px;font-size:.95rem}

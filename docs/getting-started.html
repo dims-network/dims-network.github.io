@@ -3,199 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Getting started · DIMS docs</title>
-<meta name="description" content="From raw data to a running dashboard, with the commands that work." />
+<title>Moved · DIMS docs</title>
+<link rel="canonical" href="https://dims-network.github.io/dims/latest/getting-started/" />
+<meta http-equiv="refresh" content="0; url=https://dims-network.github.io/dims/latest/getting-started/" />
 <link rel="stylesheet" href="../style.css" />
-<link rel="stylesheet" href="docs.css" />
 </head>
 <body>
-
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="../index.html">DIMS-network</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../tutorial.html">Tutorial</a>
-      <a href="../setup.html">Set up</a>
-      <a href="index.html" class="active">Docs</a>
-      <a href="https://github.com/dims-network">GitHub ↗</a>
-    </div>
-  </div>
-</nav>
-
 <div class="wrap">
-  <div class="docs-layout">
-    <aside class="docs-side"></aside>
-    <main class="docs-main">
-
-      <div class="crumbs">Start here</div>
-      <h1 id="from-raw-data-to-a-dashboard">From raw data to a dashboard</h1>
-      <p>This page goes end to end once, with the commands that actually work. It
-      assumes nothing beyond a terminal, Python 3.10–3.12 and git.</p>
-      <p><strong>You do not need a video.</strong> This page uses one because clicking from a signal to
-      the moment that produced it is what DIMS is for — but the core works from
-      timestamps, not from a recording. Leave <code>assets/videos/</code> empty and everything
-      below still runs: the analyses, the tabs, the shared timeline. Skip the video
-      steps and the rest is unchanged.</p>
-      <p>If you would rather not use a terminal at all, the no-code builder does the
-      same job through a browser — see the bottom of this page.</p>
-      <h2 id="0-install-the-core">0. Install the core</h2>
-      <p>DIMS is not on PyPI yet (<code>dims</code> is taken by an unrelated project, and the name
-      <code>dims-network</code> is not published). Install it from a checkout:</p>
-      <pre><code class="language-sh">git clone https://github.com/dims-network/dims
-pip install -e ./dims
-</code></pre>
-      <p>That gives you two commands: <code>dims-case</code>, which creates and maintains a study,
-      and <code>dims-analysis</code>, which runs the analyses.</p>
-      <blockquote>
-      <p><strong>Python 3.13 does not work for motion capture.</strong> <code>mediapipe</code> ships no 3.13
-      wheel. Everything else is fine on 3.13; if your study starts from video, use
-      3.12.</p>
-      </blockquote>
-      <h2 id="1-create-a-study">1. Create a study</h2>
-      <p>A <em>study</em> — a &quot;case&quot; — is a small repository holding one study's configuration,
-      its data, and a pinned copy of the dashboard code.</p>
-      <pre><code class="language-sh">dims-case new mystudy --visibility public     # creates ./case-mystudy
-</code></pre>
-      <p><code>--visibility</code> is the question you have to answer honestly, once. Choose
-      <code>private</code> if the data identifies anyone — video of faces, named transcripts —
-      and the study is created with commit and push guards that refuse to let data
-      into git, plus a CI check that catches it if the guards are bypassed. See
-      <a href="data-visibility.html">data visibility</a>.</p>
-      <p>It takes a <strong>name</strong>, not a path; use <code>--dir</code> to put it somewhere specific. To
-      turn an existing directory into a study instead, use <code>dims-case adopt</code>, which
-      never overwrites what is already there.</p>
-      <h2 id="2-put-the-data-where-it-belongs">2. Put the data where it belongs</h2>
-      <p>The dashboard finds files by name. There is no index, so a misnamed file is an
-      invisible file — the full rules are in <a href="assets.html">asset layout</a>.</p>
-      <pre><code>assets/
-  videos/{videoID}.mp4
-  timeseries/{videoID}_{dataType}.csv      Time in SECONDS, ascending
-  transcripts/{videoID}_transcript.json
-  elan/{videoID}.eaf
-</code></pre>
-      <p>A time series is two columns, a time column and one measurement:</p>
-      <pre><code class="language-csv">Time,bodysync
-0.000,0.1959
-0.020,0.2213
-</code></pre>
-      <p>Tools that emit milliseconds — several EnvisionBox modules do — need a unit
-      change and a rename, nothing more.</p>
-      <h3 id="if-the-data-cannot-go-in-the-repository">If the data cannot go in the repository</h3>
-      <p>For a private study, it should not. Leave <code>assets/</code> empty and say where the
-      data really is:</p>
-      <pre><code class="language-sh">cp data.local.json.example data.local.json
-</code></pre>
-      <pre><code class="language-json">{ &quot;assetsRoot&quot;: &quot;/Volumes/Data/mystudy/assets&quot; }
-</code></pre>
-      <p><code>serve.py</code> and every analysis resolve through that file, so everything runs
-      against the real data with an empty tracked <code>assets/</code>. Nothing has to be copied
-      into the repository — and on a private study, copying it in is exactly what the
-      guards exist to prevent.</p>
-      <h2 id="3-say-what-the-study-contains">3. Say what the study contains</h2>
-      <p><code>config.json</code> lists the recordings and switches on the analyses and tabs. The
-      full schema is <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/contracts/config.schema.json"><code>config.schema.json</code></a>.</p>
-      <pre><code class="language-jsonc">{
-  &quot;title&quot;: &quot;My study&quot;,
-  &quot;videoIDs&quot;: [&quot;session01&quot;, &quot;session02&quot;],
-
-  // Which measures each recording has. An object keyed by recording, not a
-  // flat list: two sessions rarely carry exactly the same measures, and this
-  // is what the time-series tab reads to know what to offer.
-  &quot;dataTypes&quot;: {
-    &quot;session01&quot;: [&quot;bodysync&quot;, &quot;neuralsync&quot;],
-    &quot;session02&quot;: [&quot;bodysync&quot;]
-  },
-
-  // Which data types to analyse -- not true/false. The list is the answer to
-  // &quot;which of them&quot;, and true does not say.
-  &quot;include_RQA&quot;: [&quot;bodysync&quot;, &quot;neuralsync&quot;],
-
-  // Pairwise analyses take pairs.
-  &quot;include_cRQA&quot;:        [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
-  &quot;include_crosswavelet&quot;: [[&quot;bodysync&quot;, &quot;neuralsync&quot;]],
-
-  // Tabs that need no analysis of their own are plain switches.
-  &quot;include_elan&quot;: true,
-
-  // The cross-effector network draws its edges from the cross-wavelet output
-  // above, and switching it on also switches on the Monte Carlo coherence
-  // null -- without which no edge can be told from chance.
-  // `true` infers the nodes from the measure names; an object says
-  // outright which series is which node -- see docs/tabs/network.md
-  &quot;include_network&quot;: true
-}
-</code></pre>
-      <p>The distinction is the one thing here worth reading twice: an analysis key
-      names <strong>what to analyse</strong>, a tab key is a <strong>switch</strong>. Writing
-      <code>&quot;include_RQA&quot;: true</code> is refused with a message saying what to write instead.</p>
-      <p>Key names are matched case-insensitively, so <code>include_crqa</code> and <code>include_cRQA</code>
-      are the same key.</p>
-      <h2 id="4-build-the-assets">4. Build the assets</h2>
-      <pre><code class="language-sh">python build_assets.py --check     # what would run, and what is missing
-python build_assets.py             # actually run it
-</code></pre>
-      <p><code>--check</code> installs nothing and computes nothing. It tells you which recordings
-      it can see, which analyses are switched on, and which time series it could not
-      find — which is the fastest way to discover that a file is misnamed.</p>
-      <p>The cross-wavelet step estimates its coherence chance level by simulation and
-      is the slow one; on a long recording it is minutes per pair, not seconds. It
-      runs only when something in your config reads it, and the step says which it
-      chose — see <a href="analysis-output.html">analysis output</a>, A8.</p>
-      <p>Each analysis writes one JSON, reduced to a few hundred points so a page can
-      draw it. Cross-wavelet writes a second, <code>_full.json</code>, in the same schema at the
-      resolution it was computed at. <strong>Continue your own analysis from <code>_full.json</code></strong>
-      where it exists; a recurrence payload carries its own full-resolution signal, so
-      there is nothing beside it to prefer.</p>
-      <p>What each analysis actually computes — the parameters, the algorithm, every
-      field it writes, and what it deliberately does not do — is in
-      <a href="analyses.html">Analyses</a>.</p>
-      <h2 id="5-look-at-it">5. Look at it</h2>
-      <pre><code class="language-sh">python serve.py        # http://localhost:8000
-</code></pre>
-      <p><code>serve.py</code> is a plain static server that also resolves <code>data.local.json</code>, so
-      video and assets outside the repository are served correctly. Opening
-      <code>index.html</code> directly from the filesystem will not work — the browser blocks
-      the fetches.</p>
-      <h2 id="6-record-what-a-complete-build-looks-like">6. Record what a complete build looks like</h2>
-      <p>Once the assets are right:</p>
-      <pre><code class="language-sh">python build_assets.py --write-manifest
-</code></pre>
-      <p>This writes <code>assets/MANIFEST.json</code> — names, sizes and checksums, never content.
-      It is the only thing in a private study's repository that says what a complete
-      set of assets is, so a later rebuild can be checked rather than hoped about.
-      Commit it.</p>
-      <h2 id="7-publish-if-it-is-publishable">7. Publish, if it is publishable</h2>
-      <p>A public study deploys to GitHub Pages by the workflow it was created with; push
-      to <code>main</code> and it is live. A private study has no Pages workflow at all, by
-      construction, and going public is a deliberate, gated transition — not a
-      setting. The checklist is in <a href="data-visibility.html">data visibility</a>.</p>
-      <h2 id="keeping-up-with-the-core">Keeping up with the core</h2>
-      <pre><code class="language-sh">dims-case sync .        # refresh the vendored core to the newest release
-dims-case check .       # verify nothing under vendor/ was edited
-</code></pre>
-      <p>A bot opens this as a pull request every Monday. Never edit anything under
-      <code>vendor/</code>: CI rebuilds it from the release tag and compares, so a hand edit is a
-      red build rather than a silent fork. Fix it in the core and bump the pin.</p>
-      <h2 id="without-a-terminal">Without a terminal</h2>
-      <pre><code class="language-sh">pip install -e &quot;./dims[builder]&quot;
-dims-builder
-</code></pre>
-      <p>The builder asks for the same things this page does — recordings, time series,
-      annotations — and writes a study with them. It runs the same analyses through
-      the same package, so a project it produces and a project you make by hand are
-      the same project.</p>
-      <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/getting-started.md"><code>docs/getting-started.md</code></a>
-        at <code>v1.4.3</code>. Edit it there, not here.</p>
-
-      <footer>
-        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
-      </footer>
-    </main>
-  </div>
+  <main>
+    <h1>The documentation moved</h1>
+    <p>It is now built from the core repository and published per release, so a
+      page can be read at the version it describes. This one is
+      <a href="https://dims-network.github.io/dims/latest/getting-started/">Getting started</a>, and you should be redirected automatically.</p>
+    <p><a href="https://dims-network.github.io/dims/latest/">All documentation →</a> ·
+       <a href="../index.html">DIMS-network home →</a></p>
+  </main>
 </div>
-
-<script src="docs.js"></script>
 </body>
 </html>

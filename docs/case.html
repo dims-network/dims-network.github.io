@@ -3,123 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>A study repository · DIMS docs</title>
-<meta name="description" content="What a case repo holds, what a version bump regenerates, and what it never touches." />
+<title>Moved · DIMS docs</title>
+<link rel="canonical" href="https://dims-network.github.io/dims/latest/contracts/case/" />
+<meta http-equiv="refresh" content="0; url=https://dims-network.github.io/dims/latest/contracts/case/" />
 <link rel="stylesheet" href="../style.css" />
-<link rel="stylesheet" href="docs.css" />
 </head>
 <body>
-
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="../index.html">DIMS-network</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../tutorial.html">Tutorial</a>
-      <a href="../setup.html">Set up</a>
-      <a href="index.html" class="active">Docs</a>
-      <a href="https://github.com/dims-network">GitHub ↗</a>
-    </div>
-  </div>
-</nav>
-
 <div class="wrap">
-  <div class="docs-layout">
-    <aside class="docs-side"></aside>
-    <main class="docs-main">
-
-      <div class="crumbs">Extending DIMS</div>
-      <h1 id="contract-a-case-repository">Contract: a case repository</h1>
-      <p>A <em>case</em> is one study. It holds its configuration, its data, and a pinned copy
-      of the core.</p>
-      <p>It holds <strong>no dashboard code</strong>. If you are editing a tab, an analysis or the
-      host inside a case repo, it belongs in this monorepo instead.</p>
-      <p>It may hold <strong>its own tabs</strong>, in <code>tabs/</code>, for views that mean nothing to any
-      other study — see <code>tab.md</code>. And it may hold <strong>study-specific data preparation</strong> — scripts that turn this study's
-      raw recordings and logs into the assets the dashboard reads. Those are part of
-      the study, not of DIMS, and belong here. Ortho's <code>tools/</code> is the example: it
-      builds time series and clips from ORTHO datalogs, and means nothing to any
-      other study.</p>
-      <pre><code>case-ortho/
-  dims-case.json        visibility, pinned core, publishable paths, hashes
-  config.json           the study (see config.schema.json)
-  data.local.json       untracked; where the data really lives
-  data.local.json.example   tracked; what to copy it from
-  assets/               data, or empty but for MANIFEST.json on a private study
-  build_assets.py       rebuild every asset from this study's raw data
-  requirements.txt      what that rebuild needs
-  serve.py              the local server; generated, refreshed by a bump
-  index.html            loads vendor/; generated
-  vendor/dims-core/     the pinned core, written by tooling, never by hand
-  vendor/dims-tabs/     likewise
-  tabs/                 optional: tabs that belong to this study alone
-  opt/                  optional: this study's own analysis steps
-  tools/                optional: this study's own data preparation
-  .githooks/            private studies: the commit and push guards
-  .github/workflows/    generated; thin callers into the shared workflows
-</code></pre>
-      <p>Three of these are <strong>generated and refreshed by a core bump</strong> — <code>serve.py</code>,
-      <code>index.html</code>, <code>.github/workflows/</code>, and on a private study <code>.githooks/</code>. Editing
-      one is pointless: the next <code>dims-case sync</code> overwrites it.</p>
-      <p><code>build_assets.py</code>, <code>requirements.txt</code> and <code>data.local.json.example</code> are
-      <strong>seeded once and then the study's own</strong>. A bump brings them forward only while
-      they are still byte-identical to what was seeded (their hashes are recorded in
-      <code>dims-case.json</code>); the moment a study edits one, it keeps it and <code>sync</code> says so.
-      Karnatak's <code>build_assets.py</code> drives motion capture, and losing that to a version
-      bump would not be a bump.</p>
-      <h2 id="the-pin">The pin</h2>
-      <p><code>dims-case.json</code> names a core version. A bot opens a pull request when a newer
-      core is released; the PR changes the version and refreshes <code>vendor/</code>. CI then
-      checks that <code>vendor/</code> matches that release exactly.</p>
-      <p>CI does this by fetching the pinned tag and rebuilding <code>vendor/</code> from it, not
-      by comparing against the study's own record of what it should be — a study
-      whose <code>vendor/</code> came from a modified core agrees with itself. <code>dims-case check</code>
-      is the offline version, and <code>dims-case check --release</code> is what CI runs.</p>
-      <p>This is why case repos never drift: editing vendored code by hand is a red X,
-      not a silent fork. It is also why a case can be archived as it stands — the
-      analysis code that produced its results is inside it, at the version that
-      produced them.</p>
-      <p>It is <strong>not</strong> self-contained in the browser — <code>index.html</code> loads four libraries
-      from a CDN, so a dashboard opened without a network shows an empty page. That
-      caveat, and the issue tracking it, are on
-      <a href="architecture.html#why-no-build-step"><code>architecture.md</code></a>.</p>
-      <p><strong>Never edit <code>vendor/</code>.</strong> Fix it in the monorepo and bump the pin.</p>
-      <h2 id="creating-one">Creating one</h2>
-      <pre><code class="language-sh">dims-case new ortho --visibility public                  # -&gt; ./case-ortho
-dims-case new ortho --visibility public --dir path/to/it # somewhere else
-dims-case adopt path/ --name ortho --visibility public   # an existing one
-</code></pre>
-      <p><code>new</code> takes a <strong>name</strong>, not a path; <code>--dir</code> is how you choose where it lands.</p>
-      <p><code>adopt</code> is deliberately a separate verb: <code>new</code> refuses a non-empty directory so
-      it can never write over someone's data, while <code>adopt</code> keeps <code>config.json</code> and
-      <code>assets/</code> exactly as they are and only adds what a case needs.</p>
-      <p>The visibility question is asked once, answered by the researcher, and written
-      down. See <code>data-visibility.md</code> — for a private case this also installs the
-      commit and push hooks, and the privacy workflow. The assets manifest is written
-      by the study when its assets are right, with <code>build_assets.py --write-manifest</code>;
-      it is not something creation can invent.</p>
-      <h2 id="acceptance">Acceptance</h2>
-      <ul>
-      <li><code>python serve.py</code> renders every tab the config enables.</li>
-      <li><code>python build_assets.py --check</code> names this study's inputs and the analyses
-      it would run, without installing anything.</li>
-      <li>Touching one byte in <code>vendor/</code> fails CI, and <code>dims-case check --release</code>
-      locally.</li>
-      <li>A public case deploys to Pages; a private one has no Pages workflow at all,
-      and <code>git add -f</code> of a restricted path is refused by the commit hook and by
-      the push hook independently.</li>
-      </ul>
-      <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/contracts/case.md"><code>docs/contracts/case.md</code></a>
-        at <code>v1.4.3</code>. Edit it there, not here.</p>
-
-      <footer>
-        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
-      </footer>
-    </main>
-  </div>
+  <main>
+    <h1>The documentation moved</h1>
+    <p>It is now built from the core repository and published per release, so a
+      page can be read at the version it describes. This one is
+      <a href="https://dims-network.github.io/dims/latest/contracts/case/">A study repository</a>, and you should be redirected automatically.</p>
+    <p><a href="https://dims-network.github.io/dims/latest/">All documentation →</a> ·
+       <a href="../index.html">DIMS-network home →</a></p>
+  </main>
 </div>
-
-<script src="docs.js"></script>
 </body>
 </html>

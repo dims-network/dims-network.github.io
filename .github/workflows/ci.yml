@@ -10,16 +10,17 @@ jobs:
     uses: dims-network/.github/.github/workflows/reusable-dashboard-ci.yml@main
     with:
       python_paths: "tools"
-      js_glob: "docs/*.js"
+      # The only JavaScript left here is the front page's own; the docs figures
+      # moved to the core with the pages they draw on.
+      js_glob: "tools/*.mjs"
       config_path: ""
       check_assets: false
 
-  # The documentation pages are generated from the markdown in the core. This
-  # is what stops them drifting from it: for months this site described
-  # developing on a template and propagating downstream, a process that had
-  # stopped existing, because nothing connected a page to the code it
-  # described.
-  docs:
+  # The documentation and the tutorial are built from the core repository with
+  # MkDocs and published per version, so they cannot drift from the code they
+  # describe. Two things here still can: the palette, and the claims the
+  # hand-written pages make about a release.
+  pinned-to-a-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -27,7 +28,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Fetch the release these pages claim to document
+      - name: Fetch the release this site claims to describe
         run: |
           ref=$(python -c "import json;print(json.load(open('tools/SOURCE.json'))['ref'])")
           echo "documenting: $ref"
@@ -35,15 +36,15 @@ jobs:
             https://github.com/dims-network/dims.git /tmp/dims \
             || { echo "::error::dims has no tag $ref. tools/SOURCE.json must name a release."; exit 1; }
 
-      - name: The committed pages are what that release produces
-        run: |
-          pip install -q -r tools/requirements.txt
-          python tools/render_docs.py --dims /tmp/dims --check
+      # One palette. vendor/tokens.css is a copy of the core's, and this is what
+      # stops it becoming a second, slightly different one.
+      - name: The vendored palette is the core's palette
+        run: python tools/sync_tokens.py /tmp/dims --check
 
-      # index.html, setup.html and tutorial.html are written here rather than
-      # generated, so the check above cannot see them. They drifted four
-      # releases before anyone outside the project noticed.
-      - name: The hand-written pages agree with that release too
+      # index.html and setup.html are written here rather than generated, so
+      # nothing else connects them to the release. They drifted four releases
+      # before anyone outside the project noticed.
+      - name: The hand-written pages agree with that release
         run: python tools/check_unpinned_pages.py /tmp/dims
 
   # The front page renders its diagram and its repository cards from one

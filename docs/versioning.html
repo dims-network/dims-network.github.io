@@ -3,131 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Versions, vendoring and the pin · DIMS docs</title>
-<meta name="description" content="How one fix reaches every study, and why a study can be archived." />
+<title>Moved · DIMS docs</title>
+<link rel="canonical" href="https://dims-network.github.io/dims/latest/versioning/" />
+<meta http-equiv="refresh" content="0; url=https://dims-network.github.io/dims/latest/versioning/" />
 <link rel="stylesheet" href="../style.css" />
-<link rel="stylesheet" href="docs.css" />
 </head>
 <body>
-
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="../index.html">DIMS-network</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../tutorial.html">Tutorial</a>
-      <a href="../setup.html">Set up</a>
-      <a href="index.html" class="active">Docs</a>
-      <a href="https://github.com/dims-network">GitHub ↗</a>
-    </div>
-  </div>
-</nav>
-
 <div class="wrap">
-  <div class="docs-layout">
-    <aside class="docs-side"></aside>
-    <main class="docs-main">
-
-      <div class="crumbs">Explanation</div>
-      <h1 id="versions-vendoring-and-the-pin">Versions, vendoring and the pin</h1>
-      <p>How one fix reaches every study, and why a study can be archived and still make
-      sense years later. This is the explanation; the commands are on
-      <a href="cli-dims-case.html">the <code>dims-case</code> reference</a>.</p>
-      <pre><code>                dims-network/dims          all the code, released as vX.Y.Z
-                       │
-        ┌──────────────┴──────────────┐
-  vendor/ , pinned            dims-analysis, installed
-  what the browser loads      what rebuilds the assets
-  (bot PR; CI rebuilds it     (pip install -e ./dims —
-   from the release tag)       not on PyPI yet)
-        │                              │
-   ┌────┴─────┬──────────────┐         └── used by every study, and by the builder
-case-demo  case-ortho  case-karnatak
- (public)   (public)     (PRIVATE — data lives outside the repository)
-</code></pre>
-      <h2 id="one-version-number-both-halves">One version number, both halves</h2>
-      <p>A study depends on the core twice, in two different ways: <strong>the browser loads a
-      copy</strong> of <code>dims-core</code> and <code>dims-tabs</code> from its own <code>vendor/</code> directory, and <strong>the
-      analyses are installed</strong> as a Python package that rebuilds its assets.</p>
-      <p>Both halves are released together and are meant to carry the same version number.
-      A study's <code>dims-case.json</code> records it once, as <code>dimsCore</code>, taken from
-      <code>git describe</code> on the core it was vendored from — and that is what the vendor
-      check compares against.</p>
-      <p><strong>The assets record their version separately.</strong> Every payload carries
-      <code>provenance.core_version</code>, read from <code>dims_analysis.__version__</code>. Nothing compares
-      the two: the only check on a study's committed output is <code>payload_version</code> against
-      the format version the dashboard reads. So &quot;one version number&quot; is the intent that
-      <code>tests/test_release.py</code> enforces <em>across packages</em> — it is not a single string the
-      tooling reads twice, and the two can drift if a release forgets to bump the
-      literals.</p>
-      <p>That is the whole reason for lockstep versioning. A study whose frontend and
-      analyses came from different releases can display a payload it half understands,
-      which is worse than refusing it.</p>
-      <h2 id="how-a-fix-travels">How a fix travels</h2>
-      <ol>
-      <li>It is made <strong>once</strong>, in the monorepo.</li>
-      <li>A release is tagged.</li>
-      <li>Each study's <strong>own</strong> scheduled workflow notices, and opens a pull request in
-      its own repository changing <code>dimsCore</code> and refreshing <code>vendor/</code>. That is
-      <a href="cli-dims-case.html#sync--take-a-new-core"><code>dims-case sync</code></a>. Studies
-      pull; the core does not push — otherwise it would need write access to every
-      study.</li>
-      <li>The study's CI checks the result — <a href="cli-dims-case.html#check--verify-the-pin"><code>dims-case check --release</code></a>.</li>
-      <li>If the payload format moved, the study rebuilds its assets. Until it does, the
-      dashboard says so rather than drawing a blank panel.</li>
-      </ol>
-      <p><strong>Propagation is a version bump, not a merge.</strong> Nothing is ever copied between
-      studies.</p>
-      <h2 id="why-the-check-rebuilds-instead-of-comparing-records">Why the check rebuilds instead of comparing records</h2>
-      <p>A study records a hash of what its <code>vendor/</code> should be. Comparing against that
-      record catches a hand-edited file — but <strong>a <code>vendor/</code> copied from a modified core
-      agrees with its own record perfectly.</strong> Both sides of that comparison came from
-      the study.</p>
-      <p>So the release check rebuilds <code>vendor/</code> from a core checkout and compares against
-      that, rather than against the study's record. It is the one comparison a fork
-      cannot pass. <code>dims-case check</code> is the
-      offline version and <code>dims-case check --release</code> is what CI runs; only the second
-      is evidence.</p>
-      <p>This is why case repositories do not drift: editing vendored code by hand is a
-      red X, not a silent fork.</p>
-      <p><strong>Never edit <code>vendor/</code>.</strong> Fix it in the monorepo and bump the pin.</p>
-      <h2 id="what-a-study-owns-and-what-the-core-keeps-rewriting">What a study owns, and what the core keeps rewriting</h2>
-      <p><code>sync</code> has to know what it may overwrite, and the answer is three tiers — the
-      full table is in <a href="cli-dims-case.html#the-three-tiers-of-file-ownership">the <code>dims-case</code> reference</a>.
-      In short: <code>vendor/</code>, <code>index.html</code>, the workflows, the private hooks and <code>serve.py</code>
-      are regenerated every sync; <code>build_assets.py</code>, <code>requirements.txt</code> and <code>data.local.json.example</code>
-      are seeded once and become yours the moment you edit one; <code>config.json</code>,
-      <code>assets/</code>, <code>opt/</code> and <code>tabs/</code> are never touched.</p>
-      <p>A study needing a different parameter changes <code>config.json</code> under <code>analysis</code> —
-      <strong>never a copied analysis script.</strong> Keeping a fork of a step is exactly what the
-      monorepo exists to make unnecessary, and it puts the study outside the guarantee
-      above.</p>
-      <h2 id="archiving">Archiving</h2>
-      <p>Because the analysis code that produced a study's results is inside the study, at
-      the version that produced them, a case repository can be archived as it stands and
-      still be read. That is the point of vendoring a copy rather than depending on a
-      package that may be yanked, moved or changed.</p>
-      <p><strong>One caveat, and it is real.</strong> A dashboard is not self-contained in the browser —
-      <code>index.html</code> loads five libraries from a CDN, so one opened without a network shows
-      an empty page. That caveat and the issue tracking it are on
-      <a href="architecture.html#why-no-build-step"><code>architecture.md</code></a>.</p>
-      <h2 id="see-also">See also</h2>
-      <ul>
-      <li><a href="case.html"><code>contracts/case.md</code></a> — the shape of a case repository.</li>
-      <li><a href="architecture.html"><code>architecture.md</code></a> — why the code is arranged this way.</li>
-      <li><a href="cli-dims-case.html"><code>reference/cli/dims-case.md</code></a> — the commands.</li>
-      </ul>
-      <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/versioning.md"><code>docs/versioning.md</code></a>
-        at <code>v1.4.3</code>. Edit it there, not here.</p>
-
-      <footer>
-        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
-      </footer>
-    </main>
-  </div>
+  <main>
+    <h1>The documentation moved</h1>
+    <p>It is now built from the core repository and published per release, so a
+      page can be read at the version it describes. This one is
+      <a href="https://dims-network.github.io/dims/latest/versioning/">Versions, vendoring and the pin</a>, and you should be redirected automatically.</p>
+    <p><a href="https://dims-network.github.io/dims/latest/">All documentation →</a> ·
+       <a href="../index.html">DIMS-network home →</a></p>
+  </main>
 </div>
-
-<script src="docs.js"></script>
 </body>
 </html>

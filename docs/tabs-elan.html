@@ -3,153 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ELAN annotations · DIMS docs</title>
-<meta name="description" content="Your annotation tiers on the dashboard&#x27;s timeline." />
+<title>Moved · DIMS docs</title>
+<link rel="canonical" href="https://dims-network.github.io/dims/latest/tabs/elan/" />
+<meta http-equiv="refresh" content="0; url=https://dims-network.github.io/dims/latest/tabs/elan/" />
 <link rel="stylesheet" href="../style.css" />
-<link rel="stylesheet" href="docs.css" />
 </head>
 <body>
-
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="../index.html">DIMS-network</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../tutorial.html">Tutorial</a>
-      <a href="../setup.html">Set up</a>
-      <a href="index.html" class="active">Docs</a>
-      <a href="https://github.com/dims-network">GitHub ↗</a>
-    </div>
-  </div>
-</nav>
-
 <div class="wrap">
-  <div class="docs-layout">
-    <aside class="docs-side"></aside>
-    <main class="docs-main">
-
-      <div class="crumbs">Tabs</div>
-      <h1 id="the-elan-tab">The ELAN tab</h1>
-      <p>Your own annotation tiers, drawn on the same timeline as the signals. This is the
-      tab that connects hand coding to everything else: click an annotation and the
-      video, the transcript and every analysis tab move to it.</p>
-      <ul>
-      <li>Tab id <code>elan</code>, label <strong>ELAN Annotations</strong>, order 50, drawn into <code>elanContainer</code>.</li>
-      <li>Gate: <code>!!cfg.include_elan</code> — any truthy value switches it on.</li>
-      <li>Reads <code>assets/elan/{videoID}.eaf</code> directly, with <code>fetch</code> and the browser's own
-      XML parser. It is the only tab that reads an input file rather than an analysis
-      payload, and the only one whose data no analysis step produces.</li>
-      </ul>
-      <h2 id="what-it-reads-out-of-the-eaf">What it reads out of the <code>.eaf</code></h2>
-      <p>Three element types, and nothing else:</p>
-      <table>
-      <thead>
-      <tr>
-        <th>element</th>
-        <th>what is taken</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td><code>TIME_SLOT</code></td>
-        <td><code>TIME_SLOT_ID</code> and <code>TIME_VALUE</code>. <strong>Values are milliseconds in the file and are divided by 1000</strong>, so the tab works in seconds like every other tab</td>
-      </tr>
-      <tr>
-        <td><code>TIER</code></td>
-        <td><code>TIER_ID</code>, used as the tier's name and its identity everywhere else</td>
-      </tr>
-      <tr>
-        <td><code>ALIGNABLE_ANNOTATION</code></td>
-        <td><code>TIME_SLOT_REF1</code> and <code>TIME_SLOT_REF2</code> for the extent, and the text of <code>ANNOTATION_VALUE</code></td>
-      </tr>
-      </tbody>
-      </table>
-      <p><strong>Only <code>ALIGNABLE_ANNOTATION</code> is read.</strong> ELAN's other annotation type,
-      <code>REF_ANNOTATION</code> — the one used by every <em>dependent</em> tier, where an annotation
-      hangs off a parent annotation instead of naming its own time slots — is ignored
-      completely. If your coding scheme puts the interesting labels on dependent tiers,
-      those tiers will be missing from this tab and nothing will say so.</p>
-      <p>Two more silent drops, both by the same rule of &quot;if it has no extent, it is not
-      drawn&quot;:</p>
-      <ul>
-      <li>An annotation whose <code>TIME_SLOT_REF1</code> or <code>TIME_SLOT_REF2</code> names a slot that is
-      not in the file is skipped.</li>
-      <li>A tier left with no annotations after that is dropped from the tier list
-      entirely, rather than shown empty.</li>
-      </ul>
-      <p>If <em>no</em> tier survives, the tab reports <strong>&quot;Failed to load ELAN data: No alignable
-      annotations found in EAF file.&quot;</strong> rather than drawing an empty timeline. On a file
-      full of dependent tiers that is the message you will get, and the cause is the
-      paragraph above — not a missing or unreadable file, which is what the wording
-      suggests.</p>
-      <h2 id="what-it-draws">What it draws</h2>
-      <p>One horizontal lane per tier, labelled down the left. Each annotation is a filled
-      block spanning its own start and end, drawn at two-thirds opacity with a solid
-      border in the same colour.</p>
-      <p>Colours come from a fixed 20-entry palette, cycled if you have more than 20 tiers.
-      The index used is the tier's position in the <strong>original</strong> file order, not its
-      position among the tiers currently shown — so hiding a tier does not recolour the
-      ones left behind.</p>
-      <p>The left margin sizes itself to the longest visible tier name, at roughly 7 px per
-      character, clamped between 120 px and 220 px. Names longer than that are cut off
-      by the margin rather than shrinking the plot.</p>
-      <p>Hovering an annotation gives its tier, its text (or <code>(empty)</code> when the
-      <code>ANNOTATION_VALUE</code> is blank), its start and end to two decimals, and its duration.
-      The hover targets are invisible square markers at each annotation's midpoint, so
-      <strong>hover is keyed to the middle of a block, not anywhere along it</strong> — on a long
-      annotation you have to aim at the centre.</p>
-      <h3 id="choosing-tiers">Choosing tiers</h3>
-      <p>Above the plot is one checkbox per tier, plus <strong>all</strong> and <strong>none</strong>. The selection
-      is held on the host as <code>app.elanSelectedTiers</code>.</p>
-      <ul>
-      <li><strong>Switching tab keeps it.</strong></li>
-      <li><strong>Switching recording clears it</strong>, because tier names belong to the recording and
-      need not carry over.</li>
-      <li><strong>Switching theme keeps it.</strong> A theme change re-renders everything, which means
-      re-entering the data load for the same recording — and that used to clear the
-      selection on its way past, until v1.4.2. It now clears only when the recording
-      actually changes.</li>
-      </ul>
-      <p>Deselecting every tier collapses the plot to zero height: the y-axis range
-      becomes <code>[0, 0]</code> and the playhead's band and line are drawn with no height to
-      occupy, so they disappear too. You get an empty frame rather than an empty
-      timeline with a playhead on it.</p>
-      <h2 id="the-playhead">The playhead</h2>
-      <p>Clicking seeks to that time — but the only clickable things are the invisible
-      midpoint markers, so <strong>you must click at or near an annotation's centre</strong>, the same
-      aiming constraint as hovering. Clicking empty timeline does nothing.</p>
-      <p>When a time is selected the tab draws two things across every lane: a translucent
-      band spanning <code>playhead ± windowSize / 2</code>, and a dotted vertical line at the
-      playhead itself. Window size is read live from the <strong>Window Size</strong> control,
-      defaulting to 5 seconds.</p>
-      <p><code>onTimeUpdate</code> redraws the whole plot rather than moving the shapes. With many
-      annotations this is the more expensive of the two strategies the tabs use — the
-      cross-wavelet tab moves shapes instead — but it keeps the tier filter and the
-      highlight in one code path.</p>
-      <h2 id="the-time-axis">The time axis</h2>
-      <p>The x-axis spans <strong>the recording</strong>, from 0 to the last sample in any loaded
-      series — the same extent the time slider uses — so the lanes line up with every
-      other tab and an unannotated head or tail of the recording is visible as empty
-      space rather than cropped away.</p>
-      <p>Until v1.4.2 it did not. The tab asked the host for a field the host has never
-      set, so the request always failed and Plotly autoscaled to the annotated span:
-      annotations sat at their true times, but a file whose first annotation began at
-      40 s drew a timeline starting near 40 s.</p>
-      <h2 id="where-it-lives">Where it lives</h2>
-      <p><a href="https://github.com/dims-network/dims/blob/v1.4.3/packages/dims-tabs/elan.js"><code>packages/dims-tabs/elan.js</code></a>. It adds
-      <code>loadELANData</code>, <code>displayELANTab</code>, <code>_renderELANPlot</code> and <code>updateELANHighlight</code> to
-      the host via <code>DIMS.extendHost</code>.</p>
-      <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/tabs/elan.md"><code>docs/tabs/elan.md</code></a>
-        at <code>v1.4.3</code>. Edit it there, not here.</p>
-
-      <footer>
-        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
-      </footer>
-    </main>
-  </div>
+  <main>
+    <h1>The documentation moved</h1>
+    <p>It is now built from the core repository and published per release, so a
+      page can be read at the version it describes. This one is
+      <a href="https://dims-network.github.io/dims/latest/tabs/elan/">ELAN annotations</a>, and you should be redirected automatically.</p>
+    <p><a href="https://dims-network.github.io/dims/latest/">All documentation →</a> ·
+       <a href="../index.html">DIMS-network home →</a></p>
+  </main>
 </div>
-
-<script src="docs.js"></script>
 </body>
 </html>

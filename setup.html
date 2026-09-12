@@ -14,9 +14,9 @@
     <a class="brand" href="index.html">DIMS-network</a>
     <div class="nav-links">
       <a href="index.html">Home</a>
-      <a href="tutorial.html">Tutorial</a>
+      <a href="/dims/latest/tutorial/">Tutorial</a>
       <a href="setup.html" class="active">Set up</a>
-      <a href="docs/index.html">Docs</a>
+      <a href="/dims/latest/">Docs</a>
       <a href="https://github.com/dims-network">GitHub ↗</a>
     </div>
   </div>
@@ -29,7 +29,7 @@
     <h1>A study, from the terminal</h1>
     <p class="lede">What DIMS needs on disk, what it needs in <code>config.json</code>,
       and which commands turn the two into a dashboard. No builder — if you would rather
-      click through a wizard, the <a href="tutorial.html">tutorial</a> does that and
+      click through a wizard, the <a href="/dims/latest/tutorial/">tutorial</a> does that and
       writes the same study.</p>
     <div class="callout"><b>The shape of it.</b> A <i>study</i> is a small repository:
       your recordings under <code>assets/</code>, one <code>config.json</code> describing
@@ -58,7 +58,7 @@ pip install -e ./dims</pre>
     <div class="callout"><b>Want the wizard as well?</b> The builder's dependencies are an
       extra, so install <code>pip install -e './dims[builder]'</code> instead and you also get
       <code>dims-builder</code>. Without the extra that command exists but cannot start.
-      The <a href="tutorial.html">tutorial</a> takes the no-terminal route instead and needs
+      The <a href="/dims/latest/tutorial/">tutorial</a> takes the no-terminal route instead and needs
       none of this.</div>
   </section>
 
@@ -80,7 +80,7 @@ cd case-my-study</pre>
         pre-push hook and a CI check that refuse to let data into git. A private study
         gets no Pages workflow at all, by construction. Going public later is a gated
         transition, not a setting:
-        <a href="docs/data-visibility.html">data visibility</a>.</div>
+        <a href="/dims/latest/contracts/data-visibility/">data visibility</a>.</div>
     </div>
   </section>
 
@@ -129,7 +129,7 @@ cd case-my-study</pre>
         <code>dyad_01_head_speed.csv</code> is not.</div>
       <p>Converting from a tool that writes milliseconds — several EnvisionBox modules
         among them — is a division and a rename, nothing more. The full rules are in
-        <a href="docs/assets.html">the asset layout contract</a>.</p>
+        <a href="/dims/latest/contracts/assets/">the asset layout contract</a>.</p>
 
       <details class="more">
         <summary><b>Data that cannot go in the repository</b>
@@ -311,7 +311,7 @@ python serve.py                  <span class="c"># http://localhost:8000</span><
           works when your measure names encode person and body part
           (<code>teacher_righthandspeed</code>) and lands everything in one column when
           they do not. The full contract is
-          <a href="docs/tabs-network.html">the network tab</a>.</p>
+          <a href="/dims/latest/tabs/network/">the network tab</a>.</p>
       </div>
     </details>
   </section>
@@ -345,7 +345,7 @@ dims-case check .   <span class="c"># verify nothing under vendor/ was edited</s
               <a href="https://github.com/dims-network/dims/blob/main/docs/contracts/config.schema.json"><code>config.schema.json</code></a>.</td></tr>
         <tr><td><b>Study-owned analyses</b> — an analysis only your study runs</td>
             <td>An <code>opt/step_*.py</code> plus its requirements, discovered and run
-              after the shared ones. See <a href="docs/step.html">the step contract</a>.</td></tr>
+              after the shared ones. See <a href="/dims/latest/contracts/step/">the step contract</a>.</td></tr>
         <tr><td><b>Trajectory and DTW tabs</b></td>
             <td><code>include_trajectory</code> and <code>include_dtw</code>; the latter is
               beta. In the schema.</td></tr>

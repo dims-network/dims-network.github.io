@@ -3,208 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cross-wavelet · DIMS docs</title>
-<meta name="description" content="The four-panel cross-wavelet figure, and how to avoid over-reading it." />
+<title>Moved · DIMS docs</title>
+<link rel="canonical" href="https://dims-network.github.io/dims/latest/tabs/crosswavelet/" />
+<meta http-equiv="refresh" content="0; url=https://dims-network.github.io/dims/latest/tabs/crosswavelet/" />
 <link rel="stylesheet" href="../style.css" />
-<link rel="stylesheet" href="docs.css" />
 </head>
 <body>
-
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="../index.html">DIMS-network</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../tutorial.html">Tutorial</a>
-      <a href="../setup.html">Set up</a>
-      <a href="index.html" class="active">Docs</a>
-      <a href="https://github.com/dims-network">GitHub ↗</a>
-    </div>
-  </div>
-</nav>
-
 <div class="wrap">
-  <div class="docs-layout">
-    <aside class="docs-side"></aside>
-    <main class="docs-main">
-
-      <div class="crumbs">Tabs</div>
-      <h1 id="the-cross-wavelet-tab">The cross-wavelet tab</h1>
-      <p>For each pair you asked for, a four-panel figure in the style of the pycwt
-      reference plots: the two signals, the cross-wavelet power spectrum with phase
-      arrows and the cone of influence, the global spectrum beside it, and the
-      scale-averaged power beneath.</p>
-      <p>This page is about what the tab draws. What the transform computes, what the four
-      different significance levels mean, and how to avoid over-reading any of it is on
-      <a href="crosswavelet.html">the analysis page</a> — read that one before trusting
-      a figure here.</p>
-      <ul>
-      <li>Tab id <code>crosswavelet</code>, label <strong>Cross-wavelet analysis</strong>, order 30.</li>
-      <li>Draws into <code>crossWaveletContainer</code>, named explicitly rather than derived, because
-      other code and tests already used the id.</li>
-      <li>Reads <code>assets/crosswavelet/{videoID}_crosswavelet_data.json</code>, container key
-      <code>crosswavelet_pairs</code>.</li>
-      </ul>
-      <h2 id="the-gate-reads-both-config-dialects">The gate reads both config dialects</h2>
-      <pre><code class="language-js">Array.isArray(v) &amp;&amp; v.length &gt; 0 &amp;&amp; (Array.isArray(v[0]) || v.length &gt;= 2)
-</code></pre>
-      <p><code>include_crosswavelet</code> can be written two ways, and they need different tests:</p>
-      <ul>
-      <li><strong>Explicit pairs</strong> — <code>[[&quot;a&quot;,&quot;b&quot;]]</code> — is valid with a single entry.</li>
-      <li><strong>A legacy flat list</strong> — <code>[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]</code> — needs at least two names before a
-      pair exists at all, and the analysis expands it into every combination.</li>
-      </ul>
-      <p>So <code>[&quot;a&quot;]</code> switches the tab off, and <code>[[&quot;a&quot;,&quot;b&quot;]]</code> switches it on. This is the one
-      place where the flat form is genuinely supported; <code>include_cRQA</code> looks similar and
-      is <strong>not</strong> expanded the same way — see <a href="tabs-crqa.html">the cross-RQA tab</a>.</p>
-      <p><strong>The three dashed lines are named behind the (i) beside the heading</strong> — panel C's
-      95 % level, panel D's flat one, and the cone-of-influence boundary. They are all
-      drawn in the body text colour beside solid curves in the same colour, so the
-      panel says which is which rather than leaving it to be inferred.</p>
-      <h2 id="the-four-panels">The four panels</h2>
-      <p>Pairs are laid out in a grid of at least 600 px columns, one figure per pair,
-      each 800 px tall.</p>
-      <table>
-      <thead>
-      <tr>
-        <th>panel</th>
-        <th>axes</th>
-        <th>what it shows</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td><strong>A</strong> top</td>
-        <td><code>x4</code>/<code>y4</code></td>
-        <td>the two raw signals, normalised, in their colours from the time series tab</td>
-      </tr>
-      <tr>
-        <td><strong>B</strong> middle-left</td>
-        <td><code>x</code>/<code>y</code></td>
-        <td>cross-wavelet power as a Viridis heatmap, with the significance contour, phase arrows and the cone of influence over it</td>
-      </tr>
-      <tr>
-        <td><strong>C</strong> middle-right</td>
-        <td><code>x2</code>/<code>y2</code></td>
-        <td>the global (time-averaged) cross-wavelet spectrum, with its 95 % level dashed beside it</td>
-      </tr>
-      <tr>
-        <td><strong>D</strong> bottom</td>
-        <td><code>x3</code>/<code>y3</code></td>
-        <td>scale-averaged power over time, with its 95 % level as a flat dashed line</td>
-      </tr>
-      </tbody>
-      </table>
-      <p><strong>The period axis is log₂.</strong> Ticks are placed at whole powers of two and labelled
-      with the period in seconds, so the spacing between 1 s and 2 s is the same as
-      between 8 s and 16 s. Hovering reports the real period, not its logarithm.</p>
-      <p>Panels A, B and D share the time axis. <strong>Panel C does not have one</strong> — it is a
-      spectrum, with period on y and power on x — which is why the playhead window is
-      not drawn on it.</p>
-      <h3 id="the-significance-contour">The significance contour</h3>
-      <p>The payload stores the 95 % level once per scale, and the power once per cell. The
-      tab divides one by the other and contours that ratio.</p>
-      <p><strong>Read the contour as approximate, not as a threshold.</strong> The contour levels are
-      0.95 and 1.45, not 1 — so the outer line sits slightly <em>inside</em> the 95 % level, and
-      a cell just within it has not quite reached significance. The exact <code>&gt; 1</code> test does
-      exist, but it is what gates the phase arrows, not what draws this line.</p>
-      <p>A scale whose level is missing or non-positive contributes no contour rather than a
-      spurious one.</p>
-      <h3 id="phase-arrows-read-the-caveat">Phase arrows — read the caveat</h3>
-      <p>Roughly 20 arrows across time by 12 down the period axis, drawn only where the
-      ratio above exceeds 1. They are white on a dark disc, because they sit on a
-      Viridis heatmap and appear only where power is high — which is its pale end. Each is one of eight Unicode arrows binned from the phase
-      angle in 45° steps, and the figure's own subtitle carries the full legend:</p>
-      <ul>
-      <li><strong>→</strong> in phase · <strong>←</strong> anti-phase</li>
-      <li><strong>↑</strong> the first measure leads by 90° · <strong>↓</strong> the second leads by 90°</li>
-      <li>the diagonals are the 45° and 135° cases in between.</li>
-      </ul>
-      <p>Hovering an arrow gives the exact time, period, phase in degrees, and power.</p>
-      <p><strong>The arrows sit where <em>power</em> is significant, not where coherence is.</strong> They are
-      gated on <code>power / signif_xwt &gt; 1</code> — the cross-wavelet significance level, which
-      asks whether there was more joint energy here than red noise would give. That is a
-      statement about power. It is <strong>not</strong> a test of whether the timing relationship was
-      consistent, and nothing in the arrow test looks at the coherence value at all. A
-      cell can carry a confident-looking arrow and have poor coherence. This is the
-      single easiest way to over-read the figure; the analysis page spells out the
-      difference at length.</p>
-      <p>Cells where either the phase or the coherence is null are skipped, so an arrow is
-      never drawn from a missing value.</p>
-      <h3 id="the-cone-of-influence">The cone of influence</h3>
-      <p>Shaded at 8 % black, with a dashed boundary line. Inside it the transform is
-      contaminated by the edges of the record and the values should not be read. The
-      boundary is clamped to the shortest period in the payload, so it never dips below
-      the plotted range.</p>
-      <h2 id="the-title-tells-you-whether-coherence-can-be-tested-at-all">The title tells you whether coherence can be tested at all</h2>
-      <p>Above every figure: mean and maximum coherence, the two AR(1) coefficients α₁ and
-      α₂, and then one line that is worth reading every time.</p>
-      <ul>
-      <li>When a Monte Carlo null was run — <strong>&quot;Coherence above chance (outside the cone):
-      X% of cells (N surrogates, median level M)&quot;</strong>. Under independence that percentage
-      sits near 5 %; well above it is the finding. The surrogate count degrades to the
-      words &quot;a Monte Carlo null&quot; when the payload does not record one, and the
-      &quot;median level&quot; clause is dropped when that statistic is absent.</li>
-      <li>When it was not — <strong>&quot;Coherence chance level: not computed for this output. Set
-      <code>analysis.crosswavelet.mcCount</code> in config.json and rebuild.&quot;</strong></li>
-      </ul>
-      <p>The second is the default for a study that does not switch on the network tab,
-      because the null is expensive and only that tab's coherence mode reads the grid
-      itself. This title line is its other reader, which is why it can tell you the
-      level is missing. It is not an error. But
-      <strong>a coherence value without it cannot be interpreted</strong>: coherence does not sit at
-      zero when there is no relationship. Measured on one of the project's own studies,
-      independent signals averaged about 0.25 and the 95 % level came out near 0.59 — so
-      a raw value of 0.5 is not evidence of anything. Those numbers are one measurement
-      on one dataset, not constants; the point they make is that the comparison has to be
-      made, which is why the tab says in the title when it could not be.</p>
-      <h2 id="the-playhead">The playhead</h2>
-      <p>Clicking panel A, B or D seeks to that time. <strong>Panel C does not seek</strong> — its
-      x-axis is power, so there is no time on it to go to.</p>
-      <p>Until v1.4.2 it did: the handler took <code>point.x</code> from whichever panel was clicked,
-      so clicking the spectrum moved the whole dashboard to a power value read as
-      seconds.</p>
-      <p>The window is drawn as two vertical edge lines plus a translucent band spanning
-      <code>playhead ± windowSize / 2</code>, clamped to the pair's own time range. It appears on
-      panels A, B and D, and not on C.</p>
-      <p><strong>Moving the playhead does not redraw the figure.</strong> The tab recomputes only the
-      shapes and hands them to Plotly's <code>relayout</code>, leaving the heatmap in place. This
-      is why scrubbing the slider is smooth here and not on the recurrence tabs, which
-      rebuild their whole figure on every move.</p>
-      <p>That split is also what the <a href="tabs-network.html">cross-effector network</a> depends on: when
-      you select an edge, the network draws this same pair figure in its detail panel
-      and then moves its window as the playhead moves, without ever redrawing it.</p>
-      <h2 id="when-it-cannot-draw">When it cannot draw</h2>
-      <ul>
-      <li><strong>No payload</strong> — <code>include_crosswavelet</code> is set, so the analysis was expected; the
-      message names <code>python build_assets.py</code>.</li>
-      <li><strong>A payload from an older format</strong> — refused by the host's version check.</li>
-      <li><strong>A pair missing <code>visualization.time</code>, <code>.power</code> or <code>.period</code></strong> — that pair's cell
-      shows the error and the rest of the grid still draws.</li>
-      <li><strong><code>coherence</code> absent</strong> — the figure still draws and the arrows lose their
-      coherence null-check. It does <strong>not</strong> change the title: the chance-level line
-      reads <code>statistics.wtc_signif_fraction</code>, an independent field, and a payload can
-      carry either one without the other.</li>
-      </ul>
-      <h2 id="where-it-lives">Where it lives</h2>
-      <p><a href="https://github.com/dims-network/dims/blob/v1.4.3/packages/dims-tabs/crosswavelet.js"><code>packages/dims-tabs/crosswavelet.js</code></a>.
-      It adds <code>loadCrossWaveletData</code>, <code>displayCrossWaveletPlots</code>, <code>chanceLevelNote</code>,
-      <code>createCrossWaveletPlot</code>, <code>crossWaveletWindowShapes</code>, <code>updateCrossWaveletWindow</code>
-      and <code>updateCrossWaveletHighlights</code> to the host.</p>
-      <p><code>createCrossWaveletPlot</code> and <code>updateCrossWaveletWindow</code> are the public seam <strong>the
-      network tab reuses</strong> to draw and then move its detail figure; treat those two as
-      part of this tab's interface rather than as private.</p>
-      <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/tabs/crosswavelet.md"><code>docs/tabs/crosswavelet.md</code></a>
-        at <code>v1.4.3</code>. Edit it there, not here.</p>
-
-      <footer>
-        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
-      </footer>
-    </main>
-  </div>
+  <main>
+    <h1>The documentation moved</h1>
+    <p>It is now built from the core repository and published per release, so a
+      page can be read at the version it describes. This one is
+      <a href="https://dims-network.github.io/dims/latest/tabs/crosswavelet/">Cross-wavelet</a>, and you should be redirected automatically.</p>
+    <p><a href="https://dims-network.github.io/dims/latest/">All documentation →</a> ·
+       <a href="../index.html">DIMS-network home →</a></p>
+  </main>
 </div>
-
-<script src="docs.js"></script>
 </body>
 </html>

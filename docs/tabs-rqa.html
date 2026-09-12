@@ -3,154 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RQA · DIMS docs</title>
-<meta name="description" content="Recurrence plots and their windowed metrics." />
+<title>Moved · DIMS docs</title>
+<link rel="canonical" href="https://dims-network.github.io/dims/latest/tabs/rqa/" />
+<meta http-equiv="refresh" content="0; url=https://dims-network.github.io/dims/latest/tabs/rqa/" />
 <link rel="stylesheet" href="../style.css" />
-<link rel="stylesheet" href="docs.css" />
 </head>
 <body>
-
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="../index.html">DIMS-network</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../tutorial.html">Tutorial</a>
-      <a href="../setup.html">Set up</a>
-      <a href="index.html" class="active">Docs</a>
-      <a href="https://github.com/dims-network">GitHub ↗</a>
-    </div>
-  </div>
-</nav>
-
 <div class="wrap">
-  <div class="docs-layout">
-    <aside class="docs-side"></aside>
-    <main class="docs-main">
-
-      <div class="crumbs">Tabs</div>
-      <h1 id="the-rqa-tab">The RQA tab</h1>
-      <p>One recurrence plot per measure, with the windowed metrics beneath it and the
-      playhead across both. This page is about what the tab <em>draws</em>; what the numbers
-      mean and how they were computed is on <a href="rqa.html">the analysis page</a>.</p>
-      <ul>
-      <li>Tab id <code>rqa</code>, label <strong>RQA Plots</strong>, order 20, drawn into <code>rqaContainer</code>.</li>
-      <li>Gate: <code>include_RQA</code> must be an array with at least one entry. A bare <code>true</code>
-      does <strong>not</strong> switch this tab on.</li>
-      <li>Reads <code>assets/rqa/{videoID}_rqa_data.json</code>, container key <code>rqa_data</code>, one entry
-      per data type.</li>
-      </ul>
-      <h2 id="what-you-see-per-measure">What you see per measure</h2>
-      <p>One block per key in <code>rqa_data</code>, each a single figure with four parts sharing one
-      time axis:</p>
-      <table>
-      <thead>
-      <tr>
-        <th>part</th>
-        <th>what it is</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr>
-        <td><strong>the square</strong></td>
-        <td>the recurrence matrix — a black cell wherever the measure was in a state it had been in before, white elsewhere. Both axes are time</td>
-      </tr>
-      <tr>
-        <td><strong>top strip</strong></td>
-        <td>the raw measure, in its colour from the time series tab</td>
-      </tr>
-      <tr>
-        <td><strong>left strip</strong></td>
-        <td>the same measure again, rotated, so a horizontal band on the square lines up with the value that produced it</td>
-      </tr>
-      <tr>
-        <td><strong>four strips below</strong></td>
-        <td>the windowed metrics, top to bottom: <strong>RR</strong>, <strong>DET</strong>, <strong>LAM</strong>, <strong>L_MAX</strong>. L_MAX is in seconds; the other three are unitless fractions</td>
-      </tr>
-      </tbody>
-      </table>
-      <p>The heading above each square carries that measure's achieved recurrence rate as a
-      percentage and the threshold that produced it, both to fixed precision.</p>
-      <p>The metric strips are tied to the square's x-axis, so the four of them and the top
-      marginal are always aligned with the recurrence plot — you can read a spike in DET
-      straight down onto the structure that caused it.</p>
-      <p><strong>The square really is square.</strong> The figure computes its own pixel geometry rather
-      than letting Plotly stretch it: the plotting width is 85 % of the space available
-      after margins, floored at 300 px, and the square itself is 80 % of that again. The
-      total height is derived from the result. A stretched recurrence plot misrepresents
-      diagonal structure, which is the thing the measures are counting.</p>
-      <p>The cost is that the figure is drawn at an explicit pixel size and <strong>does not
-      reflow</strong>. Because the width and height are both fixed in the layout, the host's
-      resize pass cannot recompute it either — the figure only takes a new size when
-      something redraws it outright, which means a playhead move, a theme change or a
-      recording change. Resizing the window alone leaves it as it was.</p>
-      <h2 id="the-playhead">The playhead</h2>
-      <p>Clicking any subplot except the rotated left strip seeks to that time. The left
-      strip is excluded because its x-axis is value, not time — a click there has no
-      time to seek to.</p>
-      <p>A selected time draws four shapes, which is more than the other tabs because a
-      recurrence plot is symmetric in time:</p>
-      <ul>
-      <li>a vertical band across the square, the top strip and every metric strip,</li>
-      <li>a line at the playhead itself,</li>
-      <li>a horizontal band across the square, at the same times,</li>
-      <li>a matching horizontal band on the left strip.</li>
-      </ul>
-      <p>The band is <code>playhead ± windowSize / 2</code>, clamped at both ends to the first and
-      last time in the <strong>drawn</strong> series, so it never runs off the edge of the plot.
-      Window size comes from the <strong>Window Size</strong> control, defaulting to 5 seconds.</p>
-      <p><code>onTimeUpdate</code> <strong>re-renders every figure from scratch</strong>, decoding the matrix again
-      each time. With several measures this is the most expensive redraw in the
-      dashboard. It is why the tab feels slower to scrub than the cross-wavelet tab,
-      which moves shapes instead.</p>
-      <h2 id="what-it-does-not-do">What it does not do</h2>
-      <ul>
-      <li><strong>It does not compute anything.</strong> Everything drawn is read from the payload. If
-      a measure is listed in <code>include_RQA</code> but absent from the payload, the tab logs
-      the mismatch to the browser console and draws the rest — it does not warn you on
-      the page.</li>
-      <li><strong>It does not draw the full-resolution matrix.</strong> The payload ships a matrix
-      reduced to at most 500 × 500 cells, by a density-preserving reduction — so the
-      picture keeps both its structure and its recurrence density.
-      <strong>The percentage in the heading is the full matrix's rate, not the drawn one's.</strong>
-      The drawn matrix's own rate is computed and stored as
-      <code>visualization.reduction.rate_drawn</code>, and is never displayed; it is close but not
-      identical, and it is measured a slightly different way — it includes the line of
-      identity, which the headline rate excludes. Do not read the heading as a
-      description of the pixels. See <a href="rqa.html">the analysis page</a>.</li>
-      <li><strong>It has no controls of its own.</strong> Everything it responds to — the recording,
-      the playhead, the window — belongs to the page, not the tab.</li>
-      </ul>
-      <h2 id="when-it-cannot-draw">When it cannot draw</h2>
-      <p>The ones you are most likely to meet, each naming its own fix:</p>
-      <ul>
-      <li><strong>No payload at all</strong> — <code>include_RQA</code> is set, so the analysis was expected. The
-      message tells you to run <code>python build_assets.py</code> in the study folder.</li>
-      <li><strong>A payload from an older format</strong> — the host's version check refuses it and
-      says so, rather than drawing something subtly wrong. See
-      <a href="analysis-output.html"><code>contracts/analysis-output.md</code></a>.</li>
-      <li><strong>A payload missing <code>visualization.time</code>, <code>.data</code>, <code>.matrix_size</code> or
-      <code>.matrix</code></strong> — that one measure's block shows the error and the others still
-      draw.</li>
-      <li><strong>A payload whose <code>rqa_data</code> is empty</strong> — reported as empty or invalid, with the
-      structure logged to the browser console.</li>
-      </ul>
-      <h2 id="where-it-lives">Where it lives</h2>
-      <p><a href="https://github.com/dims-network/dims/blob/v1.4.3/packages/dims-tabs/rqa.js"><code>packages/dims-tabs/rqa.js</code></a>, which adds
-      <code>loadRQAData</code>, <code>displayRQAPlots</code>, <code>createRQAPlot</code> and <code>updateRQAHighlights</code> to the
-      host. The figure itself is built by <code>_renderRecurrenceFigure</code>, which lives on the
-      host and is shared with <a href="tabs-crqa.html">the cross-RQA tab</a>.</p>
-      <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/tabs/rqa.md"><code>docs/tabs/rqa.md</code></a>
-        at <code>v1.4.3</code>. Edit it there, not here.</p>
-
-      <footer>
-        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
-      </footer>
-    </main>
-  </div>
+  <main>
+    <h1>The documentation moved</h1>
+    <p>It is now built from the core repository and published per release, so a
+      page can be read at the version it describes. This one is
+      <a href="https://dims-network.github.io/dims/latest/tabs/rqa/">RQA</a>, and you should be redirected automatically.</p>
+    <p><a href="https://dims-network.github.io/dims/latest/">All documentation →</a> ·
+       <a href="../index.html">DIMS-network home →</a></p>
+  </main>
 </div>
-
-<script src="docs.js"></script>
 </body>
 </html>

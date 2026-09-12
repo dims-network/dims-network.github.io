@@ -3,137 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The no-code builder · DIMS docs</title>
-<meta name="description" content="What each of the wizard&#x27;s seven steps asks, and what it writes." />
+<title>Moved · DIMS docs</title>
+<link rel="canonical" href="https://dims-network.github.io/dims/latest/builder/" />
+<meta http-equiv="refresh" content="0; url=https://dims-network.github.io/dims/latest/builder/" />
 <link rel="stylesheet" href="../style.css" />
-<link rel="stylesheet" href="docs.css" />
 </head>
 <body>
-
-<nav class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="../index.html">DIMS-network</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../tutorial.html">Tutorial</a>
-      <a href="../setup.html">Set up</a>
-      <a href="index.html" class="active">Docs</a>
-      <a href="https://github.com/dims-network">GitHub ↗</a>
-    </div>
-  </div>
-</nav>
-
 <div class="wrap">
-  <div class="docs-layout">
-    <aside class="docs-side"></aside>
-    <main class="docs-main">
-
-      <div class="crumbs">Start here</div>
-      <h1 id="the-no-code-builder">The no-code builder</h1>
-      <p>A local wizard that turns a folder of recordings and CSVs into a working
-      dashboard, without a terminal beyond the one command that starts it. It is the
-      path for the researchers DIMS is for, who are domain experts and not necessarily
-      programmers.</p>
-      <pre><code class="language-sh">pip install -e './dims[builder]'
-dims-builder
-</code></pre>
-      <p>Your browser opens on step 1. Flags, ports and launchers are on
-      <a href="cli-dims-builder.html">the <code>dims-builder</code> reference</a>.</p>
-      <p><strong>It writes an ordinary study.</strong> Nothing about the result is wizard-specific: the
-      skeleton comes from the same <code>dims_case.core</code> the
-      <a href="cli-dims-case.html"><code>dims-case</code></a> command uses, so a study you build
-      here and one you create on the command line are the same thing, and either can be
-      continued with the other.</p>
-      <h2 id="the-seven-steps">The seven steps</h2>
-      <h3 id="1-study">1 · Study</h3>
-      <p>New or existing, where it goes, and <code>public</code> / <code>private</code> — the
-      <a href="data-visibility.html">visibility decision</a>, which you answer once and
-      which is not inferred. Then the study's title, subtitle, authors, contacts and
-      <code>defaultWindowSize</code>.</p>
-      <h3 id="2-sessions-files">2 · Sessions &amp; files</h3>
-      <p>Drop files in. Each is given a <strong>role</strong> inferred from its extension, a session id
-      and — for a time series — a measure name; you correct any of that in the table.
-      This is where <code>videoIDs</code> and <code>dataTypes</code> come from.</p>
-      <p><strong>&quot;Load the example study&quot;</strong> builds a complete synthetic study called
-      ConvoConnect-Mini — two dyads, hand and rtpjSync measures, transcripts, an <code>.eaf</code>
-      and generated video — so you can see the whole path before committing your own
-      data. It is generated on demand, not shipped, and it is byte-stable: generating
-      it twice gives identical files.</p>
-      <p>Studies filmed from several angles configure <code>perspectives</code> here.</p>
-      <h3 id="3-align">3 · Align</h3>
-      <p><strong>The step that earns its place.</strong> Per session, trim the video and zero-pad the
-      time series until the two cover the same span, with live extent bars showing where
-      they currently disagree.</p>
-      <p>This is the one requirement DIMS cannot check for you and cannot recover from:
-      each signal's time axis must map onto the video clock. A misalignment is displayed
-      faithfully as a misalignment, and it is easily mistaken for meaningful dynamics.</p>
-      <p>It records <strong>specs</strong>, not edits — your original files are not modified.</p>
-      <h3 id="4-tabs-analyses">4 · Tabs &amp; analyses</h3>
-      <p>Which analyses to run, and on what.</p>
-      <ul>
-      <li><strong>RQA, cross-RQA and cross-wavelet</strong> get chip pickers for measures and pairs,
-      plus the advanced settings that become the <code>analysis</code> block.</li>
-      <li><strong>The network diagram</strong> is drawn here: place measures on a body, drag between
-      two of them to ask for that coupling. It is the same figure the dashboard draws,
-      from the same <a href="figure-geometry.html">geometry file</a>, and the pairs
-      you draw are the <em>same list</em> as the cross-wavelet chips above — either view
-      edits it and both redraw.</li>
-      <li><strong>ELAN</strong> is a toggle.</li>
-      </ul>
-      <p>Switching the network on forces cross-wavelet on, because the network is a view of
-      it. It also sets <code>mcCount</code> to 100 — but <strong>only when you have not set one</strong>; an
-      existing non-zero value is left alone. The network's coherence mode is the only
-      thing that reads the coherence null and is meaningless without it; its shared power
-      mode does not need one.</p>
-      <h3 id="5-build">5 · Build</h3>
-      <p>Validation problems first — a <code>series</code> with no CSV and a duplicated <code>series</code> are
-      errors; an unknown body part and an undefined group are warnings — then the
-      assembled <code>config.json</code> for review, then write.</p>
-      <p>The config is also checked against
-      <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/contracts/config.schema.json"><code>config.schema.json</code></a>, though <strong>during</strong> the
-      write rather than before it: the staged assets are copied into the study first, so
-      a schema failure leaves a partly-populated directory rather than nothing. See
-      <a href="builder-api.html">the API page</a>.</p>
-      <h3 id="6-compute">6 · Compute</h3>
-      <p>Runs the analyses, streaming the log into the page with a running clock. It
-      creates a virtualenv inside the study so the run does not depend on how you
-      installed the builder.</p>
-      <p><strong>This is the step that can take real time</strong>, and what governs it is <code>mcCount</code>,
-      not the size of your study. The coherence null costs the same for an 8-second clip
-      as for a twenty-minute recording, and results are cached, so the cost scales with
-      how many distinct nulls are needed.</p>
-      <p>The default is <code>0</code> — no null — unless you switched the network on, which asks for
-      100. Only a study that sets <code>mcCount</code> itself reaches 300, the publication setting,
-      which is the one that runs into hours.</p>
-      <h3 id="7-open-it">7 · Open it</h3>
-      <p>Preview the dashboard locally, and the command to deploy it. For a private study
-      this is also where the reminder sits that the data stays out of git.</p>
-      <h2 id="what-it-does-not-do">What it does not do</h2>
-      <ul>
-      <li><strong>It does not produce your time series.</strong> DIMS is not a preprocessing pipeline:
-      it assumes time-aligned modalities already exist. Tracking, filtering and
-      synchrony estimation happen before the wizard.</li>
-      <li><strong>It does not check that your alignment is correct</strong> — only that you were given
-      the chance to fix it in step 3.</li>
-      <li><strong>It is not a server.</strong> It binds to localhost, has no authentication, and is
-      meant to run on the machine holding the data.</li>
-      </ul>
-      <h2 id="see-also">See also</h2>
-      <ul>
-      <li><a href="builder-api.html">its HTTP API</a> — if you are working on the wizard itself.</li>
-      <li><a href="cli-dims-case.html"><code>dims-case</code></a> — the same job from a terminal.</li>
-      </ul>
-      <p class="source-note">Generated from
-        <a href="https://github.com/dims-network/dims/blob/v1.4.3/docs/builder/index.md"><code>docs/builder/index.md</code></a>
-        at <code>v1.4.3</code>. Edit it there, not here.</p>
-
-      <footer>
-        DIMS-network · <a href="https://github.com/dims-network">github.com/dims-network</a>
-      </footer>
-    </main>
-  </div>
+  <main>
+    <h1>The documentation moved</h1>
+    <p>It is now built from the core repository and published per release, so a
+      page can be read at the version it describes. This one is
+      <a href="https://dims-network.github.io/dims/latest/builder/">The no-code builder</a>, and you should be redirected automatically.</p>
+    <p><a href="https://dims-network.github.io/dims/latest/">All documentation →</a> ·
+       <a href="../index.html">DIMS-network home →</a></p>
+  </main>
 </div>
-
-<script src="docs.js"></script>
 </body>
 </html>
