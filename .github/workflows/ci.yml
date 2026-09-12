@@ -10,9 +10,10 @@ jobs:
     uses: dims-network/.github/.github/workflows/reusable-dashboard-ci.yml@main
     with:
       python_paths: "tools"
-      # The only JavaScript left here is the front page's own; the docs figures
-      # moved to the core with the pages they draw on.
-      js_glob: "tools/*.mjs"
+      # No JavaScript is left here: the docs figures moved to the core with the
+      # pages they draw on, and the front page is a redirect. An unmatched glob
+      # would be passed through literally and fail node --check, so say none.
+      js_glob: ""
       config_path: ""
       check_assets: false
 
@@ -46,18 +47,3 @@ jobs:
       # before anyone outside the project noticed.
       - name: The hand-written pages agree with that release
         run: python tools/check_unpinned_pages.py /tmp/dims
-
-  # The front page renders its diagram and its repository cards from one
-  # script. A mismatch between the two lists in it used to throw before the
-  # cards were built, so the page showed neither -- silently, because a
-  # TypeError in a script tag is not visible on the page.
-  front-page:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: npm install --no-save jsdom@26
-      - name: The front page renders its repository cards
-        run: node tools/check_front_page.mjs index.html

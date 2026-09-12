@@ -1,9 +1,9 @@
 """The hand-written pages say things about a release. Check they are true of it.
 
-The documentation and the tutorial are built from the core repository and
-published per version, so they cannot drift from it. `index.html` and
-`setup.html` are what is left here: written by hand, carrying no version
-marker, with nothing connecting them to the code they describe.
+The documentation, the tutorial and now the front page are built from the core
+repository or redirect to it, so they cannot drift from it. `setup.html` is what
+is left here: written by hand, carrying no version marker, with nothing
+connecting it to the code it describes.
 
 They drifted, and a reader paid for it. The front page advertised v1.0.1 for
 four releases, and `setup.html` published an install command that produced a
@@ -26,7 +26,7 @@ import re
 import sys
 
 SITE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGES = ("index.html", "setup.html")
+PAGES = ("setup.html",)
 
 
 def main(dims_root):
